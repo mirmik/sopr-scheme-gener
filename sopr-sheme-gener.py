@@ -42,6 +42,12 @@ class PaintWidget(StyleWidget):
 	def __init__(self):
 		super().__init__()
 
+	def paintEvent(self, ev):
+		painter = QPainter()
+		painter.begin(self)
+		painte.end()
+
+
 class ConfWidget_Stub(StyleWidget):
 	def __init__(self):
 		super().__init__()
