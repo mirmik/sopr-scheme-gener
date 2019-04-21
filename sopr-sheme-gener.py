@@ -6,6 +6,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 import sys
+import argparse
 
 QAPP = None
 
@@ -16,8 +17,11 @@ class SchemeType:
 		self.confwidget = confwidget
 		self.tablewidget = tablewidget
 
-		self.confwidget.set_paint_widget(self.paintwidget)
-		self.confwidget.set_table_widget(self.tablewidget)
+		self.confwidget.shemetype = self
+		self.paintwidget.shemetype = self
+		self.tablewidget.shemetype = self
+
+		self.task = self.confwidget.inittask()
 
 class StyleWidget(QWidget):
 	def __init__(self):
@@ -34,18 +38,19 @@ class StubWidget(StyleWidget):
 		self.layout.addWidget(self.label)
 		self.setLayout(self.layout)
 
-class TableWidget(StyleWidget):
+class TableWidget(QWidget):
 	def __init__(self):
 		super().__init__()
 
-class PaintWidget(StyleWidget):
+class PaintWidget_T0(QWidget):
 	def __init__(self):
 		super().__init__()
 
 	def paintEvent(self, ev):
-		painter = QPainter()
-		painter.begin(self)
-		painte.end()
+		painter = QPainter(self)
+		painter.drawRect(QRect(20,20,40,40))
+
+class VisualWidget(QWidget):
 
 
 class ConfWidget_Stub(StyleWidget):
@@ -57,21 +62,41 @@ class ConfWidget_Stub(StyleWidget):
 		self.layout.addWidget(self.label)
 		self.setLayout(self.layout)
 
-	def set_paint_widget(self, paintwidget):
-		self.paintwidget = paintwidget
+	def inittask(self):
+		return {}
 
-	def set_table_widget(self, tablewidget):
-		self.tablewidget = tablewidget
-
-class ConfWidget_Task1(StyleWidget):
+class ConfWidget_T0(StyleWidget):
 	def __init__(self):
 		super().__init__()
 
-	def set_paint_widget(self, paintwidget):
-		self.paintwidget = paintwidget
+	def inittask(self):
+		return {}
 
-	def set_table_widget(self, tablewidget):
-		self.tablewidget = tablewidget
+class ConfView(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.layout = QGridLayout()
+
+		self.width_edit = QLineEdit()
+		self.height_edit = QLineEdit()
+
+		self.width_label = QLabel("Ширина в px:")
+		self.height_label = QLabel("Высота в px:")
+
+		self.width_edit.setFixedWidth(100)
+		self.height_edit.setFixedWidth(100)
+
+		self.width_label.setFixedWidth(100)
+		self.height_label.setFixedWidth(100)
+
+		self.layout.addWidget(self.width_label,0,0)
+		self.layout.addWidget(self.height_label,1,0)
+		self.layout.addWidget(self.width_edit,0,1)
+		self.layout.addWidget(self.height_edit,1,1)
+
+		#self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+		self.setLayout(self.layout)
+
 
 class ComboBox(QComboBox):
 	def __init__(self, default):
@@ -92,12 +117,12 @@ class ComboBox(QComboBox):
 		painter.drawControl(QStyle.CE_ComboBoxLabel, option)
 
 class CentralWidget(QWidget):
-	def __init__(self):
+	def __init__(self, tp):
 		super().__init__()
 
 		self.scheme_types = [
-			SchemeType("Проверка функциональности", ConfWidget_Task1(), PaintWidget(), TableWidget()),
-			SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget(), TableWidget())
+			SchemeType("Проверка функциональности", ConfWidget_T0(), PaintWidget_T0(), TableWidget()),
+			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]
 
 		self.stub_widget_0 = StubWidget("Окно отображения")
@@ -119,10 +144,18 @@ class CentralWidget(QWidget):
 		self.hsplitter = QSplitter(Qt.Horizontal)
 		self.vsplitter = QSplitter(Qt.Vertical)
 
+		self.confview = ConfView()
+
 		self.vlayout = QVBoxLayout()
 		self.vlayout.addWidget(self.type_list_widget)
 		self.vlayout.addWidget(self.vsplitter)
 		self.set_scheme_type_no(-1)
+
+		if tp != -1:
+			self.inited = False
+			self.tp = tp
+		else:
+			self.inited = True
 
 		self.setLayout(self.vlayout)
 
@@ -133,6 +166,7 @@ class CentralWidget(QWidget):
 			self.hsplitter.addWidget(self.stub_widget_1)
 			self.vsplitter.addWidget(self.hsplitter)
 			self.vsplitter.addWidget(self.stub_widget_2)
+			self.vsplitter.addWidget(self.confview)
 
 		else:
 			if self.currentno != no:
@@ -145,18 +179,20 @@ class CentralWidget(QWidget):
 		self.type_list_widget.inited = True
 		self.set_scheme_type_no(arg)
 
-	#def paintEvent(self, ev):
-		#self.type_list_widget.lineEdit().setPlaceholderText("A")
-		#self.type_list_widget.update()
+	def showEvent(self, ev):
+		super().showEvent(ev)
+		if self.inited == False:
+			self.inited = True
+			self.type_scheme_selected(self.tp)
 
 class MainWindow(QMainWindow):
-	def __init__(self):
+	def __init__(self, tp):
 		super().__init__()
 
 		self.createActions()
 		self.createMenus()
 
-		self.cw = CentralWidget()
+		self.cw = CentralWidget(tp)
 		self.setCentralWidget(self.cw)
 
 	def action_about(self):
@@ -204,10 +240,16 @@ class MainWindow(QMainWindow):
 		self.FileMenu.addAction(self.ExitAction)
 		self.HelpMenu.addAction(self.AboutAction)
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--type", default="-1")
+pargs = parser.parse_args()
+
 qapp = QApplication(sys.argv[1:])
+qapp.setApplicationName("sopr-sheme-gener")
+
 QAPP = qapp
 
-mainwindow = MainWindow()
+mainwindow = MainWindow(int(pargs.type))
 mainwindow.resize(800, 640)
 mainwindow.show()
 
