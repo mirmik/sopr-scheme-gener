@@ -8,95 +8,10 @@ from PyQt5.QtWidgets import *
 import sys
 import argparse
 
+import task0
+import common
+
 QAPP = None
-
-class SchemeType:
-	def __init__(self, name, confwidget, paintwidget, tablewidget):
-		self.name = name
-		self.paintwidget = paintwidget
-		self.confwidget = confwidget
-		self.tablewidget = tablewidget
-
-		self.confwidget.shemetype = self
-		self.paintwidget.shemetype = self
-		self.tablewidget.shemetype = self
-
-		self.task = self.confwidget.inittask()
-
-class StyleWidget(QWidget):
-	def __init__(self):
-		super().__init__()
-		self.setStyleSheet("border: 1px solid black");
-		self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-class StubWidget(StyleWidget):
-	def __init__(self, text):
-		super().__init__()
-		self.text = text
-		self.layout = QVBoxLayout()
-		self.label = QLabel(text)
-		self.layout.addWidget(self.label)
-		self.setLayout(self.layout)
-
-class TableWidget(QWidget):
-	def __init__(self):
-		super().__init__()
-
-class PaintWidget_T0(QWidget):
-	def __init__(self):
-		super().__init__()
-
-	def paintEvent(self, ev):
-		painter = QPainter(self)
-		painter.drawRect(QRect(20,20,40,40))
-
-class VisualWidget(QWidget):
-
-
-class ConfWidget_Stub(StyleWidget):
-	def __init__(self):
-		super().__init__()
-		self.text = "STUB"
-		self.layout = QVBoxLayout()
-		self.label = QLabel(self.text)
-		self.layout.addWidget(self.label)
-		self.setLayout(self.layout)
-
-	def inittask(self):
-		return {}
-
-class ConfWidget_T0(StyleWidget):
-	def __init__(self):
-		super().__init__()
-
-	def inittask(self):
-		return {}
-
-class ConfView(QWidget):
-	def __init__(self):
-		super().__init__()
-		self.layout = QGridLayout()
-
-		self.width_edit = QLineEdit()
-		self.height_edit = QLineEdit()
-
-		self.width_label = QLabel("Ширина в px:")
-		self.height_label = QLabel("Высота в px:")
-
-		self.width_edit.setFixedWidth(100)
-		self.height_edit.setFixedWidth(100)
-
-		self.width_label.setFixedWidth(100)
-		self.height_label.setFixedWidth(100)
-
-		self.layout.addWidget(self.width_label,0,0)
-		self.layout.addWidget(self.height_label,1,0)
-		self.layout.addWidget(self.width_edit,0,1)
-		self.layout.addWidget(self.height_edit,1,1)
-
-		#self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-		self.setLayout(self.layout)
-
 
 class ComboBox(QComboBox):
 	def __init__(self, default):
@@ -121,15 +36,15 @@ class CentralWidget(QWidget):
 		super().__init__()
 
 		self.scheme_types = [
-			SchemeType("Проверка функциональности", ConfWidget_T0(), PaintWidget_T0(), TableWidget()),
+			common.SchemeType("Задача тип 0", 
+				task0.ConfWidget_T0(), task0.PaintWidget_T0(), common.TableWidget()),
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]
 
-		self.stub_widget_0 = StubWidget("Окно отображения")
-		self.stub_widget_1 = StubWidget("Таблица параметров")
-		self.stub_widget_2 = StubWidget(
-			"Окно конфигурации"
-		)
+		self.stub_widget_0 = common.StubWidget("Окно отображения")
+		self.stub_widget_1 = common.StubWidget("Таблица параметров")
+		self.stub_widget_2 = common.StubWidget("Окно конфигурации")
+
 		self.stub_widget_0.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 		self.stub_widget_1.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 		self.stub_widget_2.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -144,7 +59,8 @@ class CentralWidget(QWidget):
 		self.hsplitter = QSplitter(Qt.Horizontal)
 		self.vsplitter = QSplitter(Qt.Vertical)
 
-		self.confview = ConfView()
+		self.confview = common.ConfView()
+		common.CONFVIEW = self.confview
 
 		self.vlayout = QVBoxLayout()
 		self.vlayout.addWidget(self.type_list_widget)
