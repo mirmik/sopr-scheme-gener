@@ -59,7 +59,7 @@ class ConfWidget_T0(common.StyleWidget):
 		if column == 0: field = 'A'
 		if column == 1: field = 'l'
 
-		self.shemetype.task["sections"][row][field] = int(self.table.item(row,column).text())
+		self.shemetype.task["sections"][row][field] = float(self.table.item(row,column).text())
 
 		self.redraw()
 
@@ -69,7 +69,7 @@ class ConfWidget_T0(common.StyleWidget):
 		if column == 0: field = 'F'
 		if column == 1: field = 'M'
 
-		self.shemetype.task["betsect"][row][field] = int(self.table2.item(row,column).text())
+		self.shemetype.task["betsect"][row][field] = float(self.table2.item(row,column).text())
 
 		self.redraw()
 
@@ -178,8 +178,18 @@ class PaintWidget_T0(QWidget):
 			strt_height = height/2 - height_zone*hkoeff/2
 			fini_height = height/2 + height_zone*hkoeff/2
 
-			text_A = "{}A".format(task["sections"][i]["A"]) if task["sections"][i]["A"] != 1 else "A"
-			text_l = "{}l".format(task["sections"][i]["l"]) if task["sections"][i]["l"] != 1 else "l"
+			A = task["sections"][i]["A"]
+			l = task["sections"][i]["l"]
+
+			if abs(float(A) - int(A)) < 0.0001:
+				text_A = "{}A".format(int(task["sections"][i]["A"]+0.1)) if task["sections"][i]["A"] != 1 else "A"
+			else:
+				text_A = str(float(A)) + "A"
+
+			if abs(float(l) - int(l)) < 0.0001:
+				text_l = "{}l".format(int(task["sections"][i]["l"]+0.1)) if task["sections"][i]["l"] != 1 else "l"
+			else:
+				text_l = str(float(l)) + "l"
 			
 			painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height);
 			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2, strt_height - 5), text_A);
