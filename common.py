@@ -4,12 +4,39 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 CONFVIEW = None
+SCHEMETYPE = None
+HSPLITTER = None
+
+class ELabel(QWidget):
+	def __init__(self, ltext, ftext, lwidth, fwidth):
+		super().__init__()
+
+		self.layout = QHBoxLayout()
+		self.label = QLabel(ltext)
+		self.edit = QLineEdit(ftext)
+
+		self.label.setFixedWidth(lwidth)
+		self.edit.setFixedWidth(fwidth)
+
+		self.layout.addWidget(self.label)
+		self.layout.addWidget(self.edit)
+
+		self.setLayout(self.layout)
 
 class StyleWidget(QWidget):
 	def __init__(self):
 		super().__init__()
 		self.setStyleSheet("border: 1px solid black");
 		self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+class DataSettings:
+	def __init__(self):
+		self.arrow_size = 20
+		self.arrow_head_size = 5
+		self.width = 400
+		self.height = 200
+
+datasettings = DataSettings()
 
 class SchemeType:
 	def __init__(self, name, confwidget, paintwidget, tablewidget):
@@ -22,7 +49,13 @@ class SchemeType:
 		self.paintwidget.shemetype = self
 		self.tablewidget.shemetype = self
 
+		self.datasettings = datasettings
+
 		self.task = self.confwidget.inittask()
+
+	def updateDataSettingsVM(self):
+		CONFVIEW.width_edit.setText(str(self.datasettings.width))
+		CONFVIEW.height_edit.setText(str(self.datasettings.height))
 
 class StubWidget(StyleWidget):
 	def __init__(self, text):
@@ -62,6 +95,9 @@ class ConfView(QWidget):
 		self.width_label = QLabel("Ширина в px:")
 		self.height_label = QLabel("Высота в px:")
 
+		self.width_edit.editingFinished.connect(self.set_size)
+		self.height_edit.editingFinished.connect(self.set_size)
+
 		self.width_edit.setFixedWidth(100)
 		self.height_edit.setFixedWidth(100)
 
@@ -78,3 +114,14 @@ class ConfView(QWidget):
 
 	def size(self):
 		return (int(self.width_edit.text()), int(self.height_edit.text()))
+
+	def set_size(self):
+		sz = self.size()
+		
+		SCHEMETYPE.datasettings.width = sz[0]
+		SCHEMETYPE.datasettings.height = sz[1]
+
+		oldsz = HSPLITTER.sizes()
+		oldszsumm = oldsz[0] + oldsz[1]
+		HSPLITTER.setSizes([sz[0], oldszsumm - sz[0]])
+		SCHEMETYPE.paintwidget.resize(sz[0], sz[1])

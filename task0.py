@@ -6,11 +6,48 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+class ForceComboBox(QComboBox):
+	def __init__(self, idx, confw):
+		super().__init__()
+
+		self.idx = idx 
+		self.confw = confw
+
+		self.addItem("0")
+		self.addItem("1")
+		self.addItem("2")
+
+		self.confw.shemetype.task["betsect"][self.idx]["F"]
+
+		self.activated.connect(self.activated_handler)
+
+	def activated_handler(self):
+		n = self.currentIndex() 
+		self.confw.shemetype.task["betsect"][self.idx]["F"] = n
+		self.confw.redraw()
+
+class TorqueComboBox(QComboBox):
+	def __init__(self, idx, confw):
+		super().__init__()
+
+		self.idx = idx 
+		self.confw = confw
+
+		self.addItem("0")
+		self.addItem("1")
+		self.addItem("2")
+
+		self.activated.connect(self.activated_handler)
+
+	def activated_handler(self):
+		n = self.currentIndex() 
+		self.confw.shemetype.task["betsect"][self.idx]["M"] = n
+		self.confw.redraw()
+
 class ConfWidget_T0(common.StyleWidget):
 	"""Виджет настроек задачи T0"""
 	def __init__(self):
 		super().__init__()
-
 		self.add_button = QPushButton("add")
 		self.del_button = QPushButton("del")
 
@@ -31,7 +68,39 @@ class ConfWidget_T0(common.StyleWidget):
 		self.hhlayout.addWidget(self.table2)
 		self.vlayout.addLayout(self.hhlayout)
 
+		self.table.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+		self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+		self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)		
+		self.table.resizeColumnsToContents()
+		
+		self.table2.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+		self.table2.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+		self.table2.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)		
+		self.table2.resizeColumnsToContents()
+
+		self.table.cellChanged.connect(self.changed)
+		self.table2.cellChanged.connect(self.changed2)
+
+		self.arrow_size_le = common.ELabel("Размер линии стрелки:", str(common.datasettings.arrow_size), 300, 100)
+		self.arrow_head_size_le = common.ELabel("Размер стрелки:", str(common.datasettings.arrow_head_size), 300, 100)
+
+		self.vlayout.addWidget(self.arrow_size_le)
+		self.vlayout.addWidget(self.arrow_head_size_le)
+
+		self.arrow_size_le.edit.editingFinished.connect(self.arrows_update)
+		self.arrow_head_size_le.edit.editingFinished.connect(self.arrows_update)
+
 		self.setLayout(self.vlayout)
+
+	def arrows_update(self):
+		arrow_size = int(self.arrow_size_le.edit.text())
+		arrow_head_size = int(self.arrow_head_size_le.edit.text())
+
+		self.shemetype.datasettings.arrow_size = arrow_size
+		self.shemetype.datasettings.arrow_head_size = arrow_head_size
+
+		self.redraw()
+
 
 	def redraw(self):
 		self.shemetype.paintwidget.repaint()
@@ -86,24 +155,34 @@ class ConfWidget_T0(common.StyleWidget):
 			it = QTableWidgetItem(str(self.shemetype.task["sections"][i]["l"]))
 			self.table.setItem(i,1,it)
 
+		self.table.setFixedSize(
+				self.table.horizontalHeader().length() + self.table.verticalHeader().width(), 
+				self.table.verticalHeader().length() + self.table.horizontalHeader().height())
+
 		self.table.repaint()
-		self.table.cellChanged.connect(self.changed)
 
 	def updateTable2(self):
+		self.table2.clear()
+
 		self.table2.setColumnCount(2)
 		self.table2.setRowCount(len(self.shemetype.task["betsect"]))
 		self.table2.setHorizontalHeaderItem(0, QTableWidgetItem("F")) 
 		self.table2.setHorizontalHeaderItem(1, QTableWidgetItem("M")) 
 
 		for i in range(len(self.shemetype.task["betsect"])):
-			it = QTableWidgetItem(str(self.shemetype.task["betsect"][i]["F"]))
-			self.table2.setItem(i,0,it)
+			#it = QTableWidgetItem(str(self.shemetype.task["betsect"][i]["F"]))
 
-			it = QTableWidgetItem(str(self.shemetype.task["betsect"][i]["M"]))
-			self.table2.setItem(i,1,it)
+			it = ForceComboBox(i, self)
+			self.table2.setCellWidget(i,0,it)
+
+			it = TorqueComboBox(i, self)
+			self.table2.setCellWidget(i,1,it)
+
+		self.table2.setFixedSize(
+				self.table2.horizontalHeader().length() + self.table2.verticalHeader().width(), 
+				self.table2.verticalHeader().length() + self.table2.horizontalHeader().height())
 
 		self.table2.repaint()
-		self.table2.cellChanged.connect(self.changed2)
 
 	def betsect(self, F=0, M=0):
 		return {"F":F, "M":M}
@@ -134,11 +213,23 @@ class ConfWidget_T0(common.StyleWidget):
 		return self.shemetype.task
 
 class PaintWidget_T0(QWidget):
+
 	def __init__(self):
 		super().__init__()
 
+	def resizeEvent(self, ev):
+		print("resizeEvent")
+
+		self.shemetype.datasettings.width = self.width()
+		self.shemetype.datasettings.height = self.height()
+
+		self.shemetype.updateDataSettingsVM()
+
 	def paintEvent(self, ev):
 		"""Рисуем сцену согласно объекта задания"""
+
+		arrow_size = self.shemetype.datasettings.arrow_size
+		arrow_head_size = self.shemetype.datasettings.arrow_head_size
 
 		task = self.shemetype.task
 		size = self.size()
@@ -147,8 +238,15 @@ class PaintWidget_T0(QWidget):
 		height = size.height()
 
 		height_zone = 40
+
 		strt_width = 10
 		fini_width = width-10
+
+		if task["betsect"][0]["F"] == 1:
+			strt_width += arrow_size + 2*arrow_head_size
+
+		if task["betsect"][-1]["F"] == 2:
+			fini_width -= arrow_size + 2*arrow_head_size
 
 		painter = QPainter(self)
 		font = painter.font()
@@ -191,6 +289,46 @@ class PaintWidget_T0(QWidget):
 			else:
 				text_l = str(float(l)) + "l"
 			
-			painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height);
-			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2, strt_height - 5), text_A);
-			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2, fini_height + 15), text_l);
+			painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height)
+			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2, strt_height - 5), text_A)
+			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2, fini_height + 15), text_l)
+
+		#Отрисовка граничных эффектов
+		for i in range(len(task["betsect"])):
+			if task["betsect"][i]["F"] == 1:
+				self.leftArrow(painter, QPoint(wsect(i), height/2))
+
+			if task["betsect"][i]["F"] == 2:
+				self.rightArrow(painter, QPoint(wsect(i), height/2))
+
+	def leftArrow(self, painter, basepoint):
+		arrow_size = self.shemetype.datasettings.arrow_size
+		arrow_head_size = self.shemetype.datasettings.arrow_head_size		
+
+		painter.drawLine(basepoint, QPoint(basepoint.x() - arrow_size, basepoint.y()))
+
+		points = [
+			(basepoint.x() - arrow_size - 2 * arrow_head_size, basepoint.y()), 
+			(basepoint.x() - arrow_size, basepoint.y() - arrow_head_size), 
+			(basepoint.x() - arrow_size, basepoint.y() + arrow_head_size)
+		]
+		qpoints = [QPointF(x, y) for (x, y) in points]
+		polygon = QPolygonF(qpoints)
+
+		painter.drawConvexPolygon(polygon)
+
+	def rightArrow(self, painter, basepoint):
+		arrow_size = self.shemetype.datasettings.arrow_size
+		arrow_head_size = self.shemetype.datasettings.arrow_head_size
+
+		painter.drawLine(basepoint, QPoint(basepoint.x() + arrow_size, basepoint.y()))
+
+		points = [
+			(basepoint.x() + arrow_size + 2 * arrow_head_size, basepoint.y()), 
+			(basepoint.x() + arrow_size, basepoint.y() - arrow_head_size), 
+			(basepoint.x() + arrow_size, basepoint.y() + arrow_head_size)
+		]
+		qpoints = [QPointF(x, y) for (x, y) in points]
+		polygon = QPolygonF(qpoints)
+
+		painter.drawConvexPolygon(polygon)

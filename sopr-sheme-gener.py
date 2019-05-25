@@ -58,8 +58,8 @@ class CentralWidget(QWidget):
 
 		self.hsplitter = QSplitter(Qt.Horizontal)
 		self.vsplitter = QSplitter(Qt.Vertical)
-
 		self.confview = common.ConfView()
+		common.HSPLITTER = self.hsplitter
 		common.CONFVIEW = self.confview
 
 		self.vlayout = QVBoxLayout()
@@ -86,6 +86,7 @@ class CentralWidget(QWidget):
 
 		else:
 			if self.currentno != no:
+				common.SCHEMETYPE = self.scheme_types[no]
 				self.hsplitter.replaceWidget(0, self.scheme_types[no].paintwidget)
 				self.hsplitter.replaceWidget(1, self.scheme_types[no].tablewidget)
 				self.vsplitter.replaceWidget(1, self.scheme_types[no].confwidget)
