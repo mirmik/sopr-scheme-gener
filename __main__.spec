@@ -1,13 +1,12 @@
-# -*- mode: python -*-
-
-import os
+# -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
 
-a = Analysis(['./sopr-sheme-gener.py'],
-             pathex=['./sopr-sheme-gener'],
+a = Analysis(['__main__.spec--onefile'],
+             pathex=['C:\\sopr-scheme-gener'],
              binaries=[],
+             datas=[],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -22,7 +21,7 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name=('SoprSchemer.exe' if os.name == "nt" else 'SoprSchemer'),
+          name='__main__',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -34,4 +33,5 @@ coll = COLLECT(exe,
                a.datas,
                strip=False,
                upx=True,
-               name='SoprSchemer')
+               upx_exclude=[],
+               name='__main__')
