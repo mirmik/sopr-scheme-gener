@@ -186,7 +186,7 @@ class MainWindow(QMainWindow):
 
 	def make_picture_action(self):
 		filters = "*.png;;*.jpg;;*.*"
-		defaultFilter = "*.png"
+		defaultFilter = "*.jpg"
 
 		path, ext = QFileDialog.getSaveFileName(
 			self, "Сохранить изображение", None, filters, defaultFilter
@@ -197,7 +197,7 @@ class MainWindow(QMainWindow):
 
 		ext = os.path.splitext(ext)[1]
 		if ext == '.*':
-			ext = ".png"
+			ext = ".jpg"
 
 		curext = os.path.splitext(path)[1]
 		if curext == '':

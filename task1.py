@@ -57,7 +57,8 @@ class ConfWidget_T1(common.ConfWidget):
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
 		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
-		
+		self.sett.updated.connect(self.redraw)
+
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
@@ -102,7 +103,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 	def paintEventImplementation(self, ev):
 		sects = self.shemetype.task["sections"]
 
-		angle = deg(180)
+		firstdir = self.shemetype.first_dir.get()
+		angle = deg(180) if firstdir else deg(90)
 
 		width = self.width()
 		height = self.height()
@@ -139,7 +141,10 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			length = s.l * base_length
 			pnt = center + QPoint(math.cos(angle) * length, math.sin(angle) * length)
 			painter.drawLine(center, pnt)
-			painter.drawEllipse(QRect(pnt - QPoint(5, 5), pnt + QPoint(5, 5)))
+			#painter.drawEllipse(QRect(pnt - QPoint(5, 5), pnt + QPoint(5, 5)))
+			
+			paintool.zadelka_sharnir(painter, pnt, angle, 30, 10, 5)
+
 			angle -= deg(s.angle)
 
 		painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))

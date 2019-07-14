@@ -46,7 +46,7 @@ class ConfWidget_T2(common.ConfWidget):
 
 			"betsect": 
 			[
-				self.betsect(l=1.5),
+				self.betsect(l=0),
 				self.betsect(l=1),
 				self.betsect(l=3),
 				self.betsect(l=-5)
@@ -74,11 +74,11 @@ class ConfWidget_T2(common.ConfWidget):
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table.addColumn("l", "float")
+		self.table.addColumn("l", "float", "Длина секции")
 		self.table.updateTable()
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("l", "float")
+		self.table2.addColumn("l", "float", "Длина опоры")
 		self.table2.updateTable()
 		
 		self.vlayout.addLayout(self.butlayout)
@@ -93,12 +93,14 @@ class ConfWidget_T2(common.ConfWidget):
 
 	def add_action(self):
 		self.shemetype.task["sections"].append(self.sect())
+		self.shemetype.task["betsect"].append(self.betsect())
 		self.redraw()
 		self.updateTables()
 
 	def del_action(self):
 		if len(self.shemetype.task["sections"]) == 1: return
 		del self.shemetype.task["sections"][-1]
+		del self.shemetype.task["betsect"][-1]
 		self.redraw()
 		self.updateTables()
 
@@ -108,8 +110,7 @@ class ConfWidget_T2(common.ConfWidget):
 
 	def updateTables(self):
 		self.table.updateTable()
-
-
+		self.table2.updateTable()
 
 class PaintWidget_T2(paintwdg.PaintWidget):
 
@@ -147,9 +148,9 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		painter.setBrush(br)
 
 		left_span = 60
-		right_span = 30
-		up_span = 20
-		down_span = 20
+		right_span = 50
+		up_span = 50
+		down_span = 50
 
 		smax = 0
 		smin = 0
@@ -162,10 +163,6 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		#for s in bsects: hsum += s.l 
 		hkoeff = float(fheight) / (smax - smin)
 		hbase = hkoeff * smax + up_span
-
-		print(smax)
-		print(smin)
-		print(hbase)
 
 		lu = QPoint(left_span, hbase)
 		ru = QPoint(width - right_span, hbase)
@@ -188,17 +185,18 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 			return left_span + x
 
 		for i in range(len(bsects)):
-			painter.drawLine(QPoint(xnode(i), hbase), QPoint(xnode(i), hbase - bsects[i].l*hkoeff))
-			#painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase - bsects[i].l*hkoeff), 10))
-			painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase), 5))
-
-			
-			if (bsects[i].l < 0):
-				angle = deg(90)
-			else:
-				angle = deg(-90)
-
-			paintool.zadelka_sharnir(painter, QPoint(xnode(i), hbase - bsects[i].l*hkoeff), angle, 30, 10, 5)
+			if bsects[i].l != 0:
+				painter.drawLine(QPoint(xnode(i), hbase), QPoint(xnode(i), hbase - bsects[i].l*hkoeff))
+				#painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase - bsects[i].l*hkoeff), 10))
+				painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase), 5))
+	
+				
+				if (bsects[i].l < 0):
+					angle = deg(90)
+				else:
+					angle = deg(-90)
+	
+				paintool.zadelka_sharnir(painter, QPoint(xnode(i), hbase - bsects[i].l*hkoeff), angle, 30, 10, 5)
 
 		paintool.zadelka_sharnir_type2(painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
 			

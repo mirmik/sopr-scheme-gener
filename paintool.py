@@ -208,10 +208,10 @@ def zadelka_sharnir(painter, pnt, angle, w, h, s):
 	painter.setPen(pen)
 
 	points = [
-		pnt + QPoint(w * math.sin(angle), w * math.cos(angle)),
-		pnt + QPoint(-w * math.sin(angle), -w * math.cos(angle)),
-		pnt + QPoint(-w * math.sin(angle) + h * math.cos(angle), -w * math.cos(angle) + h * math.sin(angle)),
-		pnt + QPoint(w * math.sin(angle) + h * math.cos(angle), w * math.cos(angle) + h * math.sin(angle)),
+		pnt + rotate(angle, QPoint(0, w)),
+		pnt + rotate(angle, QPoint(0, -w)),
+		pnt + rotate(angle, QPoint(h, -w)),
+		pnt + rotate(angle, QPoint(h, w))
 	]
 
 	qpoints = [QPointF(pnt.x(), pnt.y()) for pnt in points]

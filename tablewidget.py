@@ -8,9 +8,10 @@ class TableWidget(QTableWidget):
 	updated = pyqtSignal()
 
 	class column:
-		def __init__(self, name, type):
+		def __init__(self, name, type, note):
 			self.name = name
 			self.type = type
+			self.note = note
 
 	def __init__(self, sheme, modelname):
 		super().__init__()
@@ -26,8 +27,9 @@ class TableWidget(QTableWidget):
 		self.cellChanged.connect(self.changed)	
 		self.protect = False
 
-	def addColumn(self, name, type):
-		self.columns.append(self.column(name, type))
+	def addColumn(self, name, type, note =None):
+		if note is None: note = name
+		self.columns.append(self.column(name, type, note))
 
 	def updateTable(self):
 		self.protect = True
@@ -35,7 +37,7 @@ class TableWidget(QTableWidget):
 		self.setRowCount(len(self.shemetype.task[self.modelname]))
 
 		for i in range(len(self.columns)):
-			self.setHorizontalHeaderItem(i, QTableWidgetItem(self.columns[i].name))
+			self.setHorizontalHeaderItem(i, QTableWidgetItem(self.columns[i].note))
 
 			for j in range(len(self.shemetype.task[self.modelname])):
 				if self.columns[i].type == "int":
