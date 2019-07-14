@@ -55,8 +55,11 @@ class ConfWidget_T1(common.ConfWidget):
 		self.del_button.clicked.connect(self.del_action)
 
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.datasettings.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
-		self.shemetype.datasettings.base_length = self.sett.add("Базовая длина:", "int", "80")
+		self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
+		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
+		
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("l", "float")
@@ -96,7 +99,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
 
-	def paintEvent(self, ev):
+	def paintEventImplementation(self, ev):
 		sects = self.shemetype.task["sections"]
 
 		angle = deg(180)
@@ -106,9 +109,10 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 		center = QPoint(width/2, height/2)
 
-		lwidth = 2
-		font_size = 12
-		base_length = self.shemetype.datasettings.base_length.get()
+		font_size = self.shemetype.font_size.get()
+		lwidth = self.shemetype.line_width.get()
+
+		base_length = self.shemetype.base_length.get()
 
 
 		painter = QPainter(self)

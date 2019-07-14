@@ -97,16 +97,17 @@ class ConfWidget_T0(common.ConfWidget):
 		self.table2.cellChanged.connect(self.changed2)
 
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.datasettings.axis = self.sett.add("Нарисовать ось:", "bool", True)
-		self.shemetype.datasettings.zleft = self.sett.add("Заделка слева:", "bool", False)
-		self.shemetype.datasettings.zright = self.sett.add("Заделка справа:", "bool", False)
-		self.shemetype.datasettings.lwidth = self.sett.add("Ширина линий:", "int", "2")
-		self.shemetype.datasettings.base_section_height = self.sett.add("Базовая высота секции:", "int", "40")
-		self.shemetype.datasettings.arrow_line_size = self.sett.add("Размер линии стрелки:", "int", "20")
-		self.shemetype.datasettings.arrow_size = self.sett.add("Размер стрелки:", "int", "10")
-		self.shemetype.datasettings.font_size = self.sett.add("Размер шрифта:", "int", "12")
-		self.shemetype.datasettings.left_zone = self.sett.add("Отступ слева:", "int", "20")
-		self.shemetype.datasettings.right_zone = self.sett.add("Отступ справа:", "int", "20")
+		self.shemetype.axis = self.sett.add("Нарисовать ось:", "bool", True)
+		self.shemetype.zleft = self.sett.add("Заделка слева:", "bool", False)
+		self.shemetype.zright = self.sett.add("Заделка справа:", "bool", False)
+		#self.shemetype.lwidth = self.sett.add("Ширина линий:", "int", "2")
+		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
+		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "40")
+		self.shemetype.arrow_line_size = self.sett.add("Размер линии стрелки:", "int", "20")
+		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "10")
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.left_zone = self.sett.add("Отступ слева:", "int", "20")
+		self.shemetype.right_zone = self.sett.add("Отступ справа:", "int", "20")
 		
 		self.sett.updated.connect(self.redraw)
 
@@ -265,19 +266,19 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
 
-	def paintEvent(self, ev):
+	def paintEventImplementation(self, ev):
 		"""Рисуем сцену согласно объекта задания"""
 
-		lwidth = self.shemetype.datasettings.lwidth.get()
+		lwidth = self.shemetype.lwidth.get()
 
-		axis = self.shemetype.datasettings.axis.get()
-		zleft = self.shemetype.datasettings.zleft.get()
-		zright = self.shemetype.datasettings.zright.get()
+		axis = self.shemetype.axis.get()
+		zleft = self.shemetype.zleft.get()
+		zright = self.shemetype.zright.get()
 
-		base_section_height = self.shemetype.datasettings.base_section_height.get()
-		arrow_size = self.shemetype.datasettings.arrow_line_size.get()
-		arrow_head_size = self.shemetype.datasettings.arrow_size.get()
-		font_size = self.shemetype.datasettings.font_size.get()
+		base_section_height = self.shemetype.base_section_height.get()
+		arrow_size = self.shemetype.arrow_line_size.get()
+		arrow_head_size = self.shemetype.arrow_size.get()
+		font_size = self.shemetype.font_size.get()
 
 		task = self.shemetype.task
 		size = self.size()
@@ -287,8 +288,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 		height_zone = base_section_height
 
-		strt_width = self.shemetype.datasettings.left_zone.get()
-		fini_width = width-self.shemetype.datasettings.right_zone.get()
+		strt_width = self.shemetype.left_zone.get()
+		fini_width = width-self.shemetype.right_zone.get()
 
 		#if task["betsect"][0]["F"] == 2 or task["betsect"][0]["M"] != 0:
 		#	strt_width += arrow_size + 2*arrow_head_size

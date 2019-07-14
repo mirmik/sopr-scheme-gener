@@ -11,6 +11,7 @@ import argparse
 
 import task0
 import task1
+import task2
 import common
 import container
 import paintwdg
@@ -18,7 +19,7 @@ import paintwdg
 QAPP = None
 
 def getPaintSize():
-	return (common.datasettings.width, common.datasettings.height)
+	return common.SCHEMETYPE.get_size()
 
 class ComboBox(QComboBox):
 	def __init__(self, default):
@@ -42,9 +43,13 @@ class CentralWidget(QWidget):
 	def __init__(self, tp):
 		super().__init__()
 
+		self.confview = common.ConfView()
+		common.CONFVIEW = self.confview
+
 		self.scheme_types = [
 			task0.ShemeTypeT0(),
 			task1.ShemeTypeT1(),
+			task2.ShemeTypeT2(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]
@@ -64,11 +69,8 @@ class CentralWidget(QWidget):
 		self.type_list_widget.activated.connect(self.type_scheme_selected)
 
 		self.hsplitter = QSplitter(Qt.Horizontal)
-		#self.vsplitter = QSplitter(Qt.Vertical)
-		self.confview = common.ConfView()
 
 		common.HSPLITTER = self.hsplitter
-		common.CONFVIEW = self.confview
 
 		self.layout = QVBoxLayout()
 		self.layout.addWidget(self.hsplitter)
@@ -100,7 +102,7 @@ class CentralWidget(QWidget):
 		self.hsplitter.setStretchFactor(1, 1)
 
 		common.PAINT_CONTAINER = self.container_paint
-		self.container_paint.setFixedSize(*getPaintSize())
+		self.container_paint.setFixedSize(600,400)
 
 		#self.vlayout = QVBoxLayout()
 		#self.vlayout.addWidget(self.type_list_widget)
@@ -141,6 +143,7 @@ class CentralWidget(QWidget):
 				self.container_paint.replace(self.scheme_types[no].paintwidget)
 			
 			self.currentno = no
+			common.SCHEMETYPE = self.scheme_types[no]
 			common.PAINT_CONTAINER.resize(*getPaintSize())
 			
 	def type_scheme_selected(self, arg):

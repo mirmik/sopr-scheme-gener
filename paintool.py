@@ -4,9 +4,13 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 import math
+import common
 
 def deg(arg):
 	return math.pi * arg / 180
+
+def rotate(angle, pnt):
+	return QPoint(pnt.x() * math.cos(angle) - pnt.y() * math.sin(angle), pnt.y() * math.cos(angle) + pnt.x() * math.sin(angle))
 
 #def leftArrow(self, painter, basepoint):
 #	arrow_size = self.shemetype.datasettings.arrow_size
@@ -193,6 +197,80 @@ def zadelka(painter, xl, xr, yu, yd, left_border, right_border):
 
 	if right_border:
 		painter.drawLine(QPoint(xr, yu), QPoint(xr, yd))
+
+
+def zadelka_sharnir(painter, pnt, angle, w, h, s):
+	oldbrush = painter.brush()
+	oldpen = painter.pen()
+	brush = QBrush(Qt.BDiagPattern)
+	pen = QPen(Qt.NoPen)
+	painter.setBrush(brush)
+	painter.setPen(pen)
+
+	points = [
+		pnt + QPoint(w * math.sin(angle), w * math.cos(angle)),
+		pnt + QPoint(-w * math.sin(angle), -w * math.cos(angle)),
+		pnt + QPoint(-w * math.sin(angle) + h * math.cos(angle), -w * math.cos(angle) + h * math.sin(angle)),
+		pnt + QPoint(w * math.sin(angle) + h * math.cos(angle), w * math.cos(angle) + h * math.sin(angle)),
+	]
+
+	qpoints = [QPointF(pnt.x(), pnt.y()) for pnt in points]
+	polygon = QPolygonF(qpoints)
+	painter.drawConvexPolygon(polygon)
+
+	pen = QPen()
+	pen.setWidth(common.getLineWidth())
+	brush = QBrush(Qt.SolidPattern)
+	brush.setColor(Qt.white)
+	painter.setPen(pen)
+	painter.setBrush(brush)
+	painter.drawLine(qpoints[0], qpoints[1])
+
+	painter.drawEllipse(radrect(pnt, s))
+	
+	painter.setBrush(oldbrush)
+	painter.setPen(oldpen)
+
+
+def zadelka_sharnir_type2(painter, pnt, angle, w, h, s):
+	oldbrush = painter.brush()
+	oldpen = painter.pen()
+	brush = QBrush(Qt.BDiagPattern)
+	pen = QPen(Qt.NoPen)
+	painter.setBrush(brush)
+	painter.setPen(pen)
+
+	h2 = 30
+	up = pnt + rotate(angle, QPoint(-h2, h2))
+	dp = pnt + rotate(angle, QPoint(-h2, -h2))
+
+	points = [
+		pnt + rotate(angle, QPoint(-h2, w)),
+		pnt + rotate(angle, QPoint(-h2, -w)),
+		pnt + rotate(angle, QPoint(-h2-h, -w)),
+		pnt + rotate(angle, QPoint(-h2-h, w))
+	]
+
+	qpoints = [QPointF(pnt.x(), pnt.y()) for pnt in points]
+	polygon = QPolygonF(qpoints)
+	painter.drawConvexPolygon(polygon)
+
+	pen = QPen()
+	pen.setWidth(common.getLineWidth())
+	brush = QBrush(Qt.SolidPattern)
+	brush.setColor(Qt.white)
+	painter.setPen(pen)
+	painter.setBrush(brush)
+	painter.drawLine(qpoints[0], qpoints[1])
+	painter.drawLine(pnt, up)
+	painter.drawLine(pnt, dp)
+
+	painter.drawEllipse(radrect(pnt, s))
+	
+	painter.setBrush(oldbrush)
+	painter.setPen(oldpen)
+
+
 
 def point_ellipse(painter, el):
 	x = el.x()

@@ -74,10 +74,10 @@ class PaintWidget(QWidget):
 		super().__init__()
 
 	def resizeEvent(self, ev):
-		self.shemetype.datasettings.width = self.width()
-		self.shemetype.datasettings.height = self.height()
+		self.shemetype.width_getter.set(self.width())
+		self.shemetype.height_getter.set(self.height())
 
-		self.shemetype.updateDataSettingsVM()
+		self.shemetype.updateSizeFields()
 
 	def make_image(self):
 		img = QImage(self.size(), QImage.Format_ARGB32)
@@ -93,3 +93,8 @@ class PaintWidget(QWidget):
 	def save_image(self, path):
 		self.make_image().save(path)
 		
+	def paintEvent(self, ev):
+		try:
+			self.paintEventImplementation(ev)
+		except:
+			raise

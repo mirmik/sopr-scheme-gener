@@ -24,6 +24,8 @@ class Element(QWidget):
 			self.obj.setChecked(defval)
 			self.obj.stateChanged.connect(self.updated)
 
+		self.label.setFixedWidth(200)
+
 		self.layout = QHBoxLayout()
 		self.layout.addWidget(self.label)
 		self.layout.addWidget(self.obj)
@@ -48,6 +50,22 @@ class Element(QWidget):
 					return int(self.obj.checkState())
 
 				print("strange type")
+
+			def set(self, val):
+				if (self.type == "text"):
+					self.obj.setText(val)
+					return 
+
+				if (self.type == "int"):
+					self.obj.setText(str(val))
+					return 
+
+				if (self.type == "bool"):
+					self.obj.setCheckState(val)
+					return 
+
+				print("strange type")
+
 
 		return getcls(self.obj, self.type)
 
