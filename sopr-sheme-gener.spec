@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['sopr-sheme-gener.py'],
-             pathex=['C:\\Users\\mirmik\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\site-packages\\PyQt5\\Qt\\bin', 'C:\\sopr-scheme-gener'],
+             pathex=['C:\\sopr-scheme-gener'],
              binaries=[],
              datas=[],
              hiddenimports=[],
