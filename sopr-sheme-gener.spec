@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['sopr-sheme-gener.py'],
+a = Analysis(['sopr-sheme-gener.py', '__main__.spec'],
              pathex=['C:\\sopr-scheme-gener'],
              binaries=[],
              datas=[],
