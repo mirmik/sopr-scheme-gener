@@ -5,8 +5,8 @@ import os
 block_cipher = None
 
 
-a = Analysis(['./sopr_scheme_gener.py'],
-             pathex=['./sopr_scheme_gener'],
+a = Analysis(['./sopr-sheme-gener.py'],
+             pathex=['./sopr-sheme-gener'],
              binaries=[],
              hiddenimports=[],
              hookspath=[],
