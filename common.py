@@ -3,9 +3,11 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+APP = None
 CONFVIEW = None
 SCHEMETYPE = None
 HSPLITTER = None
+PAINT_CONTAINER = None
 
 class ELabel(QWidget):
 	def __init__(self, ltext, ftext, lwidth, fwidth):
@@ -26,32 +28,27 @@ class ELabel(QWidget):
 class StyleWidget(QWidget):
 	def __init__(self):
 		super().__init__()
-		self.setStyleSheet("border: 1px solid black");
-		self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
 class DataSettings:
 	def __init__(self):
-		self.arrow_size = 20
-		self.arrow_head_size = 5
 		self.width = 400
 		self.height = 200
 
 datasettings = DataSettings()
 
 class SchemeType:
-	def __init__(self, name, confwidget, paintwidget, tablewidget):
+	def __init__(self, name):
 		self.name = name
+		self.datasettings = datasettings
+	
+	def setwidgets(self,confwidget, paintwidget, tablewidget):
 		self.paintwidget = paintwidget
 		self.confwidget = confwidget
 		self.tablewidget = tablewidget
-
 		self.confwidget.shemetype = self
 		self.paintwidget.shemetype = self
 		self.tablewidget.shemetype = self
-
-		self.datasettings = datasettings
-
-		self.task = self.confwidget.inittask()
+		self.confwidget.inittask()
 
 	def updateDataSettingsVM(self):
 		CONFVIEW.width_edit.setText(str(self.datasettings.width))
@@ -77,6 +74,11 @@ class ConfWidget_Stub(StyleWidget):
 
 	def inittask(self):
 		return {}
+
+
+class ConfWidget(StyleWidget):
+	def redraw(self):
+		self.shemetype.paintwidget.repaint()
 
 class TableWidget(QWidget):
 	def __init__(self):
@@ -109,7 +111,8 @@ class ConfView(QWidget):
 		self.layout.addWidget(self.width_edit,0,1)
 		self.layout.addWidget(self.height_edit,1,1)
 
-		#self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+		self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+
 		self.setLayout(self.layout)
 
 	def size(self):
@@ -123,5 +126,5 @@ class ConfView(QWidget):
 
 		oldsz = HSPLITTER.sizes()
 		oldszsumm = oldsz[0] + oldsz[1]
-		HSPLITTER.setSizes([sz[0], oldszsumm - sz[0]])
-		SCHEMETYPE.paintwidget.resize(sz[0], sz[1])
+		#HSPLITTER.setSizes([sz[0], oldszsumm - sz[0]])
+		PAINT_CONTAINER.resize(sz[0], sz[1])
