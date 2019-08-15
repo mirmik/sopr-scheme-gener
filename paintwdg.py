@@ -98,3 +98,9 @@ class PaintWidget(QWidget):
 			self.paintEventImplementation(ev)
 		except:
 			raise
+
+	def sections(self):
+		return self.shemetype.task["sections"]
+
+	def bsections(self):
+		return self.shemetype.task["betsect"]

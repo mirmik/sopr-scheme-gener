@@ -7,6 +7,18 @@ from PyQt5.QtWidgets import *
 class TableWidget(QTableWidget):
 	updated = pyqtSignal()
 
+	class cellsig(QObject):
+		signal = pyqtSignal(int, int)
+
+		def __init__(self, row, column):
+			super().__init__()
+			self.row = row
+			self.column = column
+
+		def emit_signal(self):
+			self.signal.emit(self.row, self.column)
+
+
 	class column:
 		def __init__(self, name, type, note):
 			self.name = name
@@ -44,9 +56,22 @@ class TableWidget(QTableWidget):
 					it = QTableWidgetItem(str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name)))
 					self.setItem(j,i,it)
 
-				if self.columns[i].type == "float":
+				elif self.columns[i].type == "float":
 					it = QTableWidgetItem(str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name)))
 					self.setItem(j,i,it)
+
+				elif self.columns[i].type == "bool":
+					sig = self.cellsig(j,i)
+					sig.signal.connect(self.changed)
+
+					obj = QCheckBox()
+					obj.sig = sig
+					obj.setChecked(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name))
+					obj.stateChanged.connect(sig.emit_signal)
+					self.setCellWidget(j,i,obj)
+
+				else:
+					raise Exception("unregistred type")
 
 		self.resizeColumnsToContents()
 		self.setFixedSize(
@@ -64,8 +89,14 @@ class TableWidget(QTableWidget):
 		if self.columns[column].type == "int":
 			val = int(self.item(row,column).text())
 
-		if self.columns[column].type == "float":
+		elif self.columns[column].type == "float":
 			val = float(self.item(row,column).text())
+
+		elif self.columns[column].type == "bool":
+			val = bool(self.cellWidget(row,column).checkState())
+		
+		else:
+			raise Exception("unregistred type")
 
 		setattr(self.shemetype.task[self.modelname][row], field, val)
 		self.updated.emit()

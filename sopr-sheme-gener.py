@@ -12,6 +12,7 @@ import argparse
 import task0
 import task1
 import task2
+import task3
 import common
 import container
 import paintwdg
@@ -50,6 +51,7 @@ class CentralWidget(QWidget):
 			task0.ShemeTypeT0(),
 			task1.ShemeTypeT1(),
 			task2.ShemeTypeT2(),
+			task3.ShemeTypeT3(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]
