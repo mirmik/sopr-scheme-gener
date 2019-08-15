@@ -20,9 +20,9 @@ class ShemeTypeT3(common.SchemeType):
 
 class ConfWidget_T3(common.ConfWidget):
 	class sect:
-		def __init__(self, shtrih = False, intgran=True, **kwarg):
-			self.d = kwarg["d"]
-			self.h = kwarg["h"]
+		def __init__(self, d = 1, h = 1, shtrih = False, intgran=True):
+			self.d = d
+			self.h = h
 			self.shtrih = shtrih
 			self.intgran = intgran
 
@@ -68,6 +68,9 @@ class ConfWidget_T3(common.ConfWidget):
 		#self.shemetype.base_d = self.sett.add("Базовая длина:", "int", "40")
 		self.shemetype.base_h = self.sett.add("Базовая толщина:", "int", "20")
 		self.shemetype.zadelka = self.sett.add("Заделка:", "bool", True)
+		self.shemetype.axis = self.sett.add("Центральная ось:", "bool", True)
+		self.shemetype.zadelka_len = self.sett.add("Длина заделки:", "float", "30")
+		self.shemetype.dimlines_step = self.sett.add("Шаг размерных линий:", "float", "40")
 		#self.shemetype.base_height = self.sett.add("Базовая высота стержня:", "int", "10")
 		self.sett.updated.connect(self.redraw)
 
@@ -134,6 +137,9 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 
 		base_h = self.shemetype.base_h.get()
 		zadelka = self.shemetype.zadelka.get()
+		axis = self.shemetype.axis.get()
+		zadelka_len = self.shemetype.zadelka_len.get()
+		dimlines_step = self.shemetype.dimlines_step.get()
 
 		painter = QPainter(self)
 		font = painter.font()
@@ -152,14 +158,15 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		left_span = 50
 		right_span = 50
 		up_span = 100
-		down_span = 100
+		down_span = 100 + len(self.sections()) * dimlines_step + 20
 
 		if zadelka:
-			left_span += base_h
-			right_span += base_h
+			left_span += base_h + zadelka_len
+			right_span += base_h + zadelka_len
 
 		width_span = left_span + right_span
 		height_span = up_span + down_span
+		center = center + QPoint(left_span - right_span, (up_span - down_span) / 2)
 
 		maxd = 0
 		maxh = 0
@@ -193,7 +200,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 				brush.setColor(Qt.white)
 				painter.setBrush(brush)
 
-				painter.drawRect(QRect(center.x() - w /2, center.y() - h/2, w, h))
+				painter.drawRect(QRect(center.x() - w /2, center.y() - (maxh * base_h)/2, w, maxh * base_h))
 
 				pen.setColor(Qt.black)
 				painter.setPen(pen)
@@ -225,7 +232,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		if zadelka:
 			fsect = self.sections()[-1]
 			h = fsect.h * base_h
-			w = fsect.h * 1.5 * base_h
+			w = zadelka_len
 			c = base_h
 
 			lx = center.x() - fsect.d * base_d / 2
@@ -273,3 +280,30 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			painter.drawLine(QPoint(rrx, uy), QPoint(rrx, dy))
 			painter.drawLine(QPoint(rx, dy), QPoint(rrx, dy))
 
+			painter.setPen(default_pen)
+			painter.setBrush(default_brush)
+
+		if axis:
+			pen = QPen(Qt.DashDotLine)
+			pen.setWidth(lwidth)
+			painter.setPen(pen)
+
+			painter.drawLine(QPoint(center.x(), center.y() + (maxh) * base_h/2 + 10), QPoint(center.x(), center.y() - (maxh) * base_h /2 - 10))
+
+
+		i = 0
+		for s in self.sections():
+			i += 1
+
+			painter.setPen(default_pen)
+			painter.setBrush(default_brush)
+
+			pen = QPen()
+			pen.setWidth(lwidth/2)
+			painter.setPen(pen)
+
+			p0 = QPoint(center.x() - s.d/2 * base_d, center.y() + s.h/2 * base_h)
+			p1 = QPoint(center.x() + s.d/2 * base_d, center.y() + s.h/2 * base_h)
+			level = center.y() + maxh/2 * base_h + 20 + dimlines_step * i 
+
+			paintool.dimlines(painter, p0, p1, level)

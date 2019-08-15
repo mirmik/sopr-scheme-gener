@@ -374,3 +374,14 @@ def greek(text):
 #	χ        Chi          \u03C7
 #	ψ        Psi          \u03C8
 #	ω        Omega        \u03C9
+
+def dimlines(painter, p0, p1, level):
+	pp0 = QPoint(p0.x(), level)
+	pp1 = QPoint(p1.x(), level)
+	pc = QPoint((p1.x() + p0.x())/2, level)
+	length = p1.x() - p0.x()
+	painter.drawLine(p0, pp0)
+	painter.drawLine(p1, pp1)
+
+	left_arrow(painter, pc, length/2, 10)
+	right_arrow(painter, pc, length/2, 10)

@@ -19,6 +19,10 @@ class Element(QWidget):
 			self.obj = QLineEdit(defval)
 			self.obj.textChanged.connect(self.updated)
 
+		if type == "float":
+			self.obj = QLineEdit(defval)
+			self.obj.textChanged.connect(self.updated)
+
 		if type == "bool":
 			self.obj = QCheckBox()
 			self.obj.setChecked(defval)
@@ -46,6 +50,9 @@ class Element(QWidget):
 				if (self.type == "int"):
 					return int(self.obj.text())
 
+				if (self.type == "float"):
+					return float(self.obj.text())
+
 				if (self.type == "bool"):
 					return int(self.obj.checkState())
 
@@ -57,6 +64,10 @@ class Element(QWidget):
 					return 
 
 				if (self.type == "int"):
+					self.obj.setText(str(val))
+					return 
+
+				if (self.type == "float"):
 					self.obj.setText(str(val))
 					return 
 
