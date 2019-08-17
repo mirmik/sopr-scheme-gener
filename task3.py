@@ -20,14 +20,19 @@ class ShemeTypeT3(common.SchemeType):
 
 class ConfWidget_T3(common.ConfWidget):
 	class sect:
-		def __init__(self, d = 1, h = 1, shtrih = False, intgran=True):
+		def __init__(self, d = 1, h = 1, shtrih = False, intgran=True, 
+				dtext="", htext="", dtext_en=True, htext_en=True):
 			self.d = d
 			self.h = h
 			self.shtrih = shtrih
 			self.intgran = intgran
+			self.dtext = dtext
+			self.htext = htext
+			self.dtext_en = dtext_en
+			self.htext_en = htext_en
 
 	class betsect:
-		def __init__(self, **kwarg):
+		def __init__(self):
 			pass
 
 	"""Виджет настроек задачи T0"""
@@ -70,6 +75,7 @@ class ConfWidget_T3(common.ConfWidget):
 		self.shemetype.zadelka = self.sett.add("Заделка:", "bool", True)
 		self.shemetype.axis = self.sett.add("Центральная ось:", "bool", True)
 		self.shemetype.zadelka_len = self.sett.add("Длина заделки:", "float", "30")
+		self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "float", "20")
 		self.shemetype.dimlines_step = self.sett.add("Шаг размерных линий:", "float", "40")
 		#self.shemetype.base_height = self.sett.add("Базовая высота стержня:", "int", "10")
 		self.sett.updated.connect(self.redraw)
@@ -78,10 +84,14 @@ class ConfWidget_T3(common.ConfWidget):
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table.addColumn("d", "float", "Длина секции")
-		self.table.addColumn("h", "float", "Высота секции")
-		self.table.addColumn("shtrih", "bool", "Штриховать")
-		self.table.addColumn("intgran", "bool", "Внутренняя граница")
+		self.table.addColumn("d", "float", "Длина")
+		self.table.addColumn("dtext", "str", "Текст")
+		self.table.addColumn("dtext_en", "bool", "Текст")
+		self.table.addColumn("h", "float", "Высота")
+		self.table.addColumn("htext", "str", "Текст")
+		self.table.addColumn("htext_en", "bool", "Текст")
+		self.table.addColumn("shtrih", "bool", "Штрих")
+		self.table.addColumn("intgran", "bool", "Вн гран")
 		self.table.updateTable()
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
@@ -140,6 +150,8 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		axis = self.shemetype.axis.get()
 		zadelka_len = self.shemetype.zadelka_len.get()
 		dimlines_step = self.shemetype.dimlines_step.get()
+		dimlines_start_step = self.shemetype.dimlines_start_step.get()
+		arrow_size = self.shemetype.arrow_size_getter.get()
 
 		painter = QPainter(self)
 		font = painter.font()
@@ -155,10 +167,15 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		default_brush.setColor(Qt.white)
 		painter.setBrush(default_brush)
 
+		font = painter.font()
+		font.setItalic(True)
+		font.setPointSize(font_size)
+		painter.setFont(font)
+
 		left_span = 50
 		right_span = 50
 		up_span = 100
-		down_span = 100 + len(self.sections()) * dimlines_step + 20
+		down_span = 100 + len(self.sections()) * dimlines_step + dimlines_start_step
 
 		if zadelka:
 			left_span += base_h + zadelka_len
@@ -292,7 +309,14 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 
 
 		i = 0
+		wprev = 0
 		for s in self.sections():
+			"""Текстовые поля"""
+
+			w = s.d * base_d
+			h = s.h * base_h
+			c = center
+
 			i += 1
 
 			painter.setPen(default_pen)
@@ -302,8 +326,30 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			pen.setWidth(lwidth/2)
 			painter.setPen(pen)
 
-			p0 = QPoint(center.x() - s.d/2 * base_d, center.y() + s.h/2 * base_h)
-			p1 = QPoint(center.x() + s.d/2 * base_d, center.y() + s.h/2 * base_h)
-			level = center.y() + maxh/2 * base_h + 20 + dimlines_step * i 
+			if s.dtext_en:		
+				p0 = QPoint(center.x() - s.d/2 * base_d, center.y() + s.h/2 * base_h)
+				p1 = QPoint(center.x() + s.d/2 * base_d, center.y() + s.h/2 * base_h)
+				level = center.y() + maxh/2 * base_h + dimlines_start_step + dimlines_step * i 
 
-			paintool.dimlines(painter, p0, p1, level)
+				if s.dtext == "":
+					dtxt = paintool.greek("\\diam{}d".format(s.d if s.d != 1 else "")) 
+				else:
+					dtxt = paintool.greek(s.dtext) 
+
+				paintool.dimlines(painter, p0, p1, level)
+				paintool.draw_text_centered(painter, QPoint((p0.x() + p1.x())/2, level - 5), dtxt, font)
+
+			if s.htext_en:
+
+				if s.htext == "":
+					htxt = paintool.greek("{}h".format(s.h if s.h != 1 else "")) 
+				else:
+					htxt = paintool.greek(s.htext) 
+
+				paintool.draw_vertical_splashed_dimlines_with_text(
+					painter, 
+					c + QPoint(wprev/2+(w-wprev)/4, -h/2), 
+					c + QPoint(wprev/2+(w-wprev)/4, h/2), 
+					arrow_size, c, htxt, font)
+
+			wprev = w

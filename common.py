@@ -54,6 +54,7 @@ class SchemeType:
 
 		self.width_getter = CONFVIEW.width_getter
 		self.height_getter = CONFVIEW.height_getter
+		self.arrow_size_getter = CONFVIEW.arrow_size_getter
 
 		self.confwidget.inittask()
 
@@ -116,6 +117,7 @@ class ConfView(QWidget):
 		self.height_getter = self.sett.add("Высота в px:", "int", "200")
 		self.font_size_getter = self.sett.add("Размер шрифта:", "int", "12")
 		self.lwidth_getter = self.sett.add("Толщина линий:", "int", "2")
+		self.arrow_size_getter = self.sett.add("Размер стрелок:", "int", "10")
 		self.sett.updated.connect(self.updated)
 
 		#self.width_edit.editingFinished.connect(self.set_size)

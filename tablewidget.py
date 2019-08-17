@@ -60,6 +60,10 @@ class TableWidget(QTableWidget):
 					it = QTableWidgetItem(str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name)))
 					self.setItem(j,i,it)
 
+				elif self.columns[i].type == "str":
+					it = QTableWidgetItem(str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name)))
+					self.setItem(j,i,it)
+
 				elif self.columns[i].type == "bool":
 					sig = self.cellsig(j,i)
 					sig.signal.connect(self.changed)
@@ -74,9 +78,9 @@ class TableWidget(QTableWidget):
 					raise Exception("unregistred type")
 
 		self.resizeColumnsToContents()
-		self.setFixedSize(
-				self.horizontalHeader().length() + self.verticalHeader().width() + 15, 
-				self.verticalHeader().length() + self.horizontalHeader().height() + 5)
+		#self.setFixedSize(
+		#		self.horizontalHeader().length() + self.verticalHeader().width() + 15, 
+		#		self.verticalHeader().length() + self.horizontalHeader().height() + 5)
 		self.protect = False
 
 	def changed(self, row, column):
@@ -91,6 +95,9 @@ class TableWidget(QTableWidget):
 
 		elif self.columns[column].type == "float":
 			val = float(self.item(row,column).text())
+
+		elif self.columns[column].type == "str":
+			val = self.item(row,column).text()
 
 		elif self.columns[column].type == "bool":
 			val = bool(self.cellWidget(row,column).checkState())

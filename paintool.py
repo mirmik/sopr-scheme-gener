@@ -169,17 +169,20 @@ def radrect(pnt, rad):
 	return QRect(pnt.x() - rad, pnt.y() - rad, rad*2+1, rad*2+1)
 
 def placedtext(painter, pnt, y, size, text = "NoText", right=False):
-		size2 = size
-		if size2 < 18:
-			size2 = 18
-		
-		if right:
-			painter.drawLine(pnt, pnt + QPoint(-size2/2, -y))
-		else:
-			painter.drawLine(pnt, pnt + QPoint(size2/2, -y))
-				
-		painter.drawLine(pnt + QPoint(size2/2, -y), pnt + QPoint(-size2/2, -y))
-		painter.drawText(pnt + QPoint(-size/2, -y-3), text)
+	"""
+		Текст с выносной линией.
+	"""
+	size2 = size
+	if size2 < 18:
+		size2 = 18
+	
+	if right:
+		painter.drawLine(pnt, pnt + QPoint(-size2/2, -y))
+	else:
+		painter.drawLine(pnt, pnt + QPoint(size2/2, -y))
+			
+	painter.drawLine(pnt + QPoint(size2/2, -y), pnt + QPoint(-size2/2, -y))
+	painter.drawText(pnt + QPoint(-size/2, -y-3), text)
 
 def zadelka(painter, xl, xr, yu, yd, left_border, right_border):
 	oldbrush = painter.brush()
@@ -342,6 +345,7 @@ def greek(text):
 		("\\chi", "χ"),
 		("\\psi", "ψ"),
 		("\\omega", "ω"),
+		("\\diam", "⌀"),
 	]
 
 	for d in data:
@@ -385,3 +389,21 @@ def dimlines(painter, p0, p1, level):
 
 	left_arrow(painter, pc, length/2, 10)
 	right_arrow(painter, pc, length/2, 10)
+
+def draw_text_centered(painter, pnt, text, font):
+	width = QFontMetrics(font).width(text)
+	painter.setFont(font)
+	
+	painter.drawText(pnt + QPoint(-width/2,0), text)
+
+def draw_vertical_splashed_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, text, font):
+	"""подписать толщину"""
+
+	painter.setFont(font)
+	down_arrow_head(painter, upnt.x(), upnt.y() - arrow_size, arrow_size)
+	up_arrow_head(painter, upnt.x(), dpnt.y() + arrow_size, arrow_size)
+	painter.drawLine(upnt+QPoint(0,-arrow_size*1.5), dpnt+QPoint(0,+arrow_size*1.5))
+
+	htext = QFontMetrics(font).height()
+	xwtext = QFontMetrics(font).width('x')
+	painter.drawText(dpnt+QPoint(xwtext/2,htext), text)
