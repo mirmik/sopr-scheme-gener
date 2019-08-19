@@ -384,9 +384,11 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			AW = QFontMetrics(font).width(text_A)
 
 			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2 - AW/2, strt_height - 5), text_A)
-			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2 - lW/2, fini_height + 15), text_l)
+			#painter.drawText( QPoint((wsect(i)+wsect(i+1))/2 - lW/2, fini_height + 15), text_l)
 
 			paintool.dimlines(painter, QPoint(wsect(i), fini_height), QPoint(wsect(i+1), fini_height), dimlines_level)
+			paintool.draw_text_centered(painter, QPoint((wsect(i)+wsect(i+1))/2, dimlines_level-5), text_l, self.font)
+
 			painter.setBrush(self.default_brush)
 			painter.setPen(self.default_pen)
 		
@@ -445,35 +447,3 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
 			pen = QPen()
 			painter.setPen(pen)
-
-	#def leftArrow(self, painter, basepoint):
-	#	arrow_size = self.shemetype.datasettings.arrow_size
-	#	arrow_head_size = self.shemetype.datasettings.arrow_head_size		
-#
-	#	painter.drawLine(basepoint, QPoint(basepoint.x() - arrow_size, basepoint.y()))
-#
-	#	points = [
-	#		(basepoint.x() - arrow_size - 2 * arrow_head_size, basepoint.y()), 
-	#		(basepoint.x() - arrow_size, basepoint.y() - arrow_head_size), 
-	#		(basepoint.x() - arrow_size, basepoint.y() + arrow_head_size)
-	#	]
-	#	qpoints = [QPointF(x, y) for (x, y) in points]
-	#	polygon = QPolygonF(qpoints)
-#
-	#	painter.drawConvexPolygon(polygon)
-#
-	#def rightArrow(self, painter, basepoint):
-	#	arrow_size = self.shemetype.datasettings.arrow_size
-	#	arrow_head_size = self.shemetype.datasettings.arrow_head_size
-#
-	#	painter.drawLine(basepoint, QPoint(basepoint.x() + arrow_size, basepoint.y()))
-#
-	#	points = [
-	#		(basepoint.x() + arrow_size + 2 * arrow_head_size, basepoint.y()), 
-	#		(basepoint.x() + arrow_size, basepoint.y() - arrow_head_size), 
-	#		(basepoint.x() + arrow_size, basepoint.y() + arrow_head_size)
-	#	]
-	#	qpoints = [QPointF(x, y) for (x, y) in points]
-	#	polygon = QPolygonF(qpoints)
-#
-	#	painter.drawConvexPolygon(polygon)
