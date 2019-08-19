@@ -62,8 +62,7 @@ class TableCheckBox(QCheckBox):
 class ConfWidget_T0(common.ConfWidget):
 	"""Виджет настроек задачи T0"""
 	def __init__(self, sheme):
-		super().__init__()
-		self.shemetype = sheme
+		super().__init__(sheme)
 
 		self.add_button = QPushButton("Добавить секцию")
 		self.del_button = QPushButton("Убрать секцию")
@@ -104,8 +103,9 @@ class ConfWidget_T0(common.ConfWidget):
 		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
 		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "40")
 		self.shemetype.arrow_line_size = self.sett.add("Размер линии стрелки:", "int", "20")
+		self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "int", "40")
 		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "10")
-		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		#self.shemetype.font_size = common.CONFVIEW.font_size_getter
 		self.shemetype.left_zone = self.sett.add("Отступ слева:", "int", "20")
 		self.shemetype.right_zone = self.sett.add("Отступ справа:", "int", "20")
 		
@@ -124,17 +124,17 @@ class ConfWidget_T0(common.ConfWidget):
 		self.setLayout(self.vlayout)
 
 	def add_action(self):
-		self.shemetype.task["sections"].append(self.sect())
+		self.sections().append(self.sect())
 		self.shemetype.task["betsect"].append(self.betsect())
 		self.redraw()
 		self.updateTable1()
 		self.updateTable2()
 
 	def del_action(self):
-		if len(self.shemetype.task["sections"]) == 1:
+		if len(self.sections()) == 1:
 			return
 
-		del self.shemetype.task["sections"][-1]
+		del self.sections()[-1]
 		del self.shemetype.task["betsect"][-1]
 		self.redraw()
 		self.updateTable1()
@@ -150,11 +150,11 @@ class ConfWidget_T0(common.ConfWidget):
 		if column == 4: field = 'delta'
 
 		if field == "A" or field == "l":
-			self.shemetype.task["sections"][row][field] = float(self.table.item(row,column).text())
+			self.sections()[row].field = float(self.table.item(row,column).text())
 		elif field == "Atext" or field == "ltext":
-			self.shemetype.task["sections"][row][field] = self.table.item(row,column).text()
+			self.sections()[row].field = self.table.item(row,column).text()
 		else:
-			self.shemetype.task["sections"][row][field] = self.table.item(row,column).checkedState()
+			self.sections()[row].field = self.table.item(row,column).checkedState()
 
 		self.redraw()
 
@@ -175,24 +175,24 @@ class ConfWidget_T0(common.ConfWidget):
 
 	def updateTable1(self):
 		self.table.setColumnCount(5)
-		self.table.setRowCount(len(self.shemetype.task["sections"]))
+		self.table.setRowCount(len(self.sections()))
 		self.table.setHorizontalHeaderItem(0, QTableWidgetItem("A")) 
 		self.table.setHorizontalHeaderItem(1, QTableWidgetItem("l")) 
 		self.table.setHorizontalHeaderItem(2, QTableWidgetItem("A текст")) 
 		self.table.setHorizontalHeaderItem(3, QTableWidgetItem("l текст")) 
 		self.table.setHorizontalHeaderItem(4, QTableWidgetItem("Разрыв")) 
 
-		for i in range(len(self.shemetype.task["sections"])):
-			it = QTableWidgetItem(str(self.shemetype.task["sections"][i]["A"]))
+		for i in range(len(self.sections())):
+			it = QTableWidgetItem(str(self.sections()[i].A))
 			self.table.setItem(i,0,it)
 
-			it = QTableWidgetItem(str(self.shemetype.task["sections"][i]["l"]))
+			it = QTableWidgetItem(str(self.sections()[i].l))
 			self.table.setItem(i,1,it)
 
-			it = QTableWidgetItem(str(self.shemetype.task["sections"][i]["Atext"]))
+			it = QTableWidgetItem(str(self.sections()[i].Atext))
 			self.table.setItem(i,2,it)
 
-			it = QTableWidgetItem(str(self.shemetype.task["sections"][i]["ltext"]))
+			it = QTableWidgetItem(str(self.sections()[i].ltext))
 			self.table.setItem(i,3,it)
 
 			it = TableCheckBox(i, self, "delta")
@@ -216,7 +216,7 @@ class ConfWidget_T0(common.ConfWidget):
 		self.table2.setHorizontalHeaderItem(3, QTableWidgetItem("T"))
 
 		for i in range(len(self.shemetype.task["betsect"])):
-			#it = QTableWidgetItem(str(self.shemetype.task["betsect"][i]["F"]))
+			#it = QTableWidgetItem(str(self.shemetype.task["betsect"][i].F))
 
 			it = TorqueComboBox(i, self, "F")
 			self.table2.setCellWidget(i,0,it)
@@ -237,11 +237,21 @@ class ConfWidget_T0(common.ConfWidget):
 
 		self.table2.repaint()
 
-	def betsect(self, F=0, M=0, Mkr=0, T=""):
-		return {"F":F, "M":M, "Mкр":Mkr, "T":T}
 
-	def sect(self, A=1, l=1, Atext="", ltext="", delta=False):
-		return {"A":A, "l":l, "Atext":Atext, "ltext":ltext, "delta":delta}
+	class sect:
+		def __init__(self, A=1, l=1, Atext="", ltext="", delta=False):
+			self.A=A
+			self.l=l
+			self.Atext=Atext
+			self.ltext = ltext
+			self.delta=delta
+
+	class betsect:
+		def __init__(self, F=0, M=0, Mkr=0, T=""):
+			self.F = F 
+			self.M = M
+			self.Mkr = Mkr 
+			self.T = T
 
 	def inittask(self):
 		self.shemetype.task = {
@@ -291,12 +301,6 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		strt_width = self.shemetype.left_zone.get()
 		fini_width = width-self.shemetype.right_zone.get()
 
-		#if task["betsect"][0]["F"] == 2 or task["betsect"][0]["M"] != 0:
-		#	strt_width += arrow_size + 2*arrow_head_size
-#
-		#if task["betsect"][-1]["F"] == 1 or task["betsect"][-1]["M"] != 0:
-		#	fini_width -= arrow_size + 2*arrow_head_size
-
 		painter = QPainter(self)
 		font = painter.font()
 		font.setItalic(True)
@@ -307,16 +311,21 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		br.setWidth(lwidth)
 		painter.setPen(br)
 
-		#size = common.CONFVIEW.size()
 
-		#painter.drawRect(0,0,width-1,height-1);
+		maxl = 0
+		maxA = 0
+		for s in self.sections():
+			if s.l > maxl: maxl = s.l
+			if s.A > maxA: maxA = s.A
+
+		dimlines_level = height/2 + base_section_height*math.sqrt(maxA)/2 + self.shemetype.dimlines_start_step.get()
 
 		# Длины и дистанции
 		summary_length = 0
 		ll = [0]
 		for i in range(len(task["sections"])):
-			summary_length += task["sections"][i]["l"]
-			ll.append(ll[i] + task["sections"][i]["l"])
+			summary_length += task["sections"][i].l
+			ll.append(ll[i] + task["sections"][i].l)
 		def wsect(i):
 			l = len(task["sections"])
 			k0 = summary_length - ll[i]
@@ -324,48 +333,48 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			return (fini_width * k1 + strt_width * k0) // summary_length
 
 		def sectrad(i):
-			return math.sqrt(task["sections"][i]["A"]) * height_zone / 2
+			return math.sqrt(task["sections"][i].A) * height_zone / 2
 
 		def msectrad(i):
-			leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1]["A"])
-			rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i]["A"])
+			leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
+			rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
 			return max(leftA, rightA) * height_zone / 2
 
 
 		# Отрисовка секций
 		for i in range(len(task["sections"])):
-			hkoeff = math.sqrt(task["sections"][i]["A"])
+			hkoeff = math.sqrt(task["sections"][i].A)
 
 			strt_height = height/2 - height_zone*hkoeff/2
 			fini_height = height/2 + height_zone*hkoeff/2
 
-			A = task["sections"][i]["A"]
-			l = task["sections"][i]["l"]
+			A = task["sections"][i].A
+			l = task["sections"][i].l
 
-			if not task["sections"][i]["delta"]:
+			if not task["sections"][i].delta:
 				if abs(float(A) - int(A)) < 0.0001:
-					text_A = "{}A".format(int(task["sections"][i]["A"]+0.1)) if task["sections"][i]["A"] != 1 else "A"
+					text_A = "{}A".format(int(task["sections"][i].A+0.1)) if task["sections"][i].A != 1 else "A"
 				else:
 					text_A = str(float(A)) + "A"
 	
 				if abs(float(l) - int(l)) < 0.0001:
-					text_l = "{}l".format(int(task["sections"][i]["l"]+0.1)) if task["sections"][i]["l"] != 1 else "l"
+					text_l = "{}l".format(int(task["sections"][i].l+0.1)) if task["sections"][i].l != 1 else "l"
 				else:
 					text_l = str(float(l)) + "l"
 			else: 
 				text_l = ""
 				text_A = ""
 
-			if task["sections"][i]["ltext"] != "":
-				text_l = task["sections"][i]["ltext"] 
+			if task["sections"][i].ltext != "":
+				text_l = task["sections"][i].ltext 
 
-			if task["sections"][i]["Atext"] != "":
-				text_A = task["sections"][i]["Atext"]
+			if task["sections"][i].Atext != "":
+				text_A = task["sections"][i].Atext
 			
 			text_l = paintool.greek(text_l)
 			text_A = paintool.greek(text_A)
 
-			if not task["sections"][i]["delta"]:
+			if not task["sections"][i].delta:
 				painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height)
 
 			lW = QFontMetrics(font).width(text_l)
@@ -374,51 +383,55 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2 - AW/2, strt_height - 5), text_A)
 			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2 - lW/2, fini_height + 15), text_l)
 
+			paintool.dimlines(painter, QPoint(wsect(i), fini_height), QPoint(wsect(i+1), fini_height), dimlines_level)
+			painter.setBrush(self.default_brush)
+			painter.setPen(self.default_pen)
+		
 		#Отрисовка граничных эффектов
 		for i in range(len(task["betsect"])):
-			if task["betsect"][i]["F"] == 1:
+			if task["betsect"][i].F == 1:
 				paintool.right_arrow(painter, QPoint(wsect(i), height/2), arrow_size, arrow_head_size)
 
-			if task["betsect"][i]["F"] == 2:
+			if task["betsect"][i].F == 2:
 				paintool.left_arrow(painter, QPoint(wsect(i), height/2), arrow_size, arrow_head_size)
 
-			if task["betsect"][i]["M"] == 1:
+			if task["betsect"][i].M == 1:
 				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), height/2), 20), False)
 
-			if task["betsect"][i]["M"] == 2:
+			if task["betsect"][i].M == 2:
 				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), height/2), 20), True)
 
-			if task["betsect"][i]["Mкр"] == 1:
+			if task["betsect"][i].Mkr == 1:
 				paintool.kr_arrow(painter, QPoint(wsect(i), height/2), msectrad(i)+10, 11, False)
 
-			if task["betsect"][i]["Mкр"] == 2:
+			if task["betsect"][i].Mkr == 2:
 				paintool.kr_arrow(painter, QPoint(wsect(i), height/2), msectrad(i)+10, 11, True)
 
-			if task["betsect"][i]["T"] != "":
-				leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1]["A"])
-				rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i]["A"])
+			if task["betsect"][i].T != "":
+				leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
+				rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
 				
-				size = QFontMetrics(font).width(task["betsect"][i]["T"])
-				text = task["betsect"][i]["T"]
+				size = QFontMetrics(font).width(task["betsect"][i].T)
+				text = task["betsect"][i].T
 
 
-				if not task["betsect"][i]["Mкр"]:
+				if not task["betsect"][i].Mkr:
 					paintool.placedtext(painter,
 						QPoint(wsect(i), height/2), 
 						max(leftA, rightA) * height_zone / 2 + 10, 
 						size, 
 						text,
-						right = task["betsect"][i]["M"] == 2)
+						right = task["betsect"][i].M == 2)
 
 				else:
 					painter.drawText(QPoint(wsect(i) - size/2, height/2 - msectrad(i) - 10 - 11*2 - 5), text)
 
 		if zleft:
-			y = math.sqrt(task["sections"][0]["A"]) * height_zone
+			y = math.sqrt(task["sections"][0].A) * height_zone
 			paintool.zadelka(painter, wsect(0) - 10, wsect(0), height/2-y, height/2+y, left_border=False, right_border=True)
 
 		if zright:
-			y = math.sqrt(task["sections"][-1]["A"]) * height_zone
+			y = math.sqrt(task["sections"][-1].A) * height_zone
 			paintool.zadelka(painter, wsect(-1), wsect(-1) + 10, height/2-y, height/2+y, left_border=True, right_border=False)
 
 

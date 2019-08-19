@@ -137,10 +137,18 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 	def paintEventImplementation(self, ev):
 		assert len(self.sections()) + 1 == len(self.bsections())
 
+		painter = QPainter(self)
+		painter.setPen(self.default_pen)
+		painter.setBrush(self.default_brush)
+
 		width = self.width()
 		height = self.height()
 
 		center = QPoint(width/2, height/2)
+
+		default_brush = self.default_brush
+		default_pen = self.default_pen
+		font = self.font
 
 		font_size = self.shemetype.font_size.get()
 		lwidth = self.shemetype.line_width.get()
@@ -152,20 +160,6 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		dimlines_step = self.shemetype.dimlines_step.get()
 		dimlines_start_step = self.shemetype.dimlines_start_step.get()
 		arrow_size = self.shemetype.arrow_size_getter.get()
-
-		painter = QPainter(self)
-		font = painter.font()
-		font.setItalic(True)
-		font.setPointSize(font_size)
-		painter.setFont(font)
-
-		default_pen = QPen()
-		default_pen.setWidth(lwidth)
-		painter.setPen(default_pen)
-
-		default_brush = QBrush(Qt.SolidPattern)
-		default_brush.setColor(Qt.white)
-		painter.setBrush(default_brush)
 
 		font = painter.font()
 		font.setItalic(True)

@@ -93,8 +93,36 @@ class PaintWidget(QWidget):
 	def save_image(self, path):
 		self.make_image().save(path)
 		
+	def paintEventCommon(self):
+		font_size = self.shemetype.font_size.get()
+		lwidth = self.shemetype.line_width.get()
+
+		painter = QPainter(self)
+		self.font = painter.font()
+		self.font.setItalic(True)
+		self.font.setPointSize(font_size)
+		painter.setFont(self.font)
+
+		self.default_pen = QPen()
+		self.default_pen.setWidth(lwidth)
+		painter.setPen(self.default_pen)
+
+		self.default_brush = QBrush(Qt.SolidPattern)
+		self.default_brush.setColor(Qt.white)
+		painter.setBrush(self.default_brush)
+
+		pen = QPen(Qt.NoPen)
+		painter.setPen(pen)
+
+		brush = QBrush(Qt.SolidPattern)
+		brush.setColor(Qt.white)
+		painter.setBrush(brush)
+
+		painter.drawRect(QRect(0,0,self.width(),self.height()))
+		
 	def paintEvent(self, ev):
 		try:
+			self.paintEventCommon()			
 			self.paintEventImplementation(ev)
 		except:
 			raise

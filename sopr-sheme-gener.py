@@ -81,15 +81,22 @@ class CentralWidget(QWidget):
 
 		self.container_paint = container.ContainerWidget(border=True, fixedSize=True, filter=True)
 		self.container_settings = container.ContainerWidget(border=False, fixedSize=False, filter=False)
-		
+
 		self.settings_layout = QVBoxLayout()
 		self.settings_layout.addWidget(self.type_list_widget)
 		self.settings_layout.addWidget(self.confview)
 		self.settings_layout.addWidget(self.container_settings)
 		self.settings_layout.addStretch()
+
+		self.settings_layout_wdg_scr = QScrollArea()
 		self.settings_layout_wdg = QWidget()
 		self.settings_layout_wdg.setLayout(self.settings_layout)
 		self.settings_layout_wdg.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+		self.settings_layout_wdg_scr.setWidget(self.settings_layout_wdg)
+		self.settings_layout_wdg_scr.setHorizontalScrollBarPolicy( Qt.ScrollBarAlwaysOff )
+		self.settings_layout_wdg_scr.setVerticalScrollBarPolicy( Qt.ScrollBarAsNeeded)
+		self.settings_layout_wdg_scr.setWidgetResizable( True )
+		self.settings_layout_wdg = self.settings_layout_wdg_scr
 
 		self.work_layout = QVBoxLayout()
 		self.work_layout.addWidget(paintwdg.PaintWidgetSetter(self.container_paint))
@@ -252,6 +259,7 @@ common.APP = qapp
 
 mainwindow = MainWindow(int(pargs.type))
 mainwindow.resize(800, 640)
+mainwindow.showMaximized()
 mainwindow.show()
 
 qapp.exec()

@@ -7,6 +7,11 @@ import common
 
 class ContainerWidget(QWidget):
 	def __init__(self, border, fixedSize, filter):
+		"""
+			filter - фильтровать входящие события
+			fixedSize - установить фиксированный размер для виджета.
+		"""
+
 		super().__init__()
 		self.border = border
 		self.fixedSize = fixedSize
@@ -23,10 +28,10 @@ class ContainerWidget(QWidget):
 		self.layout.setContentsMargins(0,0,0,0)
 		self.setLayout(self.layout)
 
-		self.setAutoFillBackground(True);
-		pal = self.palette();
+		self.setAutoFillBackground(True)
+		pal = self.palette()
 		#pal.setColor(QPalette.Background, Qt.gray);
-		self.setPalette(pal);	
+		self.setPalette(pal)	
 
 		self.resize(self.curwidget.width(), self.curwidget.height())
 
@@ -36,6 +41,7 @@ class ContainerWidget(QWidget):
 
 		self.curwidget = wdg
 		self.layout.addWidget(wdg)
+		self.resize(wdg.width(), wdg.height())		
 		self.curwidget.show()
 
 		if self.filter:

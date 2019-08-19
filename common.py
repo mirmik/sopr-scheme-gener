@@ -11,21 +11,21 @@ SCHEMETYPE = None
 HSPLITTER = None
 PAINT_CONTAINER = None
 
-class ELabel(QWidget):
-	def __init__(self, ltext, ftext, lwidth, fwidth):
-		super().__init__()
-
-		self.layout = QHBoxLayout()
-		self.label = QLabel(ltext)
-		self.edit = QLineEdit(ftext)
-
-		self.label.setFixedWidth(lwidth)
-		self.edit.setFixedWidth(fwidth)
-
-		self.layout.addWidget(self.label)
-		self.layout.addWidget(self.edit)
-
-		self.setLayout(self.layout)
+#class ELabel(QWidget):
+#	def __init__(self, ltext, ftext, lwidth, fwidth):
+#		super().__init__()
+#
+#		self.layout = QHBoxLayout()
+#		self.label = QLabel(ltext)
+#		self.edit = QLineEdit(ftext)
+#
+#		self.label.setFixedWidth(lwidth)
+#		self.edit.setFixedWidth(fwidth)
+#
+#		self.layout.addWidget(self.label)
+#		self.layout.addWidget(self.edit)
+#
+#		self.setLayout(self.layout)
 
 class StyleWidget(QWidget):
 	def __init__(self):
@@ -91,6 +91,19 @@ class ConfWidget_Stub(StyleWidget):
 		return {}
 
 class ConfWidget(StyleWidget):
+	def __init__(self, sheme=None):
+		super().__init__()
+		if sheme:
+			self.shemetype = sheme
+			self.shemetype.font_size = CONFVIEW.font_size_getter
+			self.shemetype.line_width = CONFVIEW.lwidth_getter
+
+	def sections(self):
+		return self.shemetype.task["sections"]
+
+	def bsections(self):
+		return self.shemetype.task["betsect"]
+
 	def redraw(self):
 		self.shemetype.paintwidget.repaint()
 
