@@ -296,6 +296,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		width = size.width()
 		height = size.height()
 
+		hcenter = height/2
+
 		height_zone = base_section_height
 
 		strt_width = self.shemetype.left_zone.get()
@@ -318,7 +320,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			if s.l > maxl: maxl = s.l
 			if s.A > maxA: maxA = s.A
 
-		dimlines_level = height/2 + base_section_height*math.sqrt(maxA)/2 + self.shemetype.dimlines_start_step.get()
+		dimlines_level = hcenter + base_section_height*math.sqrt(maxA)/2 + self.shemetype.dimlines_start_step.get()
+		hcenter -= self.shemetype.dimlines_start_step.get() / 2 
 
 		# Длины и дистанции
 		summary_length = 0
@@ -345,8 +348,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		for i in range(len(task["sections"])):
 			hkoeff = math.sqrt(task["sections"][i].A)
 
-			strt_height = height/2 - height_zone*hkoeff/2
-			fini_height = height/2 + height_zone*hkoeff/2
+			strt_height = hcenter - height_zone*hkoeff/2
+			fini_height = hcenter + height_zone*hkoeff/2
 
 			A = task["sections"][i].A
 			l = task["sections"][i].l
@@ -390,22 +393,22 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		#Отрисовка граничных эффектов
 		for i in range(len(task["betsect"])):
 			if task["betsect"][i].F == 1:
-				paintool.right_arrow(painter, QPoint(wsect(i), height/2), arrow_size, arrow_head_size)
+				paintool.right_arrow(painter, QPoint(wsect(i), hcenter), arrow_size, arrow_head_size)
 
 			if task["betsect"][i].F == 2:
-				paintool.left_arrow(painter, QPoint(wsect(i), height/2), arrow_size, arrow_head_size)
+				paintool.left_arrow(painter, QPoint(wsect(i), hcenter), arrow_size, arrow_head_size)
 
 			if task["betsect"][i].M == 1:
-				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), height/2), 20), False)
+				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), hcenter), 20), False)
 
 			if task["betsect"][i].M == 2:
-				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), height/2), 20), True)
+				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), hcenter), 20), True)
 
 			if task["betsect"][i].Mkr == 1:
-				paintool.kr_arrow(painter, QPoint(wsect(i), height/2), msectrad(i)+10, 11, False)
+				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad(i)+10, 11, False)
 
 			if task["betsect"][i].Mkr == 2:
-				paintool.kr_arrow(painter, QPoint(wsect(i), height/2), msectrad(i)+10, 11, True)
+				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad(i)+10, 11, True)
 
 			if task["betsect"][i].T != "":
 				leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
@@ -417,29 +420,29 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 				if not task["betsect"][i].Mkr:
 					paintool.placedtext(painter,
-						QPoint(wsect(i), height/2), 
+						QPoint(wsect(i), hcenter), 
 						max(leftA, rightA) * height_zone / 2 + 10, 
 						size, 
 						text,
 						right = task["betsect"][i].M == 2)
 
 				else:
-					painter.drawText(QPoint(wsect(i) - size/2, height/2 - msectrad(i) - 10 - 11*2 - 5), text)
+					painter.drawText(QPoint(wsect(i) - size/2, hcenter - msectrad(i) - 10 - 11*2 - 5), text)
 
 		if zleft:
 			y = math.sqrt(task["sections"][0].A) * height_zone
-			paintool.zadelka(painter, wsect(0) - 10, wsect(0), height/2-y, height/2+y, left_border=False, right_border=True)
+			paintool.zadelka(painter, wsect(0) - 10, wsect(0), hcenter-y, hcenter+y, left_border=False, right_border=True)
 
 		if zright:
 			y = math.sqrt(task["sections"][-1].A) * height_zone
-			paintool.zadelka(painter, wsect(-1), wsect(-1) + 10, height/2-y, height/2+y, left_border=True, right_border=False)
+			paintool.zadelka(painter, wsect(-1), wsect(-1) + 10, hcenter-y, hcenter+y, left_border=True, right_border=False)
 
 
 		if axis:
 			pen = QPen(Qt.CustomDashLine)
 			pen.setDashPattern([10,3,1,3])
 			painter.setPen(pen)
-			painter.drawLine(QPoint(5, height/2), QPoint(width - 5, height/2))
+			painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
 			pen = QPen()
 			painter.setPen(pen)
 

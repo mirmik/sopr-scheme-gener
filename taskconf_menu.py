@@ -48,7 +48,10 @@ class Element(QWidget):
 					return self.obj.text()
 
 				if (self.type == "int"):
-					return int(self.obj.text())
+					try:
+						return int(self.obj.text())
+					except:
+						return 1
 
 				if (self.type == "float"):
 					return float(self.obj.text())

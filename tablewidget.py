@@ -78,9 +78,9 @@ class TableWidget(QTableWidget):
 					raise Exception("unregistred type")
 
 		self.resizeColumnsToContents()
-		#self.setFixedSize(
-		#		self.horizontalHeader().length() + self.verticalHeader().width() + 15, 
-		#		self.verticalHeader().length() + self.horizontalHeader().height() + 5)
+		self.setFixedHeight(
+				#self.horizontalHeader().length() + self.verticalHeader().width() + 15, 
+				self.verticalHeader().length() + self.horizontalHeader().height() + 5)
 		self.protect = False
 
 	def changed(self, row, column):
