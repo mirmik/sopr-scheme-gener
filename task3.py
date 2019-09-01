@@ -31,9 +31,15 @@ class ConfWidget_T3(common.ConfWidget):
 			self.dtext_en = dtext_en
 			self.htext_en = htext_en
 
+	class sectforce:
+		def __init__(self, distrib=False):
+			self.distrib = distrib
+
+
 	class betsect:
-		def __init__(self):
-			pass
+		def __init__(self, fen=True, men="clean"):
+			self.fen = fen
+			self.men = men
 
 	"""Виджет настроек задачи T0"""
 	def __init__(self, sheme):
@@ -48,12 +54,18 @@ class ConfWidget_T3(common.ConfWidget):
 				self.sect(d=4.5, h=1, shtrih=True)
 			],
 
+			"sectforce": 
+			[
+				self.sectforce(distrib=False),
+				self.sectforce(distrib=False),
+				self.sectforce(distrib=True),
+			],
+
 			"betsect": 
 			[
 				self.betsect(),
-				self.betsect(),
-				self.betsect(),
-				self.betsect()
+				self.betsect(men="+"),
+				self.betsect(fen=True)
 			],
 		}
 
@@ -94,16 +106,34 @@ class ConfWidget_T3(common.ConfWidget):
 		self.table.addColumn("intgran", "bool", "Вн гран")
 		self.table.updateTable()
 
+		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
+		self.table1.addColumn("distrib", "bool", "Распр. нагрузка")
+		self.table1.updateTable()
+
+
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
+		self.table2.addColumn("fen", "bool", "Сила")
+		self.table2.addColumn("men", "list", "Момент", variant=["clean", "+", "-"])
+		self.table2.updateTable()
+
 		#self.table2.addColumn("l", "float", "Длина опоры")
 		#self.table2.updateTable()
 		
 		self.vlayout.addLayout(self.butlayout)
+
+		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
+		
+		self.vlayout.addWidget(QLabel("Распределённые силы:"))
+		self.vlayout.addWidget(self.table1)
+		
+		self.vlayout.addWidget(QLabel("Локальные силы:"))
 		self.vlayout.addWidget(self.table2)
+		
 		self.vlayout.addWidget(self.sett)
 
 		self.table.updated.connect(self.redraw)
+		self.table1.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
 
 		self.setLayout(self.vlayout)
@@ -111,6 +141,7 @@ class ConfWidget_T3(common.ConfWidget):
 	def add_action(self):
 		self.shemetype.task["sections"].append(self.sect())
 		self.shemetype.task["betsect"].append(self.betsect())
+		self.shemetype.task["sectforce"].append(self.sectforce())
 		self.redraw()
 		self.updateTables()
 
@@ -118,6 +149,7 @@ class ConfWidget_T3(common.ConfWidget):
 		if len(self.shemetype.task["sections"]) == 1: return
 		del self.shemetype.task["sections"][-1]
 		del self.shemetype.task["betsect"][-1]
+		del self.shemetype.task["sectforce"][-1]
 		self.redraw()
 		self.updateTables()
 
@@ -135,20 +167,12 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		super().__init__()
 
 	def paintEventImplementation(self, ev):
-		assert len(self.sections()) + 1 == len(self.bsections())
-
-		painter = QPainter(self)
-		painter.setPen(self.default_pen)
-		painter.setBrush(self.default_brush)
+		assert len(self.sections()) == len(self.bsections())
 
 		width = self.width()
 		height = self.height()
 
 		center = QPoint(width/2, height/2)
-
-		default_brush = self.default_brush
-		default_pen = self.default_pen
-		font = self.font
 
 		font_size = self.shemetype.font_size.get()
 		lwidth = self.shemetype.line_width.get()
@@ -160,6 +184,20 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		dimlines_step = self.shemetype.dimlines_step.get()
 		dimlines_start_step = self.shemetype.dimlines_start_step.get()
 		arrow_size = self.shemetype.arrow_size_getter.get()
+
+		painter = QPainter(self)
+		font = painter.font()
+		font.setItalic(True)
+		font.setPointSize(font_size)
+		painter.setFont(font)
+
+		default_pen = QPen()
+		default_pen.setWidth(lwidth)
+		painter.setPen(default_pen)
+
+		default_brush = QBrush(Qt.SolidPattern)
+		default_brush.setColor(Qt.white)
+		painter.setBrush(default_brush)
 
 		font = painter.font()
 		font.setItalic(True)
@@ -347,3 +385,68 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 					arrow_size, c, htxt, font)
 
 			wprev = w
+
+
+		wprev = 0
+		for i in range(len(self.sectforce())):
+			""" Отрисовываем распределенную нагрузку."""
+
+			s = self.sections()[i]
+			sf = self.sectforce()[i]
+
+			distrib_step = 10
+			distrib_alen = 20
+
+			w = s.d * base_d
+			h = s.h * base_h
+			c = center
+
+			if sf.distrib:
+				apnt = center + QPoint(w/2, -h/2-lwidth)
+				bpnt = center + QPoint(wprev/2, -h/2-lwidth)
+				paintool.draw_distribload(painter, apnt, bpnt, distrib_step, arrow_size/3*2, distrib_alen)
+
+				apnt = center + QPoint(-wprev/2, -h/2-lwidth)
+				bpnt = center + QPoint(-w/2, -h/2-lwidth)
+				paintool.draw_distribload(painter, apnt, bpnt, distrib_step, arrow_size/3*2, distrib_alen)
+
+			wprev = w
+
+
+		for i in range(len(self.bsections())):
+			b = self.bsections()[i]
+			s = self.sections()[i]
+
+			w = s.d * base_d
+			h = s.h * base_h
+			c = center
+
+			alen = 30
+			moment_radius = 40
+
+			if b.fen:
+				apnt = center + QPoint(w/2, -h/2-lwidth)
+				paintool.common_arrow(painter, apnt + QPoint(0,-alen), apnt, arrow_size)	
+
+				apnt = center + QPoint(-w/2, -h/2-lwidth)
+				paintool.common_arrow(painter, apnt + QPoint(0,-alen), apnt, arrow_size)				
+
+			if b.men == "+":
+				direction = True
+				apnt = center + QPoint(-w/2, 0)
+				paintool.half_moment_arrow(painter, apnt, moment_radius, 
+					arrow_size=arrow_size, left=True, inverse=direction)
+
+				apnt = center + QPoint(w/2, 0)
+				paintool.half_moment_arrow(painter, apnt, moment_radius, 
+					arrow_size=arrow_size, left=False, inverse=direction)
+
+			elif b.men == "-":
+				direction = False
+				apnt = center + QPoint(-w/2, 0)
+				paintool.half_moment_arrow(painter, apnt, moment_radius, 
+					arrow_size=arrow_size, left=True, inverse=direction)
+
+				apnt = center + QPoint(w/2, 0)
+				paintool.half_moment_arrow(painter, apnt, moment_radius, 
+					arrow_size=arrow_size, left=False, inverse=direction)

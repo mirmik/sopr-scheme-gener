@@ -20,10 +20,11 @@ class TableWidget(QTableWidget):
 
 
 	class column:
-		def __init__(self, name, type, note):
+		def __init__(self, name, type, note, variant):
 			self.name = name
 			self.type = type
 			self.note = note
+			self.variant = variant
 
 	def __init__(self, sheme, modelname):
 		super().__init__()
@@ -39,9 +40,9 @@ class TableWidget(QTableWidget):
 		self.cellChanged.connect(self.changed)	
 		self.protect = False
 
-	def addColumn(self, name, type, note =None):
+	def addColumn(self, name, type, note=None, variant=None):
 		if note is None: note = name
-		self.columns.append(self.column(name, type, note))
+		self.columns.append(self.column(name, type, note, variant))
 
 	def updateTable(self):
 		self.protect = True
@@ -63,6 +64,22 @@ class TableWidget(QTableWidget):
 				elif self.columns[i].type == "str":
 					it = QTableWidgetItem(str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name)))
 					self.setItem(j,i,it)
+
+				elif self.columns[i].type == "list":
+					sig = self.cellsig(j,i)
+					sig.signal.connect(self.changed)
+					variant = self.columns[i].variant
+
+					obj = QComboBox()
+					obj.addItems(variant)
+					obj.sig = sig
+					obj.currentIndexChanged.connect(sig.emit_signal)
+
+					cur = str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name))
+					no = variant.index(cur)
+					obj.setCurrentIndex(no)
+
+					self.setCellWidget(j,i,obj)
 
 				elif self.columns[i].type == "bool":
 					sig = self.cellsig(j,i)
@@ -101,6 +118,9 @@ class TableWidget(QTableWidget):
 
 		elif self.columns[column].type == "bool":
 			val = bool(self.cellWidget(row,column).checkState())
+
+		elif self.columns[column].type == "list":
+			val = str(self.cellWidget(row,column).currentText())
 		
 		else:
 			raise Exception("unregistred type")

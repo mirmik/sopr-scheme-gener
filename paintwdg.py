@@ -132,3 +132,6 @@ class PaintWidget(QWidget):
 
 	def bsections(self):
 		return self.shemetype.task["betsect"]
+
+	def sectforce(self):
+		return self.shemetype.task["sectforce"]

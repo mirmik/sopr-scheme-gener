@@ -9,6 +9,9 @@ import common
 def deg(arg):
 	return math.pi * arg / 180
 
+def deg2rad(arg):
+	return arg * 180 / math.pi
+
 def rotate(angle, pnt):
 	return QPoint(pnt.x() * math.cos(angle) - pnt.y() * math.sin(angle), pnt.y() * math.cos(angle) + pnt.x() * math.sin(angle))
 
@@ -125,6 +128,13 @@ def right_arrow(painter, pnt, length, headsize):
 def angled_arrow_head_top(painter, pnt, angle, headsize):
 	paint_arrow(painter, angled_arrow_points_top(pnt.x(), pnt.y(), angle, headsize))
 
+def common_arrow(painter, spnt, fpnt, arrow_size):
+	diff = fpnt - spnt
+	angle = math.atan2(-diff.y(), diff.x())
+
+	angled_arrow_head_top(painter, fpnt, angle, arrow_size)
+	painter.drawLine(spnt, fpnt)
+
 def circular_arrow_base(painter, rect, inverse = False, head_size=12):
 	assert rect.width() == rect.height()
 	
@@ -164,6 +174,120 @@ def circular_arrow_base(painter, rect, inverse = False, head_size=12):
 			rect.center()+QPoint(rrr*math.cos(-rangle-deg(arc_angle)),-rrr*math.sin(-rangle-deg(arc_angle))), -rangle-deg(130), head_size)
 		angled_arrow_head_top(painter, 
 			rect.center()+QPoint(-rrr*math.cos(-rangle-deg(arc_angle))+1,-rrr*math.sin(+rangle+deg(arc_angle))), -rangle-deg(130+180), head_size)
+
+
+def moment_arrows(painter, pnt, rad, inverse = False, arrow_size=12):
+	angle = -30
+	arc_angle = 60
+	rangle = angle / 180 * math.pi
+
+	x = pnt.x() - rad
+	y = pnt.y() - rad
+	x2 = pnt.x() + rad
+	y2 = pnt.y() + rad
+
+	if not inverse:
+		painter.drawLine(
+			(pnt+QPoint(rad*math.cos(rangle),-rad*math.sin(rangle))), 
+			(pnt+QPoint(-rad*math.cos(rangle),+rad*math.sin(rangle))))
+
+		painter.drawArc(QRect(x, y, x2-x, y2-y), angle*16, arc_angle*16)
+		painter.drawArc(QRect(x, y, x2-x, y2-y), angle*16 + 180*16, arc_angle*16)
+
+		angled_arrow_head_top(painter, 
+			pnt+QPoint(
+				rad*math.cos(rangle+deg(arc_angle)),
+				-rad*math.sin(rangle+deg(arc_angle))
+			), rangle+deg(130), arrow_size)
+		
+		angled_arrow_head_top(painter, 
+			pnt+QPoint(
+				-rad*math.cos(rangle+deg(arc_angle)),
+				-rad*math.sin(-rangle-deg(arc_angle))
+			), rangle+deg(130+180), arrow_size)
+	
+
+	else:
+		painter.drawLine(
+			(pnt+QPoint(rad*math.cos(rangle),+rad*math.sin(rangle))), 
+			(pnt+QPoint(-rad*math.cos(rangle),-rad*math.sin(rangle))))
+
+		
+		painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -arc_angle*16)
+		painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16 - 180*16, -arc_angle*16)
+		
+		angled_arrow_head_top(painter, 
+			pnt+QPoint(
+				rad*math.cos(rangle+deg(arc_angle)),
+				-rad*math.sin(rangle+deg(arc_angle))
+			), rangle+deg(130), arrow_size)
+		
+		angled_arrow_head_top(painter, 
+			pnt+QPoint(
+				-rad*math.cos(rangle+deg(arc_angle)),
+				-rad*math.sin(-rangle-deg(arc_angle))
+			), rangle+deg(130+180), arrow_size)
+
+def circular_arrow(painter, pnt, rad, angle, angle2, arrow_size):
+	x = pnt.x() - rad
+	y = pnt.y() - rad
+	x2 = pnt.x() + rad
+	y2 = pnt.y() + rad
+
+	rangle2= angle2
+	angle = deg2rad(angle)
+	angle2 = deg2rad(angle2)
+
+	painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -(angle2 - angle)*16)
+
+	angled_arrow_head_top(painter, 
+		pnt+QPoint(
+			rad*math.cos(rangle2),
+			rad*math.sin(rangle2)
+		), rangle2 + deg(180), arrow_size)
+
+
+def half_moment_arrow(painter, pnt, rad, left=True, inverse = False, arrow_size=12):
+	angle = -30
+	arc_angle = 60
+	rangle = angle / 180 * math.pi
+
+	x = pnt.x() - rad
+	y = pnt.y() - rad
+	x2 = pnt.x() + rad
+	y2 = pnt.y() + rad
+
+	c30 = math.cos(deg(45))
+	s30 = math.sin(deg(45))
+
+	lu = pnt + QPoint(-c30*rad, -s30*rad)
+	ld = pnt + QPoint(-c30*rad, s30*rad)
+	ru = pnt + QPoint(c30*rad, -s30*rad)
+	rd = pnt + QPoint(c30*rad, s30*rad)
+
+	if     left and     inverse: 
+		apnt = ld; bpnt = lu
+		angle = deg(-45 + 180); angle2 = deg(45 + 180)
+	
+	if     left and not inverse: 
+		apnt = lu; bpnt = ld
+		angle = deg(45 + 180); angle2 = deg(-45 + 180)
+	
+	if not left and     inverse: 
+		apnt = rd; bpnt = ru
+		angle = deg(45); angle2 = deg(-45)
+
+	if not left and not inverse: 
+		apnt = ru; bpnt = rd
+		angle = deg(-45); angle2 = deg(45)
+
+	painter.drawLine(pnt, apnt)
+
+	circular_arrow(painter, pnt, rad, angle, angle2, arrow_size)
+
+	#painter.drawLine(apnt, bpnt)
+	#angled_arrow_head_top(painter, bpnt, angle, arrow_size)
+
 
 def radrect(pnt, rad):
 	return QRect(pnt.x() - rad, pnt.y() - rad, rad*2+1, rad*2+1)
@@ -407,3 +531,20 @@ def draw_vertical_splashed_dimlines_with_text(painter, upnt, dpnt, arrow_size, t
 	htext = QFontMetrics(font).height()
 	xwtext = QFontMetrics(font).width('x')
 	painter.drawText(dpnt+QPoint(xwtext/2,htext), text)
+
+def draw_distribload(painter, apnt, bpnt, step, arrow_size, alen):
+	dist = math.sqrt((apnt.x()-bpnt.x())**2 + (apnt.y()-bpnt.y())**2)
+	count = int(dist / step)
+	count = count - count % 2 + 1
+
+	diff = bpnt - apnt
+	norm = QPoint(-diff.y(), diff.x()) / math.sqrt(diff.y()**2 + diff.x()**2)
+	norm = norm * alen
+
+	painter.drawLine(apnt+norm, bpnt+norm)
+
+	for i in range(count):
+		koeff = i / (count - 1)
+		spnt = koeff * bpnt + (1-koeff) * apnt
+		fpnt = spnt + norm
+		common_arrow(painter, fpnt, spnt, arrow_size)
