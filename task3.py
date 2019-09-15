@@ -159,6 +159,7 @@ class ConfWidget_T3(common.ConfWidget):
 
 	def updateTables(self):
 		self.table.updateTable()
+		self.table1.updateTable()
 		self.table2.updateTable()
 
 class PaintWidget_T3(paintwdg.PaintWidget):

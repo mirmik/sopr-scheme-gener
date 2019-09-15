@@ -405,9 +405,14 @@ def point_ellipse(painter, el):
 	w = el.width()
 	h = el.height()
 	s = w/4
+	brush = QBrush(Qt.white)
+	painter.setBrush(brush)
+	painter.drawEllipse(el)
+
 	brush = QBrush(Qt.NoBrush)
 	painter.setBrush(brush)
 	painter.drawEllipse(el)
+
 	brush = QBrush(Qt.SolidPattern)
 	painter.setBrush(brush)
 	painter.drawEllipse(QRect(x+w/2-s/2, y+h/2-s/2, s, s))
@@ -418,6 +423,10 @@ def crest_ellipse(painter, el):
 	w = el.width()
 	h = el.height()
 	c = w/2 / math.sqrt(2)
+	brush = QBrush(Qt.white)
+	painter.setBrush(brush)
+	painter.drawEllipse(el)
+
 	brush = QBrush(Qt.NoBrush)
 	painter.setBrush(brush)
 	painter.drawEllipse(el)
