@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+import math
 import taskconf_menu
 
 APP = None
@@ -11,33 +12,12 @@ SCHEMETYPE = None
 HSPLITTER = None
 PAINT_CONTAINER = None
 
-#class ELabel(QWidget):
-#	def __init__(self, ltext, ftext, lwidth, fwidth):
-#		super().__init__()
-#
-#		self.layout = QHBoxLayout()
-#		self.label = QLabel(ltext)
-#		self.edit = QLineEdit(ftext)
-#
-#		self.label.setFixedWidth(lwidth)
-#		self.edit.setFixedWidth(fwidth)
-#
-#		self.layout.addWidget(self.label)
-#		self.layout.addWidget(self.edit)
-#
-#		self.setLayout(self.layout)
+def angle(strt, fini):
+	return math.atan2(fini.y()-strt.y(), fini.x()-strt.x())
 
 class StyleWidget(QWidget):
 	def __init__(self):
 		super().__init__()
-
-#class DataSettings:
-#	def __init__(self):
-#		self.width = 400
-#		self.height = 200
-#		self.font_size = 12
-
-#datasettings = DataSettings()
 
 class SchemeType:
 	def __init__(self, name):
@@ -60,8 +40,6 @@ class SchemeType:
 
 	def updateSizeFields(self):
 		pass
-	#	CONFVIEW.width_getter.set(str(self.width))
-	#	CONFVIEW.height_getter.set(str(self.height))
 
 	def redraw(self):
 		self.confwidget.redraw()
@@ -91,12 +69,37 @@ class ConfWidget_Stub(StyleWidget):
 		return {}
 
 class ConfWidget(StyleWidget):
+	def create_task_structure(self):
+		raise NotImplementedError()
+
+	def init_sections_buttons(self):
+		self.add_button = QPushButton("Добавить секцию")
+		self.del_button = QPushButton("Убрать секцию")
+
+		self.butlayout = QHBoxLayout()
+
+		self.butlayout.addWidget(self.add_button)
+		self.butlayout.addWidget(self.del_button)
+
+		self.add_button.clicked.connect(self.add_action)
+		self.del_button.clicked.connect(self.del_action)
+
+		self.vlayout.addLayout(self.butlayout)
+
 	def __init__(self, sheme=None):
 		super().__init__()
+
+		self.shemetype = sheme
+
 		if sheme:
+			self.vlayout = QVBoxLayout()
+
 			self.shemetype = sheme
 			self.shemetype.font_size = CONFVIEW.font_size_getter
 			self.shemetype.line_width = CONFVIEW.lwidth_getter
+
+			self.create_task_structure()
+			self.init_sections_buttons()
 
 	def sections(self):
 		return self.shemetype.task["sections"]
@@ -116,17 +119,10 @@ class TableWidget(QWidget):
 
 class ConfView(QWidget):
 	"""Общие настройки"""
-
-	def __init__(self):
+	def __init__(self, sheme=None):
 		super().__init__()
 		self.layout = QGridLayout()
 		self.layout = QVBoxLayout()
-
-		#self.width_edit = QLineEdit("800")
-		#self.height_edit = QLineEdit("600")
-
-		#self.width_label = QLabel("Ширина в px:")
-		#self.height_label = QLabel("Высота в px:")
 
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.width_getter = self.sett.add("Ширина в px:", "int", "400")
@@ -136,24 +132,9 @@ class ConfView(QWidget):
 		self.arrow_size_getter = self.sett.add("Размер стрелок:", "int", "10")
 		self.sett.updated.connect(self.updated)
 
-		#self.width_edit.editingFinished.connect(self.set_size)
-		#self.height_edit.editingFinished.connect(self.set_size)
-
-		#self.width_edit.setFixedWidth(100)
-		#self.height_edit.setFixedWidth(100)
-
-		#self.width_label.setFixedWidth(100)
-		#self.height_label.setFixedWidth(100)
-
-		#self.layout.addWidget(self.width_label,0,0)
-		#self.layout.addWidget(self.height_label,1,0)
-		#self.layout.addWidget(self.width_edit,0,1)
-		#self.layout.addWidget(self.height_edit,1,1)
-
 		self.layout.addWidget(self.sett)
 
 		self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-
 		self.setLayout(self.layout)
 
 	def updated(self):

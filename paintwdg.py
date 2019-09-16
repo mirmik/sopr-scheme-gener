@@ -107,6 +107,9 @@ class PaintWidget(QWidget):
 		self.default_pen.setWidth(lwidth)
 		painter.setPen(self.default_pen)
 
+		self.halfpen = QPen()
+		self.halfpen.setWidth(lwidth/2)
+
 		self.default_brush = QBrush(Qt.SolidPattern)
 		self.default_brush.setColor(Qt.white)
 		painter.setBrush(self.default_brush)

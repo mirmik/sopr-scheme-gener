@@ -541,13 +541,16 @@ def draw_vertical_splashed_dimlines_with_text(painter, upnt, dpnt, arrow_size, t
 	xwtext = QFontMetrics(font).width('x')
 	painter.drawText(dpnt+QPoint(xwtext/2,htext), text)
 
-def draw_distribload(painter, apnt, bpnt, step, arrow_size, alen):
+def draw_distribload(painter, apnt, bpnt, step, arrow_size, alen, pen=None):
+	if pen:
+		painter.setPen(pen)
+
 	dist = math.sqrt((apnt.x()-bpnt.x())**2 + (apnt.y()-bpnt.y())**2)
 	count = int(dist / step)
 	count = count - count % 2 + 1
 
 	diff = bpnt - apnt
-	norm = QPoint(-diff.y(), diff.x()) / math.sqrt(diff.y()**2 + diff.x()**2)
+	norm = QPointF(-diff.y(), diff.x()) / math.sqrt(diff.y()**2 + diff.x()**2)
 	norm = norm * alen
 
 	painter.drawLine(apnt+norm, bpnt+norm)
@@ -557,3 +560,65 @@ def draw_distribload(painter, apnt, bpnt, step, arrow_size, alen):
 		spnt = koeff * bpnt + (1-koeff) * apnt
 		fpnt = spnt + norm
 		common_arrow(painter, fpnt, spnt, arrow_size)
+
+def draw_sharnir_terminator_rect(painter, pnt, angle, termx, termy, pen, halfpen):
+	angle = angle + deg(90)
+	
+	pnts = [
+		pnt + QPointF(math.cos(angle) * termx, math.sin(angle) * termx), 
+		pnt + QPointF(- math.cos(angle) * termx, - math.sin(angle) * termx),
+		pnt + QPointF(- math.cos(angle) * termx, - math.sin(angle) * termx) + QPointF(math.sin(angle)*termy, -math.cos(angle)*termy),
+		pnt + QPointF(math.cos(angle) * termx, math.sin(angle) * termx) + QPointF(math.sin(angle)*termy, -math.cos(angle)*termy),
+	]
+
+	polygon = QPolygonF(pnts)
+
+	painter.setPen(pen)
+	painter.drawLine(pnts[0], pnts[1])
+
+	painter.setBrush(Qt.BDiagPattern)
+	painter.setPen(Qt.NoPen)
+	painter.drawPolygon(polygon)
+
+
+def draw_sharnir_1dim(painter, pnt, angle, rad, termrad, termx, termy, pen, halfpen):
+	painter.setPen(halfpen)
+
+	circrect = QRect(pnt.x()-rad, pnt.y()-rad, 2*rad , 2*rad)
+	bpnt = QPoint(termrad*math.cos(angle), termrad*math.sin(angle)) + pnt
+
+	painter.setBrush(Qt.white)
+	painter.drawLine(pnt, bpnt)
+
+	circrect2 = radrect(bpnt, rad)
+
+	painter.drawLine(pnt, bpnt)
+
+
+	draw_sharnir_terminator_rect(painter, bpnt, angle, termx, termy, pen, halfpen)
+
+	painter.setPen(pen)
+	painter.setBrush(Qt.white)
+	painter.drawEllipse(circrect)
+	painter.drawEllipse(circrect2)
+
+def draw_sharnir_2dim(painter, pnt, angle, rad, termrad, termx, termy, pen, halfpen):
+	painter.setPen(pen)
+
+	circrect = radrect(pnt, rad)
+	bpnt = QPoint(termrad*math.cos(angle), termrad*math.sin(angle)) + pnt
+
+	draw_sharnir_terminator_rect(painter, bpnt, angle, termx, termy, pen, halfpen)
+
+	angle = angle + deg(90)
+	b1pnt = bpnt + QPointF(math.cos(angle) * termx*2/3, math.sin(angle) * termx*2/3) 
+	b2pnt = bpnt + QPointF(- math.cos(angle) * termx*2/3, - math.sin(angle) * termx*2/3)
+
+	painter.setPen(pen)
+	painter.drawLine(b1pnt, b2pnt)
+	painter.drawLine(pnt, b2pnt)
+	painter.drawLine(pnt, b1pnt)
+
+	painter.setBrush(Qt.white)
+	painter.drawEllipse(circrect)
+

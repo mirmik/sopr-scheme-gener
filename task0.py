@@ -16,49 +16,6 @@ class ShemeTypeT0(common.SchemeType):
 		super().__init__("Тип0 (Растяжение/сжатие/кручение стержня переменного сечения)")
 		self.setwidgets(ConfWidget_T0(self), PaintWidget_T0(), common.TableWidget())
 
-#class TorqueComboBox(QComboBox):
-#	def __init__(self, idx, confw, f):
-#		super().__init__()
-#
-#		self.idx = idx 
-#		self.confw = confw
-#		self.f = f
-#
-#		self.addItem("0")
-#		self.addItem("+")
-#		self.addItem("-")
-#
-#		self.activated.connect(self.activated_handler)
-#
-#	def activated_handler(self):
-#		n = self.currentIndex() 
-#		self.confw.shemetype.task["betsect"][self.idx][self.f] = n
-#		self.confw.redraw()
-#
-#class TTLineEdit(QLineEdit):
-#	def __init__(self, idx, confw):
-#		super().__init__()
-#
-#		self.idx = idx 
-#		self.confw = confw
-#		self.textChanged.connect(self.handler)
-#
-#	def handler(self): 
-#		self.confw.shemetype.task["betsect"][self.idx]["T"] = self.text() 
-#		self.confw.redraw()
-#
-#class TableCheckBox(QCheckBox):
-#	def __init__(self, idx, confw, f):
-#		super().__init__()
-#
-#		self.idx = idx 
-#		self.confw = confw
-#		self.stateChanged.connect(self.handler)
-#		self.f = f
-#
-#	def handler(self): 
-#		self.confw.shemetype.task["sections"][self.idx][self.f] = self.checkState()
-#		self.confw.redraw()
 
 class ConfWidget_T0(common.ConfWidget):
 	"""Виджет настроек задачи T0"""
@@ -77,10 +34,7 @@ class ConfWidget_T0(common.ConfWidget):
 			self.Mkr = Mkr 
 			self.T = T
 
-	def __init__(self, sheme):
-		super().__init__()
-		self.shemetype = sheme
-
+	def create_task_structure(self):
 		self.shemetype.task = {
 			"sections": 
 			[
@@ -97,20 +51,9 @@ class ConfWidget_T0(common.ConfWidget):
 			]
 		}
 		
-		self.add_button = QPushButton("Добавить секцию")
-		self.del_button = QPushButton("Убрать секцию")
 
-		self.vlayout = QVBoxLayout()
-		self.butlayout = QHBoxLayout()
-		self.hhlayout = QHBoxLayout()
-
-		self.butlayout.addWidget(self.add_button)
-		self.butlayout.addWidget(self.del_button)
-
-		self.add_button.clicked.connect(self.add_action)
-		self.del_button.clicked.connect(self.del_action)
-		self.vlayout.addLayout(self.butlayout)
-
+	def __init__(self, sheme):
+		super().__init__(sheme)
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 
@@ -190,103 +133,6 @@ class ConfWidget_T0(common.ConfWidget):
 		self.redraw()
 		self.updateTable1()
 		self.updateTable2()
-
-	#def changed(self, row, column):
-	#	field = None
-#
-	#	if column == 0: field = 'A'
-	#	if column == 1: field = 'l'
-	#	if column == 2: field = 'Atext'
-	#	if column == 3: field = 'ltext'
-	#	if column == 4: field = 'delta'
-#
-	#	if field == "A" or field == "l":
-	#		self.sections()[row].field = float(self.table.item(row,column).text())
-	#	elif field == "Atext" or field == "ltext":
-	#		self.sections()[row].field = self.table.item(row,column).text()
-	#	else:
-	#		self.sections()[row].field = self.table.item(row,column).checkedState()
-#
-	#	self.redraw()
-#
-	#def changed2(self, row, column):
-	#	field = None
-#
-	#	if column == 0: field = 'F'
-	#	if column == 1: field = 'M'
-	#	if column == 1: field = 'Mкр'
-	#	if column == 2: field = 'T'
-#
-	#	if field != "T":
-	#		self.shemetype.task["betsect"][row][field] = float(self.table2.item(row,column).text())
-	#	else:
-	#		self.shemetype.task["betsect"][row][field] = self.table2.item(row,column).text()
-#
-	#	self.redraw()
-
-	#def updateTable1(self):
-	#	self.table.setColumnCount(5)
-	#	self.table.setRowCount(len(self.sections()))
-	#	self.table.setHorizontalHeaderItem(0, QTableWidgetItem("A")) 
-	#	self.table.setHorizontalHeaderItem(1, QTableWidgetItem("l")) 
-	#	self.table.setHorizontalHeaderItem(2, QTableWidgetItem("A текст")) 
-	#	self.table.setHorizontalHeaderItem(3, QTableWidgetItem("l текст")) 
-	#	self.table.setHorizontalHeaderItem(4, QTableWidgetItem("Разрыв")) 
-#
-	#	for i in range(len(self.sections())):
-	#		it = QTableWidgetItem(str(self.sections()[i].A))
-	#		self.table.setItem(i,0,it)
-#
-	#		it = QTableWidgetItem(str(self.sections()[i].l))
-	#		self.table.setItem(i,1,it)
-#
-	#		it = QTableWidgetItem(str(self.sections()[i].Atext))
-	#		self.table.setItem(i,2,it)
-#
-	#		it = QTableWidgetItem(str(self.sections()[i].ltext))
-	#		self.table.setItem(i,3,it)
-#
-	#		it = TableCheckBox(i, self, "delta")
-	#		self.table.setCellWidget(i,4,it)
-#
-	#	self.table.resizeColumnsToContents()
-	#	self.table.setFixedSize(
-	#			self.table.horizontalHeader().length() + self.table.verticalHeader().width() + 15, 
-	#			self.table.verticalHeader().length() + self.table.horizontalHeader().height() + 5)
-#
-	#	self.table.repaint()
-#
-	#def updateTable2(self):
-	#	self.table2.clear()
-#
-	#	self.table2.setColumnCount(4)
-	#	self.table2.setRowCount(len(self.shemetype.task["betsect"]))
-	#	self.table2.setHorizontalHeaderItem(0, QTableWidgetItem("F")) 
-	#	self.table2.setHorizontalHeaderItem(1, QTableWidgetItem("M"))  
-	#	self.table2.setHorizontalHeaderItem(2, QTableWidgetItem("Mкр"))  
-	#	self.table2.setHorizontalHeaderItem(3, QTableWidgetItem("T"))
-#
-	#	for i in range(len(self.shemetype.task["betsect"])):
-	#		#it = QTableWidgetItem(str(self.shemetype.task["betsect"][i].F))
-#
-	#		it = TorqueComboBox(i, self, "F")
-	#		self.table2.setCellWidget(i,0,it)
-#
-	#		it = TorqueComboBox(i, self, "M")
-	#		self.table2.setCellWidget(i,1,it)
-#
-	#		it = TorqueComboBox(i, self, "Mкр")
-	#		self.table2.setCellWidget(i,2,it)
-#
-	#		it = TTLineEdit(i, self)
-	#		self.table2.setCellWidget(i,3,it)
-#
-	#	self.table2.resizeColumnsToContents()
-	#	self.table2.setFixedSize(
-	#			self.table2.horizontalHeader().length() + self.table2.verticalHeader().width() + 15, 
-	#			self.table2.verticalHeader().length() + self.table2.horizontalHeader().height() + 5)
-#
-	#	self.table2.repaint()
 
 	def inittask(self):
 		return {}
@@ -406,6 +252,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			painter.drawText( QPoint((wsect(i)+wsect(i+1))/2 - AW/2, strt_height - 5), text_A)
 			#painter.drawText( QPoint((wsect(i)+wsect(i+1))/2 - lW/2, fini_height + 15), text_l)
 
+			painter.setPen(self.halfpen)
 			paintool.dimlines(painter, QPoint(wsect(i), fini_height), QPoint(wsect(i+1), fini_height), dimlines_level)
 			paintool.draw_text_centered(painter, QPoint((wsect(i)+wsect(i+1))/2, dimlines_level-5), text_l, self.font)
 

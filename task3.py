@@ -41,11 +41,7 @@ class ConfWidget_T3(common.ConfWidget):
 			self.fen = fen
 			self.men = men
 
-	"""Виджет настроек задачи T0"""
-	def __init__(self, sheme):
-		super().__init__()
-		self.shemetype = sheme
-
+	def create_task_structure(self):
 		self.shemetype.task = {
 			"sections": 
 			[
@@ -69,18 +65,9 @@ class ConfWidget_T3(common.ConfWidget):
 			],
 		}
 
-		self.add_button = QPushButton("Добавить секцию")
-		self.del_button = QPushButton("Убрать секцию")
-
-		self.vlayout = QVBoxLayout()
-		self.butlayout = QHBoxLayout()
-
-		self.butlayout.addWidget(self.add_button)
-		self.butlayout.addWidget(self.del_button)
-
-		self.add_button.clicked.connect(self.add_action)
-		self.del_button.clicked.connect(self.del_action)
-
+	"""Виджет настроек задачи T0"""
+	def __init__(self, sheme):
+		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
 		#self.shemetype.base_d = self.sett.add("Базовая длина:", "int", "40")
 		self.shemetype.base_h = self.sett.add("Базовая толщина:", "int", "20")
@@ -118,8 +105,6 @@ class ConfWidget_T3(common.ConfWidget):
 
 		#self.table2.addColumn("l", "float", "Длина опоры")
 		#self.table2.updateTable()
-		
-		self.vlayout.addLayout(self.butlayout)
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)

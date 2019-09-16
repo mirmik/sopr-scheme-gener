@@ -20,14 +20,16 @@ class ShemeTypeT4(common.SchemeType):
 
 class ConfWidget_T4(common.ConfWidget):
 	class sect:
-		def __init__(self, direct=1, strt=(0,0), fini=(1,1)):
-			self.xstrt=strt[0]
-			self.ystrt=strt[1]
-			self.xfini=fini[0]
-			self.yfini=fini[1]
+		def __init__(self, direct=1, strt=("",""), fini=(1,1), lsharn="clean", rsharn="clean"):
+			self.xstrt=str(strt[0])
+			self.ystrt=str(strt[1])
+			self.xfini=str(fini[0])
+			self.yfini=str(fini[1])
+			self.lsharn = lsharn
+			self.rsharn = rsharn
 
 	class sectforce:
-		def __init__(self, distrib=False):
+		def __init__(self, distrib="clean"):
 			self.distrib = distrib
 
 	class betsect:
@@ -35,23 +37,20 @@ class ConfWidget_T4(common.ConfWidget):
 			self.fen = fen
 			self.men = men
 
-	def __init__(self, sheme):
-		super().__init__()
-		self.shemetype = sheme
-
+	def create_task_structure(self):
 		self.shemetype.task = {
 			"sections": 
 			[
-				self.sect(strt=(0,0), fini=(1,1)),
-				self.sect(strt=(1,1), fini=(2,1)),
-				self.sect(strt=(2,1), fini=(3,0))
+				self.sect(strt=(0,0), fini=(1,1), lsharn="1f"),
+				self.sect(strt=("",""), fini=(2,1)),
+				self.sect(strt=("",""), fini=(3,0))
 			],
 
 			"sectforce": 
 			[
-				self.sectforce(distrib=False),
-				self.sectforce(distrib=False),
-				self.sectforce(distrib=True),
+				self.sectforce(distrib="clean"),
+				self.sectforce(distrib="clean"),
+				self.sectforce(distrib="-"),
 			],
 
 			"betsect": 
@@ -62,17 +61,8 @@ class ConfWidget_T4(common.ConfWidget):
 			],
 		}
 
-		self.add_button = QPushButton("Добавить секцию")
-		self.del_button = QPushButton("Убрать секцию")
-
-		self.vlayout = QVBoxLayout()
-		self.butlayout = QHBoxLayout()
-
-		self.butlayout.addWidget(self.add_button)
-		self.butlayout.addWidget(self.del_button)
-
-		self.add_button.clicked.connect(self.add_action)
-		self.del_button.clicked.connect(self.del_action)
+	def __init__(self, sheme):
+		super().__init__(sheme)
 
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
@@ -89,11 +79,15 @@ class ConfWidget_T4(common.ConfWidget):
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
+		sharnir_arr= ["clean", "1f", "1r", "1l", "2"]
+
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table.addColumn("xstrt", "float", "X0")
-		self.table.addColumn("ystrt", "float", "Y0")
-		self.table.addColumn("xfini", "float", "X1")
-		self.table.addColumn("yfini", "float", "Y1")
+		self.table.addColumn("xstrt", "str", "X0")
+		self.table.addColumn("ystrt", "str", "Y0")
+		self.table.addColumn("xfini", "str", "X1")
+		self.table.addColumn("yfini", "str", "Y1")
+		self.table.addColumn("lsharn", "list", "ШарнирЛ", variant=sharnir_arr)
+		self.table.addColumn("rsharn", "list", "ШарнирП", variant=sharnir_arr)
 		#self.table.addColumn("dtext", "str", "Текст")
 		#self.table.addColumn("dtext_en", "bool", "Текст")
 		#self.table.addColumn("h", "float", "Высота")
@@ -104,7 +98,7 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
-		self.table1.addColumn("distrib", "bool", "Распр. нагрузка")
+		self.table1.addColumn("distrib", "list", "Распр.", variant=["clean", "+", "-"])
 		self.table1.updateTable()
 
 
@@ -115,8 +109,6 @@ class ConfWidget_T4(common.ConfWidget):
 
 		#self.table2.addColumn("l", "float", "Длина опоры")
 		#self.table2.updateTable()
-		
-		self.vlayout.addLayout(self.butlayout)
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
@@ -176,13 +168,15 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		lwidth = self.shemetype.line_width.get()
 
 		base_length = self.shemetype.base_length.get()
+		distrib_step = 10
+		distrib_alen = 20
 		#base_h = self.shemetype.base_h.get()
 		#zadelka = self.shemetype.zadelka.get()
 		#axis = self.shemetype.axis.get()
 		#zadelka_len = self.shemetype.zadelka_len.get()
 		#dimlines_step = self.shemetype.dimlines_step.get()
 		#dimlines_start_step = self.shemetype.dimlines_start_step.get()
-		#arrow_size = self.shemetype.arrow_size_getter.get()
+		arrow_size = self.shemetype.arrow_size_getter.get()
 
 		painter = QPainter(self)
 		font = painter.font()
@@ -215,28 +209,129 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		xmax=0
 		ymax=0
 
+		last = None
 		for s in self.sections():
-			xmin = min(xmin, s.xstrt, s.xfini)
-			xmax = max(xmax, s.xstrt, s.xfini)
-			ymin = min(ymin, s.ystrt, s.yfini)
-			ymax = max(ymin, s.ystrt, s.yfini)
+			xstrt = float(s.xstrt) if s.xstrt != "" else float(last.xfini)
+			ystrt = float(s.ystrt) if s.ystrt != "" else float(last.yfini)
+			xfini = float(s.xfini)
+			yfini = float(s.yfini)
+
+			xmin = min(xmin, xstrt, xfini)
+			xmax = max(xmax, xstrt, xfini)
+			ymin = min(ymin, ystrt, yfini)
+			ymax = max(ymin, ystrt, yfini)
+
+			last = s
 
 		xshift = - (xmin + xmax) / 2 * base_length
 		yshift = (ymin + ymax) / 2 * base_length
 		
+		last = None
 		for s in self.sections():
+			xstrt = float(s.xstrt) if s.xstrt != "" else float(last.xfini)
+			ystrt = float(s.ystrt) if s.ystrt != "" else float(last.yfini)
+			xfini = float(s.xfini)
+			yfini = float(s.yfini)
+
 			coordes.append((
 				QPoint(
-					s.xstrt * base_length + center.x() + xshift, 
-					- s.ystrt * base_length + center.y() + yshift), 
+					xstrt * base_length + center.x() + xshift, 
+					- ystrt * base_length + center.y() + yshift), 
 				QPoint(
-					s.xfini * base_length + center.x() + xshift, 
-					- s.yfini * base_length + center.y() + yshift)))
+					xfini * base_length + center.x() + xshift, 
+					- yfini * base_length + center.y() + yshift)))
+
+			last = s
 
 
 		# Начинаем рисовать
 		for strt, fini in coordes:
 			painter.drawLine(strt, fini)
 
+		# Распределённая нагрузка
+		for i in range(len(self.sections())):
+			strt, fini = coordes[i]
+			sect = self.sections()[i]
+			bsect = self.sectforce()[i]
+			angle = common.angle(strt, fini) 
 
+			if bsect.distrib == "+":
+				paintool.draw_distribload(painter, pen=self.halfpen, 
+					apnt=strt, 
+					bpnt=fini, 
+					step=distrib_step, 
+					arrow_size=arrow_size/3*2, 
+					alen=distrib_alen)
+
+			elif bsect.distrib == "-":
+				paintool.draw_distribload(painter, pen=self.halfpen, 
+					apnt=fini, 
+					bpnt=strt, 
+					step=distrib_step, 
+					arrow_size=arrow_size/3*2, 
+					alen=distrib_alen)
+
+		# Шарниры и заделки
+		for i in range(len(self.sections())):
+			strt, fini = coordes[i]
+			sect = self.sections()[i]
+			bsect = self.sectforce()[i]
+			angle = common.angle(strt, fini) 
+
+			def draw_sharn(pnt, angle, tp):
+				if tp == "1f":
+					paintool.draw_sharnir_1dim(
+						painter=painter, 
+						pnt=pnt, 
+						angle=angle, 
+						rad=4, 
+						termrad=15, 
+						termx=15, 
+						termy=10, 
+						pen=self.default_pen,
+						halfpen=self.halfpen)
+
+				elif tp == "1r":
+					paintool.draw_sharnir_1dim(
+						painter=painter, 
+						pnt=pnt, 
+						angle=angle + deg(90), 
+						rad=4, 
+						termrad=15, 
+						termx=15, 
+						termy=10, 
+						pen=self.default_pen,
+						halfpen=self.halfpen)
+
+				elif tp == "1l":
+					paintool.draw_sharnir_1dim(
+						painter=painter, 
+						pnt=pnt, 
+						angle=angle - deg(90), 
+						rad=4, 
+						termrad=15, 
+						termx=15, 
+						termy=10, 
+						pen=self.default_pen,
+						halfpen=self.halfpen)
+
+				elif tp == "2":
+					paintool.draw_sharnir_2dim(
+						painter=painter, 
+						pnt=pnt, 
+						angle=angle, 
+						rad=4, 
+						termrad=15, 
+						termx=15, 
+						termy=10, 
+						pen=self.default_pen,
+						halfpen=self.halfpen)
+
+			if sect.lsharn != "clean":
+				tp = sect.lsharn
+				draw_sharn(strt, angle+ deg(180), tp)
+
+			if sect.rsharn != "clean":
+				tp = sect.rsharn
+				draw_sharn(fini, angle, tp)
 

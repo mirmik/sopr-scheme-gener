@@ -28,11 +28,7 @@ class ConfWidget_T1(common.ConfWidget):
 			self.display_angle = False
 			self.force = 0
 
-	"""Виджет настроек задачи T0"""
-	def __init__(self, sheme):
-		super().__init__()
-		self.shemetype = sheme
-
+	def create_task_structure(self):
 		self.shemetype.task = {
 			"sections": 
 			[
@@ -42,18 +38,10 @@ class ConfWidget_T1(common.ConfWidget):
 			],
 		}
 
-		self.add_button = QPushButton("Добавить секцию")
-		self.del_button = QPushButton("Убрать секцию")
-
-		self.vlayout = QVBoxLayout()
-		self.butlayout = QHBoxLayout()
-
-		self.butlayout.addWidget(self.add_button)
-		self.butlayout.addWidget(self.del_button)
-
-		self.add_button.clicked.connect(self.add_action)
-		self.del_button.clicked.connect(self.del_action)
-
+		
+	"""Виджет настроек задачи T0"""
+	def __init__(self, sheme):
+		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
 		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
@@ -67,7 +55,6 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("angle", "float")
 		self.table.updateTable()
 
-		self.vlayout.addLayout(self.butlayout)
 		self.vlayout.addWidget(self.table)
 		self.vlayout.addWidget(self.sett)
 
