@@ -97,7 +97,7 @@ class ConfWidget_T0(common.ConfWidget):
 		self.table2.addColumn("F", "list", variant=["clean", "+", "-"])
 		self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
 		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
-		self.table2.addColumn("T", "str", "Сила")
+		self.table2.addColumn("T", "str", "Текст")
 		self.table2.updateTable()
 
 
@@ -287,7 +287,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				text = task["betsect"][i].T
 
 
-				if not task["betsect"][i].Mkr:
+				if task["betsect"][i].Mkr == "clean":
 					paintool.placedtext(painter,
 						QPoint(wsect(i), hcenter), 
 						max(leftA, rightA) * height_zone / 2 + 10, 

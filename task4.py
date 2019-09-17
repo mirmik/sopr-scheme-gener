@@ -33,10 +33,14 @@ class ConfWidget_T4(common.ConfWidget):
 			self.distrib = distrib
 
 	class betsect:
-		def __init__(self, fen=True, men="clean"):
-			self.fen = fen
-			self.men = men
-
+		def __init__(self, 
+					fenl="clean", fenr="clean", 
+					menl="clean", menr="clean"):
+			self.fenl = fenl
+			self.fenr = fenr
+			self.menl = menl
+			self.menr = menr
+			
 	def create_task_structure(self):
 		self.shemetype.task = {
 			"sections": 
@@ -55,7 +59,7 @@ class ConfWidget_T4(common.ConfWidget):
 
 			"betsect": 
 			[
-				self.betsect(),
+				self.betsect(menr="+"),
 				self.betsect(),
 				self.betsect()
 			],
@@ -80,6 +84,8 @@ class ConfWidget_T4(common.ConfWidget):
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
 		sharnir_arr= ["clean", "1f", "1r", "1l", "2"]
+		men_arr= ["clean", "+", "-"]
+		fen_arr= ["clean", "+", "-"]
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("xstrt", "str", "X0")
@@ -88,13 +94,6 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table.addColumn("yfini", "str", "Y1")
 		self.table.addColumn("lsharn", "list", "ШарнирЛ", variant=sharnir_arr)
 		self.table.addColumn("rsharn", "list", "ШарнирП", variant=sharnir_arr)
-		#self.table.addColumn("dtext", "str", "Текст")
-		#self.table.addColumn("dtext_en", "bool", "Текст")
-		#self.table.addColumn("h", "float", "Высота")
-		#self.table.addColumn("htext", "str", "Текст")
-		#self.table.addColumn("htext_en", "bool", "Текст")
-		#self.table.addColumn("shtrih", "bool", "Штрих")
-		#self.table.addColumn("intgran", "bool", "Вн гран")
 		self.table.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
@@ -103,12 +102,11 @@ class ConfWidget_T4(common.ConfWidget):
 
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("fen", "bool", "Сила")
-		self.table2.addColumn("men", "list", "Момент", variant=["clean", "+", "-"])
+		self.table2.addColumn("fenl", "list", "Сила", variant=fen_arr)
+		self.table2.addColumn("fenr", "list", "Сила", variant=fen_arr)
+		self.table2.addColumn("menl", "list", "Момент", variant=men_arr)
+		self.table2.addColumn("menr", "list", "Момент", variant=men_arr)
 		self.table2.updateTable()
-
-		#self.table2.addColumn("l", "float", "Длина опоры")
-		#self.table2.updateTable()
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
@@ -335,3 +333,41 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 				tp = sect.rsharn
 				draw_sharn(fini, angle, tp)
 
+
+		# Силы и моменты
+		for i in range(len(self.sections())):
+			strt, fini = coordes[i]
+			sect = self.sections()[i]
+			sectforce = self.sectforce()[i]
+			bsect = self.bsections()[i]
+			angle = common.angle(strt, fini) 
+
+			def draw_moment(pnt, angle, tp):
+				rad=40
+
+				if tp == "+":
+					paintool.half_moment_arrow(
+						painter=painter, 
+						pnt=pnt, 
+						rad=rad, 
+						left=True, 
+						inverse = False, 
+						arrow_size=arrow_size)
+
+				elif tp == "-":
+					paintool.half_moment_arrow(
+						painter=painter, 
+						pnt=pnt, 
+						rad=rad, 
+						left=True, 
+						inverse = False, 
+						arrow_size=arrow_size)
+
+			if bsect.menl != "clean":
+				tp = bsect.menl
+				draw_moment(strt, angle, tp)
+
+			if bsect.menr != "clean":
+				tp = bsect.menr
+				draw_moment(strt, angle, tp)
+				

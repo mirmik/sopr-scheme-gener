@@ -437,6 +437,7 @@ def crest_ellipse(painter, el):
 	#painter.drawEllipse(QRect(x+w/2-s/2, y+h/2-s/2, s, s))
 
 def kr_arrow(painter, pnt, rad, circ, inverse=False):
+	"""Обозначение кручения для задачи о стержне"""
 	brush = QBrush()
 	painter.setBrush(brush)
 
