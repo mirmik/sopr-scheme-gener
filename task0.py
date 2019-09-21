@@ -230,8 +230,11 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		def msectrad2(i):
 			leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
 			rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
+			rm = False
 			lm = task["sectforce"][i-1].mkr != "clean"
-			rm = task["sectforce"][i].mkr != "clean"
+			
+			if i != len(task["sectforce"]):
+				rm = task["sectforce"][i].mkr != "clean"
 			
 			ret = max(leftA, rightA) * height_zone / 2
 

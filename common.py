@@ -107,7 +107,7 @@ class ConfWidget(StyleWidget):
 	def bsections(self):
 		return self.shemetype.task["betsect"]
 
-	def sectforce(self):
+	def sectforces(self):
 		return self.shemetype.task["sectforce"]
 
 	def redraw(self):
