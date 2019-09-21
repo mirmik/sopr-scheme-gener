@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import *
 
 class ShemeTypeT2(common.SchemeType):
 	def __init__(self):
-		super().__init__("Тип2 (Горизонтальный стержень на шарнирах)")
+		super().__init__("Горизонтальный стержень на шарнирах")
 		self.setwidgets(ConfWidget_T2(self), PaintWidget_T2(), common.TableWidget())
 
 class ConfWidget_T2(common.ConfWidget):
@@ -55,7 +55,7 @@ class ConfWidget_T2(common.ConfWidget):
 		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "10")
-		#self.shemetype.base_height = self.sett.add("Базовая высота стержня:", "int", "10")
+		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "40")
 		self.sett.updated.connect(self.redraw)
 
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
@@ -119,6 +119,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		lwidth = self.shemetype.line_width.get()
 
 		base_height = self.shemetype.base_height.get()
+		dimlines_level = self.shemetype.dimlines_level.get()
 
 		painter = QPainter(self)
 		font = painter.font()
@@ -176,14 +177,32 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				painter.drawLine(QPoint(xnode(i), hbase), QPoint(xnode(i), hbase - bsects[i].l*hkoeff))
 				#painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase - bsects[i].l*hkoeff), 10))
 				painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase), 5))
-	
-				
+
 				if (bsects[i].l < 0):
 					angle = deg(90)
 				else:
 					angle = deg(-90)
-	
-				paintool.zadelka_sharnir(painter, QPoint(xnode(i), hbase - bsects[i].l*hkoeff), angle, 30, 10, 5)
+				
+				upnt = bsects[i].l*hkoeff
+				paintool.zadelka_sharnir(painter, QPoint(xnode(i), hbase - upnt), angle, 30, 10, 5)
+
+				ap = -upnt if bsects[i].l < 0 else 0
+				bp = 0 if bsects[i].l < 0 else -upnt
+
+				paintool.dimlines_vertical(painter,
+					QPoint(xnode(i), hbase + ap),
+					QPoint(xnode(i), hbase + bp),
+					xnode(i) + dimlines_level)
 
 		paintool.zadelka_sharnir_type2(painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
 			
+		# Размерные линии горизонтальные.
+		for i in range(len(self.sections())):
+			xl = xnode(i)
+			xr = xnode(i+1)
+
+			paintool.dimlines(painter, 
+				QPoint(xl, hbase), 
+				QPoint(xr, hbase), 
+				hbase+dimlines_level)
+

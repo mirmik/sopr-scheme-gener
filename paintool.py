@@ -128,6 +128,16 @@ def right_arrow(painter, pnt, length, headsize):
 	painter.drawLine(pnt, QPoint(pnt.x()+length, pnt.y()))
 	right_arrow_head_top(painter, pnt.x()+length, pnt.y(), headsize)
 
+def up_arrow(painter, pnt, length, headsize):
+	tgt = pnt + QPoint(0, length)
+	painter.drawLine(pnt, tgt)
+	up_arrow_head_top(painter, tgt.x(), tgt.y(), headsize)
+
+def down_arrow(painter, pnt, length, headsize):
+	tgt = pnt + QPoint(0, -length)
+	painter.drawLine(pnt, tgt)
+	down_arrow_head_top(painter, tgt.x(), tgt.y(), headsize)
+
 def angled_arrow_head_top(painter, pnt, angle, headsize):
 	paint_arrow(painter, angled_arrow_points_top(pnt.x(), pnt.y(), angle, headsize))
 
@@ -525,6 +535,8 @@ def greek(text):
 #	ω        Omega        \u03C9
 
 def dimlines(painter, p0, p1, level):
+	painter.setPen(halfpen)
+
 	pp0 = QPoint(p0.x(), level)
 	pp1 = QPoint(p1.x(), level)
 	pc = QPoint((p1.x() + p0.x())/2, level)
@@ -534,6 +546,24 @@ def dimlines(painter, p0, p1, level):
 
 	left_arrow(painter, pc, length/2, 10)
 	right_arrow(painter, pc, length/2, 10)
+
+	painter.setPen(pen)
+
+def dimlines_vertical(painter, p0, p1, level):
+	painter.setPen(halfpen)
+
+	pp0 = QPoint(level,p0.y())
+	pp1 = QPoint(level,p1.y())
+	pc = QPoint(level, (p1.y() + p0.y())/2)
+	length = p1.y() - p0.y()
+	painter.drawLine(p0, pp0)
+	painter.drawLine(p1, pp1)
+
+	up_arrow(painter, pc, length/2, 10)
+	down_arrow(painter, pc, length/2, 10)
+
+	painter.setBrush(Qt.white)
+	painter.setPen(pen)
 
 def draw_text_centered(painter, pnt, text, font):
 	width = QFontMetrics(font).width(text)
