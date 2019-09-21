@@ -69,6 +69,7 @@ class ConfWidget_T0(common.ConfWidget):
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 
 		self.sett = taskconf_menu.TaskConfMenu()
+		self.shemetype.kruch_flag = self.sett.add("Сечение/Крутильная жесткость:", "bool", True)
 		self.shemetype.axis = self.sett.add("Нарисовать ось:", "bool", True)
 		self.shemetype.zleft = self.sett.add("Заделка слева:", "bool", False)
 		self.shemetype.zright = self.sett.add("Заделка справа:", "bool", False)
@@ -173,6 +174,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 		width = size.width()
 		height = size.height()
+		kruch_flag = self.shemetype.kruch_flag.get()
 
 		hcenter = height/2
 
@@ -255,11 +257,13 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			A = task["sections"][i].A
 			l = task["sections"][i].l
 
+			sechtext = "GIк" if kruch_flag else "A"
+
 			if not task["sections"][i].delta:
 				if abs(float(A) - int(A)) < 0.0001:
-					text_A = "{}A".format(int(task["sections"][i].A+0.1)) if task["sections"][i].A != 1 else "A"
+					text_A = "{}{}".format(int(task["sections"][i].A+0.1), sechtext) if task["sections"][i].A != 1 else sechtext
 				else:
-					text_A = str(float(A)) + "A"
+					text_A = str(float(A)) + sechtext
 	
 				if abs(float(l) - int(l)) < 0.0001:
 					text_l = "{}l".format(int(task["sections"][i].l+0.1)) if task["sections"][i].l != 1 else "l"
