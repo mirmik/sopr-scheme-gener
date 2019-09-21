@@ -81,8 +81,8 @@ class ConfWidget_T0(common.ConfWidget):
 		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "20")
 		self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "int", "40")
 		#self.shemetype.font_size = common.CONFVIEW.font_size_getter
-		#self.shemetype.left_zone = self.sett.add("Отступ слева:", "int", "20")
-		#self.shemetype.right_zone = self.sett.add("Отступ справа:", "int", "20")
+		self.shemetype.left_zone = self.sett.add("Отступ слева:", "int", "30")
+		self.shemetype.right_zone = self.sett.add("Отступ справа:", "int", "30")
 		
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
@@ -180,8 +180,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 		height_zone = base_section_height
 
-		strt_width = 30
-		fini_width = width-30
+		strt_width = self.shemetype.left_zone.get()
+		fini_width = width-self.shemetype.right_zone.get()
 
 
 		painter = QPainter(self)
