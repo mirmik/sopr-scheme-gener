@@ -6,6 +6,9 @@ from PyQt5.QtWidgets import *
 import math
 import common
 
+halfpen = None
+pen = None
+
 def deg(arg):
 	return math.pi * arg / 180
 
@@ -415,7 +418,7 @@ def point_ellipse(painter, el):
 
 	brush = QBrush(Qt.SolidPattern)
 	painter.setBrush(brush)
-	painter.drawEllipse(QRect(x+w/2-s/2, y+h/2-s/2, s, s))
+	painter.drawEllipse(QRect(x+w/2+0.5-s/2, y+h/2-s/2+0.5, s+0.5, s+0.5))
 
 def crest_ellipse(painter, el):
 	x = el.x()
@@ -431,17 +434,21 @@ def crest_ellipse(painter, el):
 	painter.setBrush(brush)
 	painter.drawEllipse(el)
 	
-	painter.drawLine(QPoint(x+w/2-c, y+h/2-c), QPoint(x+w/2+c, y+h/2+c))
-	painter.drawLine(QPoint(x+w/2-c, y+h/2+c), QPoint(x+w/2+c, y+h/2-c))
+	painter.drawLine(QPoint(x+w/2-c+0.5, y+h/2-c+0.5), QPoint(x+w/2+c+0.5, y+h/2+c+0.5))
+	painter.drawLine(QPoint(x+w/2-c+0.5, y+h/2+c+0.5), QPoint(x+w/2+c+0.5, y+h/2-c+0.5))
 
 	#painter.drawEllipse(QRect(x+w/2-s/2, y+h/2-s/2, s, s))
+
+def point_circ(painter, pnt, rad):
+	point_ellipse(painter, QRect(pnt-QPoint(rad/2,rad/2), pnt+QPoint(rad/2,rad/2)))
+
+def crest_circ(painter, pnt, rad):
+	crest_ellipse(painter, QRect(pnt-QPoint(rad/2,rad/2), pnt+QPoint(rad/2,rad/2)))
 
 def kr_arrow(painter, pnt, rad, circ, inverse=False):
 	"""Обозначение кручения для задачи о стержне"""
 	brush = QBrush()
 	painter.setBrush(brush)
-
-	painter.drawLine(pnt + QPoint(0,rad), pnt + QPoint(0,-rad))
 
 	if inverse:
 		point_ellipse(painter, QRect(-circ + pnt.x(), pnt.y() + rad, circ*2, circ*2))
@@ -451,6 +458,10 @@ def kr_arrow(painter, pnt, rad, circ, inverse=False):
 		crest_ellipse(painter, QRect(-circ + pnt.x(), pnt.y() + rad, circ*2, circ*2))
 		point_ellipse(painter, QRect(-circ + pnt.x(), pnt.y() - rad - 2*circ, circ*2, circ*2))
 
+	painter.setPen(halfpen)
+	painter.drawLine(pnt + QPoint(0,rad), pnt + QPoint(0,-rad))
+
+	painter.setPen(pen)
 
 def greek(text):
 	data = [
@@ -530,6 +541,32 @@ def draw_text_centered(painter, pnt, text, font):
 	
 	painter.drawText(pnt + QPoint(-width/2,0), text)
 
+def draw_vertical_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, text, font):
+	"""подписать толщину"""
+
+	painter.setFont(font)
+	up_arrow_head(painter, upnt.x(), upnt.y() + arrow_size, arrow_size)
+	down_arrow_head(painter, upnt.x(), dpnt.y() - arrow_size, arrow_size)
+	
+	painter.drawLine(upnt, dpnt)
+
+	pen = painter.pen()
+	painter.setBrush(Qt.white)
+	painter.setPen(Qt.NoPen)
+
+	htext = QFontMetrics(font).height()
+	xwtext = QFontMetrics(font).width('x')
+	
+	tpnt = (dpnt+upnt)/2 + QPoint(xwtext/2,htext/2)
+
+	painter.drawRect(
+		tpnt.x(), tpnt.y() - QFontMetrics(font).height(), 
+		QFontMetrics(font).width(text), htext
+	)
+	painter.setPen(pen)
+	painter.drawText(tpnt, text)
+
+	
 def draw_vertical_splashed_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, text, font):
 	"""подписать толщину"""
 
@@ -623,3 +660,105 @@ def draw_sharnir_2dim(painter, pnt, angle, rad, termrad, termx, termy, pen, half
 	painter.setBrush(Qt.white)
 	painter.drawEllipse(circrect)
 
+def draw_kamera(painter, lu, rd, t):
+	"""Рисует камеру с измененным давлением"""
+	pen = painter.pen()
+	painter.setBrush(Qt.BDiagPattern)
+	painter.setPen(Qt.NoPen)
+
+	painter.drawRect(QRect(lu, rd))
+
+	painter.setPen(pen)
+	painter.setBrush(Qt.white)
+	painter.drawRect(QRect(lu + QPoint(t,t), rd+QPoint(-t,-t)))
+
+	painter.setBrush(Qt.white)
+	painter.setPen(pen)
+
+	xx=rd - lu
+	xx=QPoint((xx * 2 / 3).x(), 30)
+
+	painter.drawText(lu + xx, "p")
+
+def draw_inkamera(painter, lu, rd, t):
+	"""Рисует камеру с измененным давлением"""
+	pen = painter.pen()
+	painter.setBrush(Qt.BDiagPattern)
+	#painter.setPen(Qt.NoPen)
+
+	painter.drawRect(QRect(lu, rd))
+
+	painter.setPen(pen)
+	painter.setBrush(Qt.white)
+	painter.drawRect(QRect(lu + QPoint(t,t), rd+QPoint(-t,-t)))
+
+	painter.setBrush(Qt.white)
+	painter.setPen(pen)
+
+	xx=rd - lu
+	xx=QPoint((xx * 2 / 3).x(), 40)
+
+	painter.drawText(lu + xx, "p")
+
+def razrez(painter, a, b):
+	c = (a + b) / 2
+	ac = (c + a) / 2 + QPoint(6, 0)
+	bc = (c + b) / 2 + QPoint(-6, 0)
+
+	painter.drawLine(a,ac)
+	painter.drawLine(ac,c)
+	painter.drawLine(c,bc)
+	painter.drawLine(bc,b)
+
+def draw_rectangle(painter,x,y,xl,yl,zleft=False,zright=False):
+	pen = painter.pen()
+	painter.setPen(Qt.NoPen)
+	painter.drawRect(x,y,xl,yl)
+
+	painter.setPen(pen)	
+	
+	painter.drawLine(QPoint(x,y), QPoint(x+xl, y))
+	painter.drawLine(QPoint(x,y+yl), QPoint(x+xl, y+yl))
+	
+	if zleft:
+		razrez(painter,QPoint(x,y), QPoint(x, y+yl))
+	else:
+		painter.drawLine(QPoint(x,y), QPoint(x, y+yl))
+
+	if zright:
+		razrez(painter,QPoint(x+xl,y), QPoint(x+xl, y+yl))
+	else:
+		painter.drawLine(QPoint(x+xl,y), QPoint(x+xl, y+yl))
+
+def raspred_torsion(painter, apnt, bpnt, alen, step, rad, tp):
+	if pen:
+		painter.setPen(pen)
+
+	dist = math.sqrt((apnt.x()-bpnt.x())**2 + (apnt.y()-bpnt.y())**2)
+	count = int(dist / step)
+	count = count - count % 2 + 1
+
+	diff = bpnt - apnt
+	norm = QPointF(-diff.y(), diff.x()) / math.sqrt(diff.y()**2 + diff.x()**2)
+	norm = norm * alen
+
+	#painter.drawLine(apnt+norm, bpnt+norm)
+
+	for i in range(count):
+		koeff = i / (count - 1)
+		spnt = koeff * bpnt + (1-koeff) * apnt
+		fpnt = spnt + norm
+
+		spnt = QPoint(spnt.x(), spnt.y())
+		fpnt = QPoint(fpnt.x(), fpnt.y())
+		
+		painter.setPen(halfpen)
+		painter.drawLine(spnt, fpnt)
+
+		painter.setPen(pen)
+		if tp:
+			point_circ(painter, fpnt, rad)
+
+		else:
+			crest_circ(painter, fpnt, rad)
+		#common_arrow(painter, fpnt, spnt, arrow_size)

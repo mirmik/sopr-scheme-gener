@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 import common
+import paintool
 
 class PaintWidgetSetter(QWidget):
 	def __init__(self, container):
@@ -106,9 +107,11 @@ class PaintWidget(QWidget):
 		self.default_pen = QPen()
 		self.default_pen.setWidth(lwidth)
 		painter.setPen(self.default_pen)
+		paintool.pen = self.default_pen
 
 		self.halfpen = QPen()
 		self.halfpen.setWidth(lwidth/2)
+		paintool.halfpen = self.halfpen
 
 		self.default_brush = QBrush(Qt.SolidPattern)
 		self.default_brush.setColor(Qt.white)

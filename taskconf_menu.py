@@ -57,7 +57,7 @@ class Element(QWidget):
 					return float(self.obj.text())
 
 				if (self.type == "bool"):
-					return int(self.obj.checkState())
+					return bool(self.obj.checkState())
 
 				print("strange type")
 

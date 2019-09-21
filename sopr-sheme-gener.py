@@ -10,6 +10,7 @@ import sys
 import argparse
 
 import task0
+import task0kr
 import task1
 import task2
 import task3
@@ -50,6 +51,7 @@ class CentralWidget(QWidget):
 
 		self.scheme_types = [
 			task0.ShemeTypeT0(),
+			task0kr.ShemeTypeT01(),
 			task1.ShemeTypeT1(),
 			task2.ShemeTypeT2(),
 			task3.ShemeTypeT3(),

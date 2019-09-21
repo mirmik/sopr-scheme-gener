@@ -132,7 +132,7 @@ class ConfView(QWidget):
 		self.arrow_size_getter = self.sett.add("Размер стрелок:", "int", "10")
 		self.sett.updated.connect(self.updated)
 
-		self.layout.addWidget(self.sett)
+		#self.layout.addWidget(self.sett)
 
 		self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 		self.setLayout(self.layout)
