@@ -315,26 +315,27 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			if task["betsect"][i].Mkr == "-":
 				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad2(i)+10, 11, True)
 
-			if task["betsect"][i].T != "":
-				leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
-				rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
-				
-				size = QFontMetrics(font).width(task["betsect"][i].T)
-				text = task["betsect"][i].T
 
-
-				if task["betsect"][i].Mkr == "clean":
-					paintool.placedtext(painter,
-						QPoint(wsect(i), hcenter), 
-						max(leftA, rightA) * height_zone / 2 + 10, 
-						size, 
-						text,
-						right = task["betsect"][i].M == 2)
-
-				else:
-					painter.drawText(QPoint(
-						wsect(i) + 14, 
-						hcenter - msectrad2(i)-14), text)
+			if task["betsect"][i].F != "clean" or task["betsect"][i].M != "clean" or task["betsect"][i].Mkr != "clean":
+				if task["betsect"][i].T != "":
+					leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
+					rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
+					
+					size = QFontMetrics(font).width(task["betsect"][i].T)
+					text = task["betsect"][i].T
+	
+					if task["betsect"][i].Mkr == "clean":
+						paintool.placedtext(painter,
+							QPoint(wsect(i), hcenter), 
+							max(leftA, rightA) * height_zone / 2 + 10, 
+							size, 
+							text,
+							right = task["betsect"][i].M == 2)
+	
+					else:
+						painter.drawText(QPoint(
+							wsect(i) + 14, 
+							hcenter - msectrad2(i)-14), text)
 
 		# Отрисовка распределённых нагрузок:
 		for i in range(len(task["sectforce"])):
