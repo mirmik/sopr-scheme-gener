@@ -126,8 +126,8 @@ class ConfWidget_T0(common.ConfWidget):
 
 	def add_action(self):
 		self.sections().append(self.sect())
-		self.sectforce().append(self.sectforce())
-		self.shemetype.task["betsect"].append(self.betsect())
+		self.sectforces().append(self.sectforce())
+		self.bsections().append(self.betsect())
 		self.redraw()
 		self.table.updateTable()
 		self.table1.updateTable()
@@ -138,8 +138,8 @@ class ConfWidget_T0(common.ConfWidget):
 			return
 
 		del self.sections()[-1]
-		del self.sectforce()[-1]
-		del self.shemetype.task["betsect"][-1]
+		del self.sectforces()[-1]
+		del self.bsections()[-1]
 		self.redraw()
 		self.table.updateTable()
 		self.table1.updateTable()
