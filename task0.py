@@ -343,8 +343,18 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			strt_height = hcenter - height_zone*hkoeff/2
 			fini_height = hcenter + height_zone*hkoeff/2
 
+			step = 15
+			alen = 15
+			rad = 10
+
 			xa = wsect(i)
 			xb = wsect(i+1)
+
+			if i == 0 and zleft:
+				xa = xa + step*2/3
+
+			if i == len(self.sections())-1 and zright:
+				xb = xb - step*2/3
 
 			if task["sectforce"][i].mkr == "clean":
 				continue
@@ -353,10 +363,6 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				tp = True
 			else:
 				tp = False
-
-			step = 15
-			alen = 15
-			rad = 10
 
 			paintool.raspred_torsion(painter=painter,
 				apnt=QPointF(xa, strt_height),
