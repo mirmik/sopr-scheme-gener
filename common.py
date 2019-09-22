@@ -157,3 +157,12 @@ class ConfView(QWidget):
 
 def getLineWidth():
 	return CONFVIEW.lwidth_getter.get()
+
+def pretty_str(f, t):
+	if (f == 1):
+		return t
+	else:
+		if abs(float(f) - int(f)) < 0.0001:
+			return str(int(f)) + t
+		else:
+			return str(f) + t

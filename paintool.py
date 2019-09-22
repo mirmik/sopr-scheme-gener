@@ -91,9 +91,9 @@ def left_arrow_points_top(x, y, s):
 
 def right_arrow_points_top(x, y, s):
 	return [
-		(x, 		y),
-		(x - s, 	y+s/3),
-		(x - s, 	y-s/3)
+		(x+0.5, 		y+0.5),
+		(x - s+0.5, 	y+s/3+0.5),
+		(x - s+0.5, 	y-s/3+0.5)
 	]
 
 def angled_arrow_points_top(x, y, a, s):
@@ -124,9 +124,27 @@ def left_arrow(painter, pnt, length, headsize):
 	painter.drawLine(pnt, QPoint(pnt.x()-length, pnt.y()))
 	left_arrow_head_top(painter, pnt.x()-length, pnt.y(), headsize)
 
+def left_arrow_double(painter, pnt, length, headsize, h):
+	apnt = pnt + QPoint(0, h/2)
+	bpnt = pnt + QPoint(0, -h/2)
+	painter.setPen(pen)
+	left_arrow(painter, apnt, length, headsize)
+	left_arrow(painter, bpnt, length, headsize)
+	painter.setPen(halfpen)
+	painter.drawLine(apnt, bpnt)
+
 def right_arrow(painter, pnt, length, headsize):
 	painter.drawLine(pnt, QPoint(pnt.x()+length, pnt.y()))
 	right_arrow_head_top(painter, pnt.x()+length, pnt.y(), headsize)
+
+def right_arrow_double(painter, pnt, length, headsize, h):
+	apnt = pnt + QPoint(0, h/2)
+	bpnt = pnt + QPoint(0, -h/2)
+	painter.setPen(pen)
+	right_arrow(painter, apnt, length, headsize)
+	right_arrow(painter, bpnt, length, headsize)
+	painter.setPen(halfpen)
+	painter.drawLine(apnt, bpnt)
 
 def up_arrow(painter, pnt, length, headsize):
 	tgt = pnt + QPoint(0, length)
@@ -313,12 +331,15 @@ def placedtext(painter, pnt, y, size, text = "NoText", right=False):
 	if size2 < 18:
 		size2 = 18
 	
+	painter.setPen(halfpen)
 	if right:
 		painter.drawLine(pnt, pnt + QPoint(-size2/2, -y))
 	else:
 		painter.drawLine(pnt, pnt + QPoint(size2/2, -y))
 			
 	painter.drawLine(pnt + QPoint(size2/2, -y), pnt + QPoint(-size2/2, -y))
+	
+	painter.setPen(pen)
 	painter.drawText(pnt + QPoint(-size/2, -y-3), text)
 
 def zadelka(painter, xl, xr, yu, yd, left_border, right_border):
@@ -792,3 +813,32 @@ def raspred_torsion(painter, apnt, bpnt, alen, step, rad, tp):
 		else:
 			crest_circ(painter, fpnt, rad)
 		#common_arrow(painter, fpnt, spnt, arrow_size)
+
+def raspred_force(painter, apnt, bpnt, step, tp):
+	if pen:
+		painter.setPen(pen)
+
+	dist = math.sqrt((apnt.x()-bpnt.x())**2 + (apnt.y()-bpnt.y())**2)
+	count = int(dist / step)
+	count = count - count % 2 + 1
+
+	diff = bpnt - apnt
+	#norm = QPointF(-diff.y(), diff.x()) / math.sqrt(diff.y()**2 + diff.x()**2)
+	#norm = norm * alen
+
+	#painter.drawLine(apnt+norm, bpnt+norm)
+
+	pnts = []
+	for i in range(count):
+		koeff = i / (count - 1)
+		spnt = koeff * bpnt + (1-koeff) * apnt
+		spnt = QPoint(spnt.x()+0.5, spnt.y()+0.5)
+		pnts.append(spnt)
+
+	painter.setPen(pen)
+	for i in range(len(pnts) - 1):
+		if tp:
+			right_arrow(painter, pnts[i], step, 12)
+		else:
+			left_arrow(painter, pnts[i+1], step, 12)
+		

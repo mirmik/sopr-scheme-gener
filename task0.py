@@ -20,16 +20,18 @@ class ShemeTypeT0(common.SchemeType):
 class ConfWidget_T0(common.ConfWidget):
 	"""Виджет настроек задачи T0"""
 	class sect:
-		def __init__(self, A=1, l=1, text="", delta=False):
+		def __init__(self, A=1, l=1, E=1, text="", delta=False):
 			self.A=A
 			self.l=l
+			self.E=E
 			self.text = text
 			self.delta=delta
 
 	class sectforce:
-		def __init__(self, mkr="clean", mkrT=""):
+		def __init__(self, mkr="clean", mkrT="", Fr="clean"):
 			self.mkr = mkr
 			self.mkrT = mkrT
+			self.Fr = Fr
 
 	class betsect:
 		def __init__(self, F="clean", M="clean", Mkr="clean", T=""):
@@ -42,9 +44,9 @@ class ConfWidget_T0(common.ConfWidget):
 		self.shemetype.task = {
 			"sections": 
 			[
-				self.sect(A=1, l=1),
-				self.sect(A=2, l=1),
-				self.sect(A=1, l=2),
+				self.sect(A=1, l=1, E=1),
+				self.sect(A=2, l=1, E=1),
+				self.sect(A=1, l=2, E=1),
 			],
 			"betsect":
 			[
@@ -91,14 +93,16 @@ class ConfWidget_T0(common.ConfWidget):
 
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table.addColumn("A", "float", "Толщина")
+		self.table.addColumn("A", "float", "Площажь/КрутЖестк")
 		self.table.addColumn("l", "float", "Длина")
+		self.table.addColumn("E", "float", "МодульЮнга")
 		self.table.addColumn("text", "str", "Текст")
 		self.table.addColumn("delta", "bool", "Зазор")
 		self.table.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
 		self.table1.addColumn("mkr", "list", variant=["clean", "+", "-"])
+		self.table1.addColumn("Fr", "list", variant=["clean", "+", "-"])
 		self.table1.addColumn("mkrT", "str", "Текст")
 		self.table1.updateTable()
 
@@ -121,7 +125,9 @@ class ConfWidget_T0(common.ConfWidget):
 		self.table1.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
 
-
+		self.shemetype.texteditor = QTextEdit()
+		self.shemetype.texteditor.textChanged.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
 
 		self.setLayout(self.vlayout)
 
@@ -156,6 +162,12 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 	def paintEventImplementation(self, ev):
 		"""Рисуем сцену согласно объекта задания"""
+		font_size = self.shemetype.font_size.get()
+		painter = QPainter(self)
+		font = painter.font()
+		font.setItalic(True)
+		font.setPointSize(font_size)
+		painter.setFont(font)
 
 		lwidth = self.shemetype.lwidth.get()
 
@@ -166,7 +178,6 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		base_section_height = self.shemetype.base_section_height.get()
 		arrow_size = self.shemetype.arrow_size.get()
 		arrow_head_size = self.shemetype.arrow_size.get()
-		font_size = self.shemetype.font_size.get()
 		razm = self.shemetype.razm.get()
 
 		task = self.shemetype.task
@@ -176,19 +187,21 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		height = size.height()
 		kruch_flag = self.shemetype.kruch_flag.get()
 
-		hcenter = height/2
+		addtext = self.shemetype.texteditor.toPlainText()
+
+		arrow_line_size = 50
+		hcenter = height/2 - QFontMetrics(font).height() * len(addtext.splitlines()) / 2
 
 		height_zone = base_section_height
 
 		strt_width = self.shemetype.left_zone.get()
 		fini_width = width-self.shemetype.right_zone.get()
 
+		if self.bsections()[0].F == "-":
+			strt_width = strt_width + arrow_line_size
 
-		painter = QPainter(self)
-		font = painter.font()
-		font.setItalic(True)
-		font.setPointSize(font_size)
-		painter.setFont(font)
+		if self.bsections()[-1].F == "+":
+			fini_width = fini_width - arrow_line_size
 
 		br = QPen()
 		br.setWidth(lwidth)
@@ -214,6 +227,16 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		for i in range(len(task["sections"])):
 			summary_length += task["sections"][i].l
 			ll.append(ll[i] + task["sections"][i].l)
+
+		def next_raspred(i):
+			if i == len(self.sections()):
+				return False
+			return task["sectforce"][i].Fr != "clean"
+
+		def prev_raspred(i):
+			if i == 0:
+				return False
+			return task["sectforce"][i-1].Fr != "clean"
 
 		def wsect(i):
 			l = len(task["sections"])
@@ -256,9 +279,11 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 			A = task["sections"][i].A
 			l = task["sections"][i].l
+			E = task["sections"][i].E
 
 			sechtext = "GIк" if kruch_flag else "A"
 
+			text_E = common.pretty_str(E, "E")
 			if not task["sections"][i].delta:
 				if abs(float(A) - int(A)) < 0.0001:
 					text_A = "{}{}".format(int(task["sections"][i].A+0.1), sechtext) if task["sections"][i].A != 1 else sechtext
@@ -272,9 +297,10 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			else: 
 				text_l = ""
 				text_A = ""
-
+			
 			text_l = paintool.greek(text_l)
 			text_A = paintool.greek(text_A)
+			text_E = paintool.greek(text_E)
 
 			if not task["sections"][i].delta:
 				painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height)
@@ -282,11 +308,18 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			lW = QFontMetrics(font).width(text_l)
 			AW = QFontMetrics(font).width(text_A)
 
-			if task["sections"][i].text == "":
-				text = "{}, {}".format(text_l, text_A)
-			else:
-				text = task["sections"][i].text
 
+			if kruch_flag:
+				if task["sections"][i].text == "":
+					text = "{}, {}".format(text_l, text_A)
+				else:
+					text = paintool.greek(task["sections"][i].text)
+			else:
+				if task["sections"][i].text == "":
+					text = "{}, {}, {}".format(text_l, text_A, text_E)
+				else:
+					text = paintool.greek(task["sections"][i].text)
+				
 			if razm:
 				painter.setPen(self.halfpen)
 				paintool.dimlines(painter, QPoint(wsect(i), fini_height), QPoint(wsect(i+1), fini_height), dimlines_level)
@@ -297,11 +330,38 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		
 		#Отрисовка граничных эффектов
 		for i in range(len(task["betsect"])):
-			if task["betsect"][i].F == "+":
-				paintool.right_arrow(painter, QPoint(wsect(i), hcenter), arrow_size, arrow_head_size)
+			painter.setPen(self.default_pen)
+			arrow_head_size = 15
 
-			if task["betsect"][i].F == "-":
-				paintool.left_arrow(painter, QPoint(wsect(i), hcenter), arrow_size, arrow_head_size)
+			F_text_policy = "simple"
+			F_level = 0
+
+			if task["betsect"][i].F != "clean":
+				#Отрисовываем сосредоточенные силы.
+
+				if task["betsect"][i].F == "+":
+					if not next_raspred(i):
+						paintool.right_arrow(painter, QPoint(wsect(i), hcenter), arrow_line_size, arrow_head_size)
+					else:
+						paintool.right_arrow_double(painter, 
+							QPoint(wsect(i), hcenter), 
+							arrow_line_size, 
+							arrow_head_size,
+							h = sectrad(i) * 3.2)
+						F_text_policy = "up"
+						F_level = - sectrad(i) * 3.2/2 + hcenter
+				
+				if task["betsect"][i].F == "-":
+					if not prev_raspred(i):
+						paintool.left_arrow(painter, QPoint(wsect(i), hcenter), arrow_line_size, arrow_head_size)
+					else:
+						paintool.left_arrow_double(painter, 
+							QPoint(wsect(i), hcenter), 
+							arrow_line_size, 
+							arrow_head_size,
+							h = sectrad(i-1) * 3.2)
+						F_text_policy = "up"
+						F_level = - sectrad(i-1) * 3.2/2 + hcenter					
 
 			if task["betsect"][i].M == "+":
 				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), hcenter), 20), False)
@@ -316,7 +376,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad2(i)+10, 11, True)
 
 
-			if task["betsect"][i].F != "clean" or task["betsect"][i].M != "clean" or task["betsect"][i].Mkr != "clean":
+			if task["betsect"][i].F != "clean":
 				if task["betsect"][i].T != "":
 					leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
 					rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
@@ -324,18 +384,28 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					size = QFontMetrics(font).width(task["betsect"][i].T)
 					text = task["betsect"][i].T
 	
-					if task["betsect"][i].Mkr == "clean":
+					desp = +arrow_line_size/2 if task["betsect"][i].F == "+" else -arrow_line_size/2
+					
+					if F_text_policy == "simple":
 						paintool.placedtext(painter,
-							QPoint(wsect(i), hcenter), 
+							QPoint(wsect(i)+desp, hcenter), 
 							max(leftA, rightA) * height_zone / 2 + 10, 
 							size, 
 							text,
 							right = task["betsect"][i].M == 2)
 	
-					else:
-						painter.drawText(QPoint(
-							wsect(i) + 14, 
-							hcenter - msectrad2(i)-14), text)
+					if F_text_policy == "up":
+						paintool.draw_text_centered(painter,
+							QPoint(
+								wsect(i)+desp, 
+								F_level -3), 
+							text, font)
+
+			elif task["betsect"][i].Mkr != "clean":
+				if task["betsect"][i].T != "":
+					painter.drawText(QPoint(
+						wsect(i) + 14, 
+						hcenter - msectrad2(i)-14), text)
 
 		# Отрисовка распределённых нагрузок:
 		for i in range(len(task["sectforce"])):
@@ -344,12 +414,14 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			strt_height = hcenter - height_zone*hkoeff/2
 			fini_height = hcenter + height_zone*hkoeff/2
 
-			step = 15
+			step = 18
 			alen = 15
 			rad = 10
 
 			xa = wsect(i)
 			xb = wsect(i+1)
+			fxa = wsect(i)
+			fxb = wsect(i+1)
 
 			if i == 0 and zleft:
 				xa = xa + step*2/3
@@ -357,34 +429,61 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			if i == len(self.sections())-1 and zright:
 				xb = xb - step*2/3
 
-			if task["sectforce"][i].mkr == "clean":
-				continue
+			if task["sectforce"][i].mkr != "clean":
+				if task["sectforce"][i].mkr == "+":
+					tp = True
+				else:
+					tp = False
+	
+				paintool.raspred_torsion(painter=painter,
+					apnt=QPointF(xa, strt_height),
+					bpnt=QPointF(xb, strt_height),
+					alen=-alen,
+					rad=rad,
+					step=step,
+					tp = tp)
+	
+				paintool.raspred_torsion(painter=painter,
+					apnt=QPointF(xa, fini_height),
+					bpnt=QPointF(xb, fini_height),
+					alen=alen,
+					step=step,
+					rad=rad,
+					tp = not tp)
+	
+				if task["sectforce"][i].mkrT:
+					painter.drawText(QPointF((xa+xb)/2, strt_height - 3 - alen - rad), 
+						task["sectforce"][i].mkrT)
 
-			if task["sectforce"][i].mkr == "+":
-				tp = True
-			else:
-				tp = False
 
-			paintool.raspred_torsion(painter=painter,
-				apnt=QPointF(xa, strt_height),
-				bpnt=QPointF(xb, strt_height),
-				alen=-alen,
-				rad=rad,
-				step=step,
-				tp = tp)
+			#отрисовка распределённой силы.
+			
+			if task["sectforce"][i].Fr != "clean":
+				if task["sectforce"][i].Fr == "+":
+					tp = True
+				else:
+					tp = False
+				
+				step = 20
 
-			paintool.raspred_torsion(painter=painter,
-				apnt=QPointF(xa, fini_height),
-				bpnt=QPointF(xb, fini_height),
-				alen=alen,
-				step=step,
-				rad=rad,
-				tp = not tp)
+				paintool.raspred_force(painter=painter,
+					apnt=QPointF(fxa, hcenter),
+					bpnt=QPointF(fxb, hcenter),
+					step=step,
+					tp = tp)
 
-			if task["sectforce"][i].mkrT:
-				painter.drawText(QPointF((xa+xb)/2, strt_height - 3 - alen - rad), 
-					task["sectforce"][i].mkrT)
-
+				if task["sectforce"][i].mkrT:
+					leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
+					rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
+	
+					size = QFontMetrics(font).width(task["sectforce"][i].mkrT)
+					paintool.placedtext(painter,
+						QPoint((fxa + fxb)/2, hcenter), 
+						max(leftA, rightA) * height_zone / 2 + 10, 
+						size, 
+						task["sectforce"][i].mkrT,
+						right = True)
+	
 
 		if zleft:
 			y = math.sqrt(task["sections"][0].A) * height_zone
@@ -402,3 +501,9 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
 			pen = QPen()
 			painter.setPen(pen)
+
+		for i, l in enumerate(addtext.splitlines()):
+			painter.drawText(QPoint(
+				40, 
+				dimlines_level + 30 + QFontMetrics(font).height()*i), 
+			paintool.greek(l))
