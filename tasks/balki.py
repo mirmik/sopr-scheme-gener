@@ -252,12 +252,17 @@ class PaintWidget(paintwdg.PaintWidget):
 			painter.drawEllipse(
 				QRect(center - QPoint(arg1,arg1), center + QPoint(arg1,arg1)))
 
+			painter.setBrush(QBrush(Qt.NoBrush))
+			painter.setPen(self.axpen)
+			painter.drawEllipse(
+				QRect(center - QPoint((arg1+arg0)/2,(arg0+arg1)/2), center + QPoint((arg1+arg0)/2,(arg0+arg1)/2)))
+
 			painter.setPen(self.halfpen)
 
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center-QPoint(0,arg0),
-				bpnt = center+QPoint(0,arg0),
+				apnt = center-QPoint(0,(arg1+arg0)/2),
+				bpnt = center+QPoint(0,(arg1+arg0)/2),
 				offset = QPoint(-dimlines_off,0),
 				textoff = QPoint(-10, 0) - QPoint(QFontMetrics(self.font).width(atxt)/2, 0),
 				text = atxt,
