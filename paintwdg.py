@@ -3,8 +3,15 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+import traceback
 import common
 import paintool
+
+EXIT_ON_EXCEPT = False
+
+def set_EXIT_ON_ERROR():
+	global EXIT_ON_EXCEPT
+	EXIT_ON_EXCEPT = True
 
 class PaintWidgetSetter(QWidget):
 	def __init__(self, container):
@@ -105,6 +112,7 @@ class PaintWidget(QWidget):
 		painter.setFont(self.font)
 
 		self.default_pen = QPen()
+		self.pen = self.default_pen
 		self.default_pen.setWidth(lwidth)
 		painter.setPen(self.default_pen)
 		paintool.pen = self.default_pen
@@ -112,6 +120,11 @@ class PaintWidget(QWidget):
 		self.halfpen = QPen()
 		self.halfpen.setWidth(lwidth/2)
 		paintool.halfpen = self.halfpen
+
+		axpen = QPen(Qt.DashDotLine)
+		axpen.setWidth(lwidth/2)
+		paintool.axpen = axpen
+		self.axpen = axpen
 
 		self.default_brush = QBrush(Qt.SolidPattern)
 		self.default_brush.setColor(Qt.white)
@@ -130,7 +143,10 @@ class PaintWidget(QWidget):
 		try:
 			self.paintEventCommon()			
 			self.paintEventImplementation(ev)
-		except:
+		except Exception as ex:
+			if EXIT_ON_EXCEPT:
+				traceback.print_exc()
+				exit(0)
 			raise
 
 	def sections(self):

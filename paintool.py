@@ -166,6 +166,9 @@ def common_arrow(painter, spnt, fpnt, arrow_size):
 	angled_arrow_head_top(painter, fpnt, angle, arrow_size)
 	painter.drawLine(spnt, fpnt)
 
+def arrow_head(painter, pnt, angle, headsize):
+	return angled_arrow_head_top(painter, pnt, angle, headsize)
+
 def circular_arrow_base(painter, rect, inverse = False, head_size=12):
 	assert rect.width() == rect.height()
 	
@@ -499,7 +502,8 @@ def greek(text):
 		("\\alpha", "α"),
 		("\\beta", "β"),
 		("\\gamma", "γ"),
-		#("\\delta", "\u0394"),
+		("\\degree", "\u00B0"),
+		("\\Delta", "\u0394"),
 		("\\delta", "δ"),
 		("\\epsilon", "ε"),
 		("\\zeta", "ζ"),
@@ -608,7 +612,7 @@ def draw_vertical_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, t
 	htext = QFontMetrics(font).height()
 	xwtext = QFontMetrics(font).width('x')
 	
-	tpnt = (dpnt+upnt)/2 + QPoint(xwtext/2,htext/2)
+	tpnt = (dpnt+upnt)/2 + QPoint(xwtext/2,htext/2) + textpnt
 
 	painter.drawRect(
 		tpnt.x(), tpnt.y() - QFontMetrics(font).height(), 
@@ -617,7 +621,45 @@ def draw_vertical_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, t
 	painter.setPen(pen)
 	painter.drawText(tpnt, text)
 
-	
+def draw_textline(painter, strt, textpnt, text, font):
+	htext = QFontMetrics(font).height()
+	wtext = QFontMetrics(font).width(text)
+
+	apnt = textpnt + QPoint(0, htext/8)
+	bpnt = textpnt + QPoint(wtext, htext/8)
+
+	painter.drawLine(apnt, bpnt)
+	painter.drawLine(strt, apnt)
+
+def draw_dimlines(painter, apnt, bpnt, offset, textoff, text, arrow_size, splashed=False, textline_from=None):
+	"""Нарисовать размерные линии с текстом"""
+
+	aoff = apnt + offset
+	boff = bpnt + offset
+	coff = aoff + (boff - aoff) / 2
+
+	diff = boff - aoff
+	angle = math.atan2(-diff.y(), diff.x())
+
+	aang = angle if splashed else angle + math.pi
+	bang = angle + math.pi if splashed else angle
+
+	arrow_head(painter, aoff, aang, arrow_size)
+	arrow_head(painter, boff, bang, arrow_size)
+	painter.drawLine(aoff, boff)
+	painter.drawLine(aoff, boff)
+	painter.drawLine(apnt, aoff)
+	painter.drawLine(bpnt, boff)
+
+	font = painter.font()
+	htext = QFontMetrics(font).height()
+	wtext = QFontMetrics(font).width(text)
+	textpnt = coff + textoff + QPoint(-wtext/2, htext/4)
+	painter.drawText(textpnt, text)
+
+	if textline_from == "bpnt":
+		draw_textline(painter, bpnt, textpnt, text, font=font)
+
 def draw_vertical_splashed_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, text, font):
 	"""подписать толщину"""
 

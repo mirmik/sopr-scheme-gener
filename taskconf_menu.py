@@ -6,27 +6,37 @@ from PyQt5.QtWidgets import *
 class Element(QWidget):
 	updated = pyqtSignal()
 
-	def __init__(self, label, type, defval):
+	def __init__(self, label, type, defval=None, variant=None):
 		super().__init__()
 		self.label = QLabel(label)
 		self.type = type
 
-		if type == "text":
+		if type == "text" or type == "str":
 			self.obj = QLineEdit(defval)
 			self.obj.textChanged.connect(self.updated)
 
-		if type == "int":
+		elif type == "int":
 			self.obj = QLineEdit(defval)
 			self.obj.textChanged.connect(self.updated)
 
-		if type == "float":
+		elif type == "float":
 			self.obj = QLineEdit(defval)
 			self.obj.textChanged.connect(self.updated)
 
-		if type == "bool":
+		elif type == "bool":
 			self.obj = QCheckBox()
 			self.obj.setChecked(defval)
 			self.obj.stateChanged.connect(self.updated)
+
+		elif type == "list":
+			self.obj = QComboBox()
+			self.obj.addItems(variant)
+			self.obj.setCurrentIndex(defval),
+			self.obj.currentIndexChanged.connect(self.updated)
+
+			#cur = str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name))
+			#no = variant.index(cur)
+			#self.obj.setCurrentIndex(no)
 
 		self.label.setFixedWidth(200)
 
@@ -44,25 +54,29 @@ class Element(QWidget):
 				self.type = type
 
 			def get(self):
-				if (self.type == "text"):
+				if (self.type == "text" or self.type == "str"):
 					return self.obj.text()
 
-				if (self.type == "int"):
+				elif (self.type == "int"):
 					try:
 						return int(self.obj.text())
 					except:
 						return 1
 
-				if (self.type == "float"):
+				elif (self.type == "float"):
 					return float(self.obj.text())
 
-				if (self.type == "bool"):
+				elif (self.type == "bool"):
 					return bool(self.obj.checkState())
+
+				elif self.type == "list":
+					idx = self.obj.currentIndex()
+					return str(self.obj.itemText(idx))
 
 				print("strange type")
 
 			def set(self, val):
-				if (self.type == "text"):
+				if (self.type == "text" or self.type=="str"):
 					self.obj.setText(val)
 					return 
 
@@ -91,8 +105,8 @@ class TaskConfMenu(QWidget):
 		self.layout = QVBoxLayout()
 		self.setLayout(self.layout)
 
-	def add(self, label, type, defval):
-		el = Element(label, type, defval)
+	def add(self, label, type, defval=None, variant=None):
+		el = Element(label, type, defval, variant)
 		self.layout.addWidget(el)
 		el.updated.connect(self.updated)
 		return el.getter()

@@ -15,6 +15,7 @@ import task1
 import task2
 import task3
 import task4
+import tasks.balki
 import common
 import container
 import paintwdg
@@ -52,6 +53,7 @@ class CentralWidget(QWidget):
 		self.scheme_types = [
 			task0.ShemeTypeT0(),
 			task0kr.ShemeTypeT01(),
+			tasks.balki.ShemeType(),
 			task1.ShemeTypeT1(),
 			task2.ShemeTypeT2(),
 			task3.ShemeTypeT3(),
@@ -253,7 +255,11 @@ class MainWindow(QMainWindow):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--type", default="-1")
+parser.add_argument("--error", action="store_true")
 pargs = parser.parse_args()
+
+if pargs.error:
+	paintwdg.set_EXIT_ON_ERROR()
 
 qapp = QApplication(sys.argv[1:])
 qapp.setApplicationName("sopr-sheme-gener")
