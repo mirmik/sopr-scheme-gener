@@ -129,6 +129,7 @@ class ConfWidget(common.ConfWidget):
 		self.table.updateTable()
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
+		self.table2.addColumn("sectname", "str", "Имя")
 		self.table2.addColumn("sharn", "bool", "Шарн.")
 		self.table2.addColumn("F", "list", variant=["clean", "+", "-"])
 		self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
@@ -584,9 +585,10 @@ class PaintWidget(paintwdg.PaintWidget):
 					self.bsections()[i].FT)
 
 			if self.bsections()[i].sectname != "":
+				off = 9 if self.bsections()[i].sharn else 5
 				painter.drawText(
-					QPoint(wpnts[i]+10, hcenter+25), 
-					self.bsections()[i].FT)
+					QPoint(wpnts[i]-off-QFontMetrics(self.font).width(self.bsections()[i].sectname), hcenter+21), 
+					self.bsections()[i].sectname)
 
 
 		rad2 = rad/2
@@ -655,12 +657,13 @@ class PaintWidget(paintwdg.PaintWidget):
 		for i in range(len(self.bsections())):
 			if self.bsections()[i].sharn:
 				hoff = 0 if i == 0 or i == len(self.bsections()) - 1 else 8
+				ihoff = 8 if i == 0 or i == len(self.bsections()) - 1 else 0
 				paintool.draw_sharnir_1dim(
 					painter, 
 					pnt=QPoint(wpnts[i], hcenter + hoff), 
 					angle=math.pi/2, 
 					rad=5.5, 
-					termrad=25, 
+					termrad=25+ihoff, 
 					termx=20, 
 					termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
 
