@@ -101,29 +101,33 @@ class TableWidget(QTableWidget):
 		self.protect = False
 
 	def changed(self, row, column):
-		if column == -1 or self.protect:
-			return
+		try:
+			if column == -1 or self.protect:
+				return
 
-		field = self.columns[column].name
-		
-		val = None
-		if self.columns[column].type == "int":
-			val = int(self.item(row,column).text())
-
-		elif self.columns[column].type == "float":
-			val = float(self.item(row,column).text())
-
-		elif self.columns[column].type == "str":
-			val = self.item(row,column).text()
-
-		elif self.columns[column].type == "bool":
-			val = bool(self.cellWidget(row,column).checkState())
-
-		elif self.columns[column].type == "list":
-			val = str(self.cellWidget(row,column).currentText())
-		
-		else:
-			raise Exception("unregistred type")
-
-		setattr(self.shemetype.task[self.modelname][row], field, val)
-		self.updated.emit()
+			field = self.columns[column].name
+			
+			val = None
+			if self.columns[column].type == "int":
+				val = int(self.item(row,column).text())
+	
+			elif self.columns[column].type == "float":
+				val = float(self.item(row,column).text())
+	
+			elif self.columns[column].type == "str":
+				val = self.item(row,column).text()
+	
+			elif self.columns[column].type == "bool":
+				val = bool(self.cellWidget(row,column).checkState())
+	
+			elif self.columns[column].type == "list":
+				val = str(self.cellWidget(row,column).currentText())
+			
+			else:
+				raise Exception("unregistred type")
+	
+			setattr(self.shemetype.task[self.modelname][row], field, val)
+			self.updated.emit()
+		except:
+			pass
+	
