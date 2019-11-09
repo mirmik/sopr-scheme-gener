@@ -699,27 +699,28 @@ class PaintWidget(paintwdg.PaintWidget):
 
 
 		# Рисуем терминатор:
-		termpos = wpnts[0] if self.shemetype.leftterm.get() else wpnts[-1]
-		termangle = math.pi if self.shemetype.leftterm.get() else 0
+		termpos = wpnts[0] if self.shemetype.leftterm.get() == "слева" else wpnts[-1]
+		termangle = math.pi if self.shemetype.leftterm.get() == "слева" else 0
 
-		if self.shemetype.sharnterm.get():
-			paintool.draw_sharnir_1dim(
+		if self.shemetype.leftterm.get() != "":
+			if self.shemetype.sharnterm.get():
+				paintool.draw_sharnir_1dim(
+						painter, 
+						pnt=QPointF(termpos, hcenter), 
+						angle=termangle, 
+						rad=5.5, 
+						termrad=25, 
+						termx=20, 
+						termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
+	
+			else:
+				paintool.draw_zadelka(
 					painter, 
-					pnt=QPointF(termpos, hcenter), 
+					pnt=QPointF(termpos+0.5, hcenter), 
 					angle=termangle, 
-					rad=5.5, 
-					termrad=25, 
-					termx=20, 
-					termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
-
-		else:
-			paintool.draw_zadelka(
-				painter, 
-				pnt=QPointF(termpos+0.5, hcenter), 
-				angle=termangle, 
-				termx=25, 
-				termy=15, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)			
-
+					termx=25, 
+					termy=15, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)			
+	
 
 		for i in range(len(self.bsections())):
 			if self.bsections()[i].sharn == "1":
