@@ -939,7 +939,7 @@ def raspred_force_vertical(painter, apnt, bpnt, step, offset, dim, arrow_size):
 	for i in range(count):
 		koeff = i / (count - 1)
 		spnt = koeff * bpnt + (1-koeff) * apnt
-		spnt = QPoint(spnt.x()+0.5, spnt.y()+0.5)
+		spnt = QPointF(spnt.x()+0.5, spnt.y()+0.5)
 		pnts.append(spnt)
 
 	painter.setPen(halfpen)

@@ -638,6 +638,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				QPoint(wpnts[i+1], hcenter), 
 				hcenter+80)
 			text = util.text_prepare_ltext(self.sections()[i].l)
+			if not self.shemetype.section_enable.get():
+				text += ", E, Ix"
 			paintool.draw_text_centered(painter, 
 				QPoint((wpnts[i]+wpnts[i+1])/2, 
 					hcenter+80-5), text, self.font)
