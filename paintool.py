@@ -19,13 +19,13 @@ def rad2deg(arg):
 	return arg * 180 / math.pi
 
 def rotate(angle, pnt):
-	return QPoint(pnt.x() * math.cos(angle) - pnt.y() * math.sin(angle), pnt.y() * math.cos(angle) + pnt.x() * math.sin(angle))
+	return QPointF(pnt.x() * math.cos(angle) - pnt.y() * math.sin(angle), pnt.y() * math.cos(angle) + pnt.x() * math.sin(angle))
 
 #def leftArrow(self, painter, basepoint):
 #	arrow_size = self.shemetype.datasettings.arrow_size
 #	arrow_head_size = self.shemetype.datasettings.arrow_head_size		
 #
-#	painter.drawLine(basepoint, QPoint(basepoint.x() - arrow_size, basepoint.y()))
+#	painter.drawLine(basepoint, QPointF(basepoint.x() - arrow_size, basepoint.y()))
 #
 #	points = [
 #		(basepoint.x() - arrow_size - 2 * arrow_head_size, basepoint.y()), 
@@ -41,7 +41,7 @@ def rotate(angle, pnt):
 #	arrow_size = self.shemetype.datasettings.arrow_size
 #	arrow_head_size = self.shemetype.datasettings.arrow_head_size
 #
-#	painter.drawLine(basepoint, QPoint(basepoint.x() + arrow_size, basepoint.y()))
+#	painter.drawLine(basepoint, QPointF(basepoint.x() + arrow_size, basepoint.y()))
 #
 #	points = [
 #		(basepoint.x() + arrow_size + 2 * arrow_head_size, basepoint.y()), 
@@ -124,12 +124,12 @@ def right_arrow_head_top(painter, x, y, s): paint_arrow(painter, right_arrow_poi
 def left_arrow_head_top(painter, x, y, s): paint_arrow(painter, left_arrow_points_top(x, y, s))
 
 def left_arrow(painter, pnt, length, headsize):
-	painter.drawLine(pnt, QPoint(pnt.x()-length, pnt.y()))
+	painter.drawLine(pnt, QPointF(pnt.x()-length, pnt.y()))
 	left_arrow_head_top(painter, pnt.x()-length, pnt.y(), headsize)
 
 def left_arrow_double(painter, pnt, length, headsize, h):
-	apnt = pnt + QPoint(0, h/2)
-	bpnt = pnt + QPoint(0, -h/2)
+	apnt = pnt + QPointF(0, h/2)
+	bpnt = pnt + QPointF(0, -h/2)
 	painter.setPen(pen)
 	left_arrow(painter, apnt, length, headsize)
 	left_arrow(painter, bpnt, length, headsize)
@@ -137,12 +137,12 @@ def left_arrow_double(painter, pnt, length, headsize, h):
 	painter.drawLine(apnt, bpnt)
 
 def right_arrow(painter, pnt, length, headsize):
-	painter.drawLine(pnt, QPoint(pnt.x()+length, pnt.y()))
+	painter.drawLine(pnt, QPointF(pnt.x()+length, pnt.y()))
 	right_arrow_head_top(painter, pnt.x()+length, pnt.y(), headsize)
 
 def right_arrow_double(painter, pnt, length, headsize, h):
-	apnt = pnt + QPoint(0, h/2)
-	bpnt = pnt + QPoint(0, -h/2)
+	apnt = pnt + QPointF(0, h/2)
+	bpnt = pnt + QPointF(0, -h/2)
 	painter.setPen(pen)
 	right_arrow(painter, apnt, length, headsize)
 	right_arrow(painter, bpnt, length, headsize)
@@ -150,12 +150,12 @@ def right_arrow_double(painter, pnt, length, headsize, h):
 	painter.drawLine(apnt, bpnt)
 
 def up_arrow(painter, pnt, length, headsize):
-	tgt = pnt + QPoint(0, length)
+	tgt = pnt + QPointF(0, length)
 	painter.drawLine(pnt, tgt)
 	up_arrow_head_top(painter, tgt.x(), tgt.y(), headsize)
 
 def down_arrow(painter, pnt, length, headsize):
-	tgt = pnt + QPoint(0, -length)
+	tgt = pnt + QPointF(0, -length)
 	painter.drawLine(pnt, tgt)
 	down_arrow_head_top(painter, tgt.x(), tgt.y(), headsize)
 
@@ -188,29 +188,29 @@ def circular_arrow_base(painter, rect, inverse = False, head_size=12):
 
 	if not inverse:
 		painter.drawLine(
-			(rect.center()+QPoint(rrr*math.cos(rangle),-rrr*math.sin(rangle))), 
-			(rect.center()+QPoint(-rrr*math.cos(rangle),+rrr*math.sin(rangle))))
+			(rect.center()+QPointF(rrr*math.cos(rangle),-rrr*math.sin(rangle))), 
+			(rect.center()+QPointF(-rrr*math.cos(rangle),+rrr*math.sin(rangle))))
 	
 		painter.drawArc(rect, angle*16, arc_angle*16)
 		painter.drawArc(rect, angle*16 + 180*16, arc_angle*16)
 		
 		angled_arrow_head_top(painter, 
-			rect.center()+QPoint(rrr*math.cos(rangle+deg(arc_angle)),-rrr*math.sin(rangle+deg(arc_angle))), rangle+deg(130), head_size)
+			rect.center()+QPointF(rrr*math.cos(rangle+deg(arc_angle)),-rrr*math.sin(rangle+deg(arc_angle))), rangle+deg(130), head_size)
 		angled_arrow_head_top(painter, 
-			rect.center()+QPoint(-rrr*math.cos(rangle+deg(arc_angle))+1,-rrr*math.sin(-rangle-deg(arc_angle))), rangle+deg(130+180), head_size)
+			rect.center()+QPointF(-rrr*math.cos(rangle+deg(arc_angle))+1,-rrr*math.sin(-rangle-deg(arc_angle))), rangle+deg(130+180), head_size)
 	
 	else:
 		painter.drawLine(
-			(rect.center()+QPoint(rrr*math.cos(rangle),rrr*math.sin(rangle))), 
-			(rect.center()+QPoint(-rrr*math.cos(rangle),-rrr*math.sin(rangle))))
+			(rect.center()+QPointF(rrr*math.cos(rangle),rrr*math.sin(rangle))), 
+			(rect.center()+QPointF(-rrr*math.cos(rangle),-rrr*math.sin(rangle))))
 	
 		painter.drawArc(rect, -angle*16, -arc_angle*16)
 		painter.drawArc(rect, -angle*16 - 180*16, -arc_angle*16)
 		
 		angled_arrow_head_top(painter, 
-			rect.center()+QPoint(rrr*math.cos(-rangle-deg(arc_angle)),-rrr*math.sin(-rangle-deg(arc_angle))), -rangle-deg(130), head_size)
+			rect.center()+QPointF(rrr*math.cos(-rangle-deg(arc_angle)),-rrr*math.sin(-rangle-deg(arc_angle))), -rangle-deg(130), head_size)
 		angled_arrow_head_top(painter, 
-			rect.center()+QPoint(-rrr*math.cos(-rangle-deg(arc_angle))+1,-rrr*math.sin(+rangle+deg(arc_angle))), -rangle-deg(130+180), head_size)
+			rect.center()+QPointF(-rrr*math.cos(-rangle-deg(arc_angle))+1,-rrr*math.sin(+rangle+deg(arc_angle))), -rangle-deg(130+180), head_size)
 
 
 def moment_arrows(painter, pnt, rad, inverse = False, arrow_size=12):
@@ -225,20 +225,20 @@ def moment_arrows(painter, pnt, rad, inverse = False, arrow_size=12):
 
 	if not inverse:
 		painter.drawLine(
-			(pnt+QPoint(rad*math.cos(rangle),-rad*math.sin(rangle))), 
-			(pnt+QPoint(-rad*math.cos(rangle),+rad*math.sin(rangle))))
+			(pnt+QPointF(rad*math.cos(rangle),-rad*math.sin(rangle))), 
+			(pnt+QPointF(-rad*math.cos(rangle),+rad*math.sin(rangle))))
 
 		painter.drawArc(QRect(x, y, x2-x, y2-y), angle*16, arc_angle*16)
 		painter.drawArc(QRect(x, y, x2-x, y2-y), angle*16 + 180*16, arc_angle*16)
 
 		angled_arrow_head_top(painter, 
-			pnt+QPoint(
+			pnt+QPointF(
 				rad*math.cos(rangle+deg(arc_angle)),
 				-rad*math.sin(rangle+deg(arc_angle))
 			), rangle+deg(130), arrow_size)
 		
 		angled_arrow_head_top(painter, 
-			pnt+QPoint(
+			pnt+QPointF(
 				-rad*math.cos(rangle+deg(arc_angle)),
 				-rad*math.sin(-rangle-deg(arc_angle))
 			), rangle+deg(130+180), arrow_size)
@@ -246,21 +246,21 @@ def moment_arrows(painter, pnt, rad, inverse = False, arrow_size=12):
 
 	else:
 		painter.drawLine(
-			(pnt+QPoint(rad*math.cos(rangle),+rad*math.sin(rangle))), 
-			(pnt+QPoint(-rad*math.cos(rangle),-rad*math.sin(rangle))))
+			(pnt+QPointF(rad*math.cos(rangle),+rad*math.sin(rangle))), 
+			(pnt+QPointF(-rad*math.cos(rangle),-rad*math.sin(rangle))))
 
 		
 		painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -arc_angle*16)
 		painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16 - 180*16, -arc_angle*16)
 		
 		angled_arrow_head_top(painter, 
-			pnt+QPoint(
+			pnt+QPointF(
 				rad*math.cos(rangle+deg(arc_angle)),
 				-rad*math.sin(rangle+deg(arc_angle))
 			), rangle+deg(130), arrow_size)
 		
 		angled_arrow_head_top(painter, 
-			pnt+QPoint(
+			pnt+QPointF(
 				-rad*math.cos(rangle+deg(arc_angle)),
 				-rad*math.sin(-rangle-deg(arc_angle))
 			), rangle+deg(130+180), arrow_size)
@@ -278,7 +278,7 @@ def circular_arrow(painter, pnt, rad, angle, angle2, arrow_size):
 	painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -(angle2 - angle)*16)
 
 	angled_arrow_head_top(painter, 
-		pnt+QPoint(
+		pnt+QPointF(
 			rad*math.cos(rangle2),
 			rad*math.sin(rangle2)
 		), rangle2 + deg(180), arrow_size)
@@ -302,7 +302,7 @@ def circular_arrow2(painter, pnt, rad, angle, angle2, arrow_size):
 	
 
 	angled_arrow_head_top(painter, 
-		pnt+QPoint(
+		pnt+QPointF(
 			rad*math.cos(rangle2),
 			rad*math.sin(rangle2)
 		), aangle, arrow_size)
@@ -310,7 +310,7 @@ def circular_arrow2(painter, pnt, rad, angle, angle2, arrow_size):
 def half_moment_arrow_common(painter, pnt, rad, angle, angle2, arrow_size):
 	angle = -angle
 	angle2 = -angle2
-	pnt2 = pnt+QPoint(
+	pnt2 = pnt+QPointF(
 			rad*math.cos(angle),
 			rad*math.sin(angle)
 		)
@@ -330,10 +330,10 @@ def half_moment_arrow(painter, pnt, rad, left=True, inverse = False, arrow_size=
 	c30 = math.cos(deg(45))
 	s30 = math.sin(deg(45))
 
-	lu = pnt + QPoint(-c30*rad, -s30*rad)
-	ld = pnt + QPoint(-c30*rad, s30*rad)
-	ru = pnt + QPoint(c30*rad, -s30*rad)
-	rd = pnt + QPoint(c30*rad, s30*rad)
+	lu = pnt + QPointF(-c30*rad, -s30*rad)
+	ld = pnt + QPointF(-c30*rad, s30*rad)
+	ru = pnt + QPointF(c30*rad, -s30*rad)
+	rd = pnt + QPointF(c30*rad, s30*rad)
 
 	if     left and     inverse: 
 		apnt = ld; bpnt = lu
@@ -372,14 +372,14 @@ def placedtext(painter, pnt, y, size, text = "NoText", right=False):
 	
 	painter.setPen(halfpen)
 	if right:
-		painter.drawLine(pnt, pnt + QPoint(-size2/2, -y))
+		painter.drawLine(pnt, pnt + QPointF(-size2/2, -y))
 	else:
-		painter.drawLine(pnt, pnt + QPoint(size2/2, -y))
+		painter.drawLine(pnt, pnt + QPointF(size2/2, -y))
 			
-	painter.drawLine(pnt + QPoint(size2/2, -y), pnt + QPoint(-size2/2, -y))
+	painter.drawLine(pnt + QPointF(size2/2, -y), pnt + QPointF(-size2/2, -y))
 	
 	painter.setPen(pen)
-	painter.drawText(pnt + QPoint(-size/2, -y-3), text)
+	painter.drawText(pnt + QPointF(-size/2, -y-3), text)
 
 def zadelka(painter, xl, xr, yu, yd, left_border, right_border):
 	oldbrush = painter.brush()
@@ -393,10 +393,10 @@ def zadelka(painter, xl, xr, yu, yd, left_border, right_border):
 	painter.setPen(oldpen)
 
 	if left_border:
-		painter.drawLine(QPoint(xl, yu), QPoint(xl, yd))
+		painter.drawLine(QPointF(xl, yu), QPointF(xl, yd))
 
 	if right_border:
-		painter.drawLine(QPoint(xr, yu), QPoint(xr, yd))
+		painter.drawLine(QPointF(xr, yu), QPointF(xr, yd))
 
 
 def zadelka_sharnir(painter, pnt, angle, w, h, s):
@@ -408,10 +408,10 @@ def zadelka_sharnir(painter, pnt, angle, w, h, s):
 	painter.setPen(pen)
 
 	points = [
-		pnt + rotate(angle, QPoint(0, w)),
-		pnt + rotate(angle, QPoint(0, -w)),
-		pnt + rotate(angle, QPoint(h, -w)),
-		pnt + rotate(angle, QPoint(h, w))
+		pnt + rotate(angle, QPointF(0, w)),
+		pnt + rotate(angle, QPointF(0, -w)),
+		pnt + rotate(angle, QPointF(h, -w)),
+		pnt + rotate(angle, QPointF(h, w))
 	]
 
 	qpoints = [QPointF(pnt.x(), pnt.y()) for pnt in points]
@@ -441,14 +441,14 @@ def zadelka_sharnir_type2(painter, pnt, angle, w, h, s):
 	painter.setPen(pen)
 
 	h2 = 30
-	up = pnt + rotate(angle, QPoint(-h2, h2))
-	dp = pnt + rotate(angle, QPoint(-h2, -h2))
+	up = pnt + rotate(angle, QPointF(-h2, h2))
+	dp = pnt + rotate(angle, QPointF(-h2, -h2))
 
 	points = [
-		pnt + rotate(angle, QPoint(-h2, w)),
-		pnt + rotate(angle, QPoint(-h2, -w)),
-		pnt + rotate(angle, QPoint(-h2-h, -w)),
-		pnt + rotate(angle, QPoint(-h2-h, w))
+		pnt + rotate(angle, QPointF(-h2, w)),
+		pnt + rotate(angle, QPointF(-h2, -w)),
+		pnt + rotate(angle, QPointF(-h2-h, -w)),
+		pnt + rotate(angle, QPointF(-h2-h, w))
 	]
 
 	qpoints = [QPointF(pnt.x(), pnt.y()) for pnt in points]
@@ -504,16 +504,16 @@ def crest_ellipse(painter, el):
 	painter.setBrush(brush)
 	painter.drawEllipse(el)
 	
-	painter.drawLine(QPoint(x+w/2-c+0.5, y+h/2-c+0.5), QPoint(x+w/2+c+0.5, y+h/2+c+0.5))
-	painter.drawLine(QPoint(x+w/2-c+0.5, y+h/2+c+0.5), QPoint(x+w/2+c+0.5, y+h/2-c+0.5))
+	painter.drawLine(QPointF(x+w/2-c+0.5, y+h/2-c+0.5), QPointF(x+w/2+c+0.5, y+h/2+c+0.5))
+	painter.drawLine(QPointF(x+w/2-c+0.5, y+h/2+c+0.5), QPointF(x+w/2+c+0.5, y+h/2-c+0.5))
 
 	#painter.drawEllipse(QRect(x+w/2-s/2, y+h/2-s/2, s, s))
 
 def point_circ(painter, pnt, rad):
-	point_ellipse(painter, QRect(pnt-QPoint(rad/2,rad/2), pnt+QPoint(rad/2,rad/2)))
+	point_ellipse(painter, QRect(pnt-QPointF(rad/2,rad/2), pnt+QPointF(rad/2,rad/2)))
 
 def crest_circ(painter, pnt, rad):
-	crest_ellipse(painter, QRect(pnt-QPoint(rad/2,rad/2), pnt+QPoint(rad/2,rad/2)))
+	crest_ellipse(painter, QRect(pnt-QPointF(rad/2,rad/2), pnt+QPointF(rad/2,rad/2)))
 
 def kr_arrow(painter, pnt, rad, circ, inverse=False):
 	"""Обозначение кручения для задачи о стержне"""
@@ -529,7 +529,7 @@ def kr_arrow(painter, pnt, rad, circ, inverse=False):
 		point_ellipse(painter, QRect(-circ + pnt.x(), pnt.y() - rad - 2*circ, circ*2, circ*2))
 
 	painter.setPen(halfpen)
-	painter.drawLine(pnt + QPoint(0,rad), pnt + QPoint(0,-rad))
+	painter.drawLine(pnt + QPointF(0,rad), pnt + QPointF(0,-rad))
 
 	painter.setPen(pen)
 
@@ -598,9 +598,9 @@ def greek(text):
 def dimlines(painter, p0, p1, level):
 	painter.setPen(halfpen)
 
-	pp0 = QPoint(p0.x(), level)
-	pp1 = QPoint(p1.x(), level)
-	pc = QPoint((p1.x() + p0.x())/2, level)
+	pp0 = QPointF(p0.x(), level)
+	pp1 = QPointF(p1.x(), level)
+	pc = QPointF((p1.x() + p0.x())/2, level)
 	length = p1.x() - p0.x()
 	painter.drawLine(p0, pp0)
 	painter.drawLine(p1, pp1)
@@ -613,9 +613,9 @@ def dimlines(painter, p0, p1, level):
 def dimlines_vertical(painter, p0, p1, level):
 	painter.setPen(halfpen)
 
-	pp0 = QPoint(level,p0.y())
-	pp1 = QPoint(level,p1.y())
-	pc = QPoint(level, (p1.y() + p0.y())/2)
+	pp0 = QPointF(level,p0.y())
+	pp1 = QPointF(level,p1.y())
+	pc = QPointF(level, (p1.y() + p0.y())/2)
 	length = p1.y() - p0.y()
 	painter.drawLine(p0, pp0)
 	painter.drawLine(p1, pp1)
@@ -630,7 +630,7 @@ def draw_text_centered(painter, pnt, text, font):
 	width = QFontMetrics(font).width(text)
 	painter.setFont(font)
 	
-	painter.drawText(pnt + QPoint(-width/2,0), text)
+	painter.drawText(pnt + QPointF(-width/2,0), text)
 
 def draw_vertical_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, text, font):
 	"""подписать толщину"""
@@ -648,7 +648,7 @@ def draw_vertical_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, t
 	htext = QFontMetrics(font).height()
 	xwtext = QFontMetrics(font).width('x')
 	
-	tpnt = (dpnt+upnt)/2 + QPoint(xwtext/2,htext/2) + textpnt
+	tpnt = (dpnt+upnt)/2 + QPointF(xwtext/2,htext/2) + textpnt
 
 	painter.drawRect(
 		tpnt.x(), tpnt.y() - QFontMetrics(font).height(), 
@@ -661,8 +661,8 @@ def draw_textline(painter, strt, textpnt, text, font):
 	htext = QFontMetrics(font).height()
 	wtext = QFontMetrics(font).width(text)
 
-	apnt = textpnt + QPoint(0, htext/8)
-	bpnt = textpnt + QPoint(wtext, htext/8)
+	apnt = textpnt + QPointF(0, htext/8)
+	bpnt = textpnt + QPointF(wtext, htext/8)
 
 	painter.drawLine(apnt, bpnt)
 	painter.drawLine(strt, apnt)
@@ -690,7 +690,7 @@ def draw_dimlines(painter, apnt, bpnt, offset, textoff, text, arrow_size, splash
 	font = painter.font()
 	htext = QFontMetrics(font).height()
 	wtext = QFontMetrics(font).width(text)
-	textpnt = coff + textoff + QPoint(-wtext/2, htext/4)
+	textpnt = coff + textoff + QPointF(-wtext/2, htext/4)
 	painter.drawText(textpnt, text)
 
 	if textline_from == "bpnt":
@@ -702,11 +702,11 @@ def draw_vertical_splashed_dimlines_with_text(painter, upnt, dpnt, arrow_size, t
 	painter.setFont(font)
 	down_arrow_head(painter, upnt.x(), upnt.y() - arrow_size, arrow_size)
 	up_arrow_head(painter, upnt.x(), dpnt.y() + arrow_size, arrow_size)
-	painter.drawLine(upnt+QPoint(0,-arrow_size*1.5), dpnt+QPoint(0,+arrow_size*1.5))
+	painter.drawLine(upnt+QPointF(0,-arrow_size*1.5), dpnt+QPointF(0,+arrow_size*1.5))
 
 	htext = QFontMetrics(font).height()
 	xwtext = QFontMetrics(font).width('x')
-	painter.drawText(dpnt+QPoint(xwtext/2,htext), text)
+	painter.drawText(dpnt+QPointF(xwtext/2,htext), text)
 
 def draw_distribload(painter, apnt, bpnt, step, arrow_size, alen, pen=None):
 	if pen:
@@ -752,11 +752,11 @@ def draw_sharnir_1dim(painter, pnt, angle, rad, termrad, termx, termy, pen, half
 	painter.setPen(halfpen)
 
 	circrect = QRect(pnt.x()-rad, pnt.y()-rad, 2*rad , 2*rad)
-	bpnt = QPoint(
+	bpnt = QPointF(
 		termrad*math.cos(angle), 
 		termrad*math.sin(angle)) + pnt
 
-	bpnt_draw = QPoint(
+	bpnt_draw = QPointF(
 		(termrad-rad)*math.cos(angle), 
 		(termrad-rad)*math.sin(angle)) + pnt
 
@@ -782,7 +782,7 @@ def draw_sharnir_2dim(painter, pnt, angle, rad, termrad, termx, termy, pen, half
 	painter.setPen(pen)
 
 	circrect = radrect(pnt, rad)
-	bpnt = QPoint(termrad*math.cos(angle), termrad*math.sin(angle)) + pnt
+	bpnt = QPointF(termrad*math.cos(angle), termrad*math.sin(angle)) + pnt
 
 	draw_sharnir_terminator_rect(painter, bpnt, angle, termx, termy, pen, halfpen)
 
@@ -808,13 +808,13 @@ def draw_kamera(painter, lu, rd, t):
 
 	painter.setPen(pen)
 	painter.setBrush(Qt.white)
-	painter.drawRect(QRect(lu + QPoint(t,t), rd+QPoint(-t,-t)))
+	painter.drawRect(QRect(lu + QPointF(t,t), rd+QPointF(-t,-t)))
 
 	painter.setBrush(Qt.white)
 	painter.setPen(pen)
 
 	xx=rd - lu
-	xx=QPoint((xx * 2 / 3).x(), 30)
+	xx=QPointF((xx * 2 / 3).x(), 30)
 
 	painter.drawText(lu + xx, "p")
 
@@ -828,20 +828,20 @@ def draw_inkamera(painter, lu, rd, t):
 
 	painter.setPen(pen)
 	painter.setBrush(Qt.white)
-	painter.drawRect(QRect(lu + QPoint(t,t), rd+QPoint(-t,-t)))
+	painter.drawRect(QRect(lu + QPointF(t,t), rd+QPointF(-t,-t)))
 
 	painter.setBrush(Qt.white)
 	painter.setPen(pen)
 
 	xx=rd - lu
-	xx=QPoint((xx * 2 / 3).x(), 40)
+	xx=QPointF((xx * 2 / 3).x(), 40)
 
 	painter.drawText(lu + xx, "p")
 
 def razrez(painter, a, b):
 	c = (a + b) / 2
-	ac = (c + a) / 2 + QPoint(6, 0)
-	bc = (c + b) / 2 + QPoint(-6, 0)
+	ac = (c + a) / 2 + QPointF(6, 0)
+	bc = (c + b) / 2 + QPointF(-6, 0)
 
 	painter.drawLine(a,ac)
 	painter.drawLine(ac,c)
@@ -855,18 +855,18 @@ def draw_rectangle(painter,x,y,xl,yl,zleft=False,zright=False):
 
 	painter.setPen(pen)	
 	
-	painter.drawLine(QPoint(x,y), QPoint(x+xl, y))
-	painter.drawLine(QPoint(x,y+yl), QPoint(x+xl, y+yl))
+	painter.drawLine(QPointF(x,y), QPointF(x+xl, y))
+	painter.drawLine(QPointF(x,y+yl), QPointF(x+xl, y+yl))
 	
 	if zleft:
-		razrez(painter,QPoint(x,y), QPoint(x, y+yl))
+		razrez(painter,QPointF(x,y), QPointF(x, y+yl))
 	else:
-		painter.drawLine(QPoint(x,y), QPoint(x, y+yl))
+		painter.drawLine(QPointF(x,y), QPointF(x, y+yl))
 
 	if zright:
-		razrez(painter,QPoint(x+xl,y), QPoint(x+xl, y+yl))
+		razrez(painter,QPointF(x+xl,y), QPointF(x+xl, y+yl))
 	else:
-		painter.drawLine(QPoint(x+xl,y), QPoint(x+xl, y+yl))
+		painter.drawLine(QPointF(x+xl,y), QPointF(x+xl, y+yl))
 
 def raspred_torsion(painter, apnt, bpnt, alen, step, rad, tp):
 	if pen:
@@ -887,8 +887,8 @@ def raspred_torsion(painter, apnt, bpnt, alen, step, rad, tp):
 		spnt = koeff * bpnt + (1-koeff) * apnt
 		fpnt = spnt + norm
 
-		spnt = QPoint(spnt.x(), spnt.y())
-		fpnt = QPoint(fpnt.x(), fpnt.y())
+		spnt = QPointF(spnt.x(), spnt.y())
+		fpnt = QPointF(fpnt.x(), fpnt.y())
 		
 		painter.setPen(halfpen)
 		painter.drawLine(spnt, fpnt)
@@ -919,7 +919,7 @@ def raspred_force(painter, apnt, bpnt, step, tp):
 	for i in range(count):
 		koeff = i / (count - 1)
 		spnt = koeff * bpnt + (1-koeff) * apnt
-		spnt = QPoint(spnt.x()+0.5, spnt.y()+0.5)
+		spnt = QPointF(spnt.x()+0.5, spnt.y()+0.5)
 		pnts.append(spnt)
 
 	painter.setPen(pen)
