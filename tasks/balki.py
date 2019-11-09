@@ -55,9 +55,9 @@ class ConfWidget(common.ConfWidget):
 			],
 			"betsect":
 			[
-				self.betsect(sharn=True),
+				self.betsect(sharn="1"),
 				self.betsect(),
-				self.betsect(),
+				self.betsect(sharn="2"),
 				self.betsect()
 			],
 			"sectforce":
@@ -132,7 +132,7 @@ class ConfWidget(common.ConfWidget):
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 		self.table2.addColumn("sectname", "str", "Имя")
-		self.table2.addColumn("sharn", "bool", "Шарн.")
+		self.table2.addColumn("sharn", "list", "Шарн.", variant=["1", "2"])
 		self.table2.addColumn("F", "list", variant=["clean", "+", "-"])
 		self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
 #		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
