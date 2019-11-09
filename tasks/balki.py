@@ -696,7 +696,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		size = self.size()
 		width = size.width()
 		height = size.height()
-		hcenter = height/2
+		hcenter = height/2 - 20
 
 #		height_zone = base_section_height
 
