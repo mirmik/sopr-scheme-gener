@@ -746,7 +746,7 @@ def draw_sharnir_terminator_rect(painter, pnt, angle, termx, termy, pen, halfpen
 	painter.setPen(Qt.NoPen)
 	painter.setBrush(Qt.white)
 	painter.drawPolygon(polygon)
-	
+
 	painter.setPen(pen)
 	painter.drawLine(pnts[0], pnts[1])
 
@@ -793,12 +793,15 @@ def draw_sharnir_2dim(painter, pnt, angle, rad, termrad, termx, termy, pen, half
 
 	circrect = radrect(pnt, rad)
 	bpnt = QPointF(termrad*math.cos(angle), termrad*math.sin(angle)) + pnt
+	bbpnt = QPointF((termrad-rad/3*2)*math.cos(angle), (termrad-rad/3*2)*math.sin(angle)) + pnt
 
 	draw_sharnir_terminator_rect(painter, bpnt, angle, termx, termy, pen, halfpen)
 
 	angle = angle + deg(90)
 	b1pnt = bpnt + QPointF(math.cos(angle) * termx*2/3, math.sin(angle) * termx*2/3) 
 	b2pnt = bpnt + QPointF(- math.cos(angle) * termx*2/3, - math.sin(angle) * termx*2/3)
+	bb1pnt = bbpnt + QPointF(math.cos(angle) * termx*2/3, math.sin(angle) * termx*2/3) 
+	bb2pnt = bbpnt + QPointF(- math.cos(angle) * termx*2/3, - math.sin(angle) * termx*2/3)
 
 	painter.setPen(pen)
 	painter.drawLine(b1pnt, b2pnt)
@@ -807,6 +810,8 @@ def draw_sharnir_2dim(painter, pnt, angle, rad, termrad, termx, termy, pen, half
 
 	painter.setBrush(Qt.white)
 	painter.drawEllipse(circrect)
+
+	#painter.drawEllipse(radrect(bbpnt, rad))
 
 def draw_kamera(painter, lu, rd, t):
 	"""Рисует камеру с измененным давлением"""

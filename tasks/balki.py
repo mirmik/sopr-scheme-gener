@@ -28,7 +28,7 @@ class ConfWidget(common.ConfWidget):
 			self.l=l
 
 	class betsect:
-		def __init__(self, sharn = False, sectname="", F="clean", M="clean", Mkr="clean", MT="", FT=""):
+		def __init__(self, sharn = "", sectname="", F="clean", M="clean", Mkr="clean", MT="", FT=""):
 			self.sectname = sectname
 			self.M = M
 			self.Mkr = Mkr 
@@ -132,7 +132,7 @@ class ConfWidget(common.ConfWidget):
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 		self.table2.addColumn("sectname", "str", "Имя")
-		self.table2.addColumn("sharn", "list", "Шарн.", variant=["1", "2"])
+		self.table2.addColumn("sharn", "list", "Шарн.", variant=["", "1", "2"])
 		self.table2.addColumn("F", "list", variant=["clean", "+", "-"])
 		self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
 #		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
@@ -491,7 +491,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		elif section_type == "Квадрат повёрнутый":
 			l = arg0/math.sqrt(2) 
 			center = QPoint(right - 20 - 20 - arg0/2, hcenter)
-			section_width = arg1 + 80
+			section_width = arg1 + 95
 
 			painter.setPen(self.pen)
 
@@ -638,7 +638,7 @@ class PaintWidget(paintwdg.PaintWidget):
 					paintool.greek(self.bsections()[i].FT))
 
 			if self.bsections()[i].sectname != "":
-				off = 11 if self.bsections()[i].sharn else 5
+				off = 11 if self.bsections()[i].sharn != "" else 5
 				painter.drawText(
 					QPoint(wpnts[i]-off-QFontMetrics(self.font).width(self.bsections()[i].sectname), hcenter+21), 
 					self.bsections()[i].sectname)
@@ -722,7 +722,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 
 		for i in range(len(self.bsections())):
-			if self.bsections()[i].sharn:
+			if self.bsections()[i].sharn == "1":
 				hoff = 0 if i == 0 or i == len(self.bsections()) - 1 else 8
 				ihoff = 8 if i == 0 or i == len(self.bsections()) - 1 else 0
 				paintool.draw_sharnir_1dim(
@@ -734,6 +734,17 @@ class PaintWidget(paintwdg.PaintWidget):
 					termx=20, 
 					termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
 
+			elif self.bsections()[i].sharn == "2":
+				hoff = 0 if i == 0 or i == len(self.bsections()) - 1 else 8
+				ihoff = 8 if i == 0 or i == len(self.bsections()) - 1 else 0
+				paintool.draw_sharnir_2dim(
+					painter, 
+					pnt=QPoint(wpnts[i], hcenter + hoff), 
+					angle=math.pi/2, 
+					rad=5.5, 
+					termrad=25+ihoff, 
+					termx=20, 
+					termy=10, pen=self.pen, halfpen=self.halfpen)
 
 
 
