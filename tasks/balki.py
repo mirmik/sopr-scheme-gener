@@ -96,6 +96,7 @@ class ConfWidget(common.ConfWidget):
 				"Толстая труба",
 				"Тонкая труба",
 				"Прямоугольник",
+				"Ромб",
 				"Треугольник",
 				"Квадрат - окружность",
 			])
@@ -486,6 +487,53 @@ class PaintWidget(paintwdg.PaintWidget):
 			llen = arg0 + 10
 			painter.drawLine(center + QPoint(-llen,-arg0+4/3*arg0), center + QPoint(llen,-arg0+4/3*arg0))
 			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
+		elif section_type == "Квадрат повёрнутый":
+			l = arg0/math.sqrt(2) 
+			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
+			section_width = arg0 + 120
+
+			painter.setPen(self.pen)
+
+			painter.setBrush(QBrush(Qt.BDiagPattern))
+			painter.drawPolygon(
+				QPolygon([
+					center+QPoint(-arg0, 0),
+					center+QPoint(0, arg0),
+					center+QPoint(arg0, 0),
+					center+QPoint(0, -arg0),
+				])
+			)
+
+			painter.setBrush(QBrush(Qt.white))
+	
+			painter.setPen(self.halfpen)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(0,arg0),
+				bpnt = center+QPoint(0,-arg0),
+				offset = QPoint(-20-arg0,0),
+				textoff = QPoint(-10, 0),
+				text = atxt,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(arg1,arg0),
+				bpnt = center+QPoint(-arg1,arg0),
+				offset = QPoint(0,25),
+				textoff = QPoint(0, -6),
+				text = btxt,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			painter.setPen(self.axpen)
+			llen = arg0 + 10
+			painter.drawLine(center + QPoint(-llen,-arg0+4/3*arg0), center + QPoint(llen,-arg0+4/3*arg0))
+			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
 
 		else:
 			print("Unresolved section type:", section_type)
