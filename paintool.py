@@ -743,11 +743,15 @@ def draw_sharnir_terminator_rect(painter, pnt, angle, termx, termy, pen, halfpen
 
 	polygon = QPolygonF(pnts)
 
+	painter.setPen(Qt.NoPen)
+	painter.setBrush(Qt.white)
+	painter.drawPolygon(polygon)
+	
 	painter.setPen(pen)
 	painter.drawLine(pnts[0], pnts[1])
 
-	painter.setBrush(Qt.BDiagPattern)
 	painter.setPen(Qt.NoPen)
+	painter.setBrush(Qt.BDiagPattern)
 	painter.drawPolygon(polygon)
 
 
