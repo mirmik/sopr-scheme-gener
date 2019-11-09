@@ -510,10 +510,10 @@ def crest_ellipse(painter, el):
 	#painter.drawEllipse(QRect(x+w/2-s/2, y+h/2-s/2, s, s))
 
 def point_circ(painter, pnt, rad):
-	point_ellipse(painter, QRect(pnt-QPointF(rad/2,rad/2), pnt+QPointF(rad/2,rad/2)))
+	point_ellipse(painter, QRect(pnt-QPoint(rad/2,rad/2), pnt+QPoint(rad/2,rad/2)))
 
 def crest_circ(painter, pnt, rad):
-	crest_ellipse(painter, QRect(pnt-QPointF(rad/2,rad/2), pnt+QPointF(rad/2,rad/2)))
+	crest_ellipse(painter, QRect(pnt-QPoint(rad/2,rad/2), pnt+QPoint(rad/2,rad/2)))
 
 def kr_arrow(painter, pnt, rad, circ, inverse=False):
 	"""Обозначение кручения для задачи о стержне"""
@@ -902,8 +902,8 @@ def raspred_torsion(painter, apnt, bpnt, alen, step, rad, tp):
 		spnt = koeff * bpnt + (1-koeff) * apnt
 		fpnt = spnt + norm
 
-		spnt = QPointF(spnt.x(), spnt.y())
-		fpnt = QPointF(fpnt.x(), fpnt.y())
+		spnt = QPoint(spnt.x(), spnt.y())
+		fpnt = QPoint(fpnt.x(), fpnt.y())
 		
 		painter.setPen(halfpen)
 		painter.drawLine(spnt, fpnt)
