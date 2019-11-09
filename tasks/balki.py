@@ -201,9 +201,9 @@ class PaintWidget(paintwdg.PaintWidget):
 		arg1 = int(self.shemetype.section_arg1.get())
 		arg2 = int(self.shemetype.section_arg2.get())
 		
-		atxt = self.shemetype.section_txt0.get()
-		btxt = self.shemetype.section_txt1.get()
-		ctxt = self.shemetype.section_txt2.get()
+		atxt = paintool.greek(self.shemetype.section_txt0.get())
+		btxt = paintool.greek(self.shemetype.section_txt1.get())
+		ctxt = paintool.greek(self.shemetype.section_txt2.get())
 
 		arrow_size = self.shemetype.arrow_size.get()
 		
@@ -575,20 +575,20 @@ class PaintWidget(paintwdg.PaintWidget):
 				paintool.draw_text_centered(
 					painter,
 					pnt=QPoint(wpnts[i], hcenter-rad-5), 
-					text=self.bsections()[i].MT,
+					text=paintool.greek(self.bsections()[i].MT),
 					font=self.font)
 
 			if self.bsections()[i].F != "clean" and fdown == False:
 				paintool.draw_text_centered(
 					painter,
 					pnt=QPoint(wpnts[i], hcenter-rad-5), 
-					text=self.bsections()[i].FT,
+					text=paintool.greek(self.bsections()[i].FT),
 					font=self.font)
 
 			if self.bsections()[i].F != "clean" and fdown == True:
 				painter.drawText(
 					QPoint(wpnts[i]+10, hcenter+25), 
-					self.bsections()[i].FT)
+					paintool.greek(self.bsections()[i].FT))
 
 			if self.bsections()[i].sectname != "":
 				off = 11 if self.bsections()[i].sharn else 5
@@ -623,7 +623,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				paintool.draw_text_centered(
 					painter,
 					QPoint((wpnts[i] + wpnts[i+1])/2, hcenter-8-rad2),
-					self.sectforce()[i].FrT,
+					paintool.greek(self.sectforce()[i].FrT),
 					font=self.font
 				)
 			
