@@ -13,6 +13,9 @@ def deg(arg):
 	return math.pi * arg / 180
 
 def deg2rad(arg):
+	return arg / 180 * math.pi
+
+def rad2deg(arg):
 	return arg * 180 / math.pi
 
 def rotate(angle, pnt):
@@ -269,8 +272,8 @@ def circular_arrow(painter, pnt, rad, angle, angle2, arrow_size):
 	y2 = pnt.y() + rad
 
 	rangle2= angle2
-	angle = deg2rad(angle)
-	angle2 = deg2rad(angle2)
+	angle = rad2deg(angle)
+	angle2 = rad2deg(angle2)
 
 	painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -(angle2 - angle)*16)
 
@@ -280,6 +283,39 @@ def circular_arrow(painter, pnt, rad, angle, angle2, arrow_size):
 			rad*math.sin(rangle2)
 		), rangle2 + deg(180), arrow_size)
 
+def circular_arrow2(painter, pnt, rad, angle, angle2, arrow_size):
+	x = pnt.x() - rad
+	y = pnt.y() - rad
+	x2 = pnt.x() + rad
+	y2 = pnt.y() + rad
+
+	rangle2= angle2
+	angle = rad2deg(angle)
+	angle2 = rad2deg(angle2)
+
+	painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -(angle2 - angle)*16)
+
+	if angle > angle2:
+		aangle = - rangle2 + deg(90)
+	else:
+		aangle = - rangle2 - deg(90)
+	
+
+	angled_arrow_head_top(painter, 
+		pnt+QPoint(
+			rad*math.cos(rangle2),
+			rad*math.sin(rangle2)
+		), aangle, arrow_size)
+
+def half_moment_arrow_common(painter, pnt, rad, angle, angle2, arrow_size):
+	angle = -angle
+	angle2 = -angle2
+	pnt2 = pnt+QPoint(
+			rad*math.cos(angle),
+			rad*math.sin(angle)
+		)
+	circular_arrow2(painter, pnt, rad, angle, angle2, arrow_size)
+	painter.drawLine(pnt, pnt2)
 
 def half_moment_arrow(painter, pnt, rad, left=True, inverse = False, arrow_size=12):
 	angle = -30
@@ -712,19 +748,28 @@ def draw_sharnir_terminator_rect(painter, pnt, angle, termx, termy, pen, halfpen
 	painter.drawPolygon(polygon)
 
 
-def draw_sharnir_1dim(painter, pnt, angle, rad, termrad, termx, termy, pen, halfpen):
+def draw_sharnir_1dim(painter, pnt, angle, rad, termrad, termx, termy, pen, halfpen, doublepen=None):
 	painter.setPen(halfpen)
 
 	circrect = QRect(pnt.x()-rad, pnt.y()-rad, 2*rad , 2*rad)
-	bpnt = QPoint(termrad*math.cos(angle), termrad*math.sin(angle)) + pnt
+	bpnt = QPoint(
+		termrad*math.cos(angle), 
+		termrad*math.sin(angle)) + pnt
+
+	bpnt_draw = QPoint(
+		(termrad-rad)*math.cos(angle), 
+		(termrad-rad)*math.sin(angle)) + pnt
 
 	painter.setBrush(Qt.white)
+	if doublepen:
+		painter.setPen(doublepen)
+	else:
+		painter.setPen(pen)
 	painter.drawLine(pnt, bpnt)
 
-	circrect2 = radrect(bpnt, rad)
-
-	painter.drawLine(pnt, bpnt)
-
+	painter.setPen(pen)
+	circrect2 = radrect(bpnt_draw, rad)
+	#painter.drawLine(pnt, bpnt)
 
 	draw_sharnir_terminator_rect(painter, bpnt, angle, termx, termy, pen, halfpen)
 
@@ -883,4 +928,26 @@ def raspred_force(painter, apnt, bpnt, step, tp):
 			right_arrow(painter, pnts[i], step, 12)
 		else:
 			left_arrow(painter, pnts[i+1], step, 12)
+		
+def raspred_force_vertical(painter, apnt, bpnt, step, offset, dim, arrow_size):
+	dist = math.sqrt((apnt.x()-bpnt.x())**2 + (apnt.y()-bpnt.y())**2)
+	count = int(dist / step)
+	count = count - count % 2 + 1
+	diff = bpnt - apnt
+
+	pnts = []
+	for i in range(count):
+		koeff = i / (count - 1)
+		spnt = koeff * bpnt + (1-koeff) * apnt
+		spnt = QPoint(spnt.x()+0.5, spnt.y()+0.5)
+		pnts.append(spnt)
+
+	painter.setPen(halfpen)
+	painter.drawLine(apnt, bpnt)
+	painter.drawLine(apnt+offset, bpnt+offset)
+	for p in pnts:
+		if dim:
+			common_arrow(painter, p, p+offset, arrow_size)
+		else:
+			common_arrow(painter, p+offset, p, arrow_size)
 		

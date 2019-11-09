@@ -121,6 +121,10 @@ class PaintWidget(QWidget):
 		self.halfpen.setWidth(lwidth/2)
 		paintool.halfpen = self.halfpen
 
+		self.doublepen = QPen()
+		self.doublepen.setWidth(lwidth*2)
+		paintool.doublepen = self.doublepen
+
 		axpen = QPen(Qt.DashDotLine)
 		axpen.setWidth(lwidth/2)
 		paintool.axpen = axpen

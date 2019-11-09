@@ -2,8 +2,10 @@ import common
 import paintwdg
 import math
 
+from paintool import deg
 import paintool
 import taskconf_menu
+import util
 import tablewidget
 
 from PyQt5 import *
@@ -26,11 +28,21 @@ class ConfWidget(common.ConfWidget):
 			self.l=l
 
 	class betsect:
-		def __init__(self, sharn = False, M="clean", Mkr="clean", T=""):
+		def __init__(self, sharn = False, F="clean", M="clean", Mkr="clean", MT="", FT=""):
 			self.M = M
 			self.Mkr = Mkr 
-			self.T = T
+			self.F=F
+			self.MT = MT
+			self.FT = FT
 			self.sharn = sharn
+
+	class sectforce:
+		def __init__(self, Fr="clean", FrT=""):
+			#self.mkr = mkr
+			#self.mkrT = mkrT
+			self.Fr = Fr
+			self.FrT = FrT
+
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -42,10 +54,16 @@ class ConfWidget(common.ConfWidget):
 			],
 			"betsect":
 			[
-				self.betsect(),
-				self.betsect(),
-				self.betsect(),
-				self.betsect()
+				self.betsect(M = "-", MT="M"),
+				self.betsect(sharn =True),
+				self.betsect(F = "+", FT="F"),
+				self.betsect(sharn=True)
+			],
+			"sectforce":
+			[
+				self.sectforce(),
+				self.sectforce(),
+				self.sectforce(Fr="+", FrT="ql")
 			]
 		}
 		
@@ -67,7 +85,7 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
 		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "6")
 		self.shemetype.leftterm = self.sett.add("Левый терминатор:", "bool", True)
-		
+				
 		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
 		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
 			defval=1,
@@ -87,7 +105,7 @@ class ConfWidget(common.ConfWidget):
 
 		#self.shemetype.arrow_line_size = self.sett.add("Размер линии стрелки:", "int", "20")
 		#self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "int", "40")
-		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "20")
+		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "15")
 		#self.shemetype.font_size = common.CONFVIEW.font_size_getter
 #		self.shemetype.left_zone = self.sett.add("Отступ слева:", "int", "20")
 #		self.shemetype.right_zone = self.sett.add("Отступ справа:", "int", "20")
@@ -101,40 +119,51 @@ class ConfWidget(common.ConfWidget):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 #		self.table.addColumn("d", "float", "Диаметр")
 #		self.table.addColumn("dtext", "str", "Текст")
-#		self.table.addColumn("l", "float", "Длина")
+		self.table.addColumn("l", "float", "Длина")
 		#self.table.addColumn("delta", "float", "Зазор")
 		self.table.updateTable()
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 		self.table2.addColumn("sharn", "bool", "Шарн.")
-#		#self.table2.addColumn("F", "list", variant=["clean", "+", "-"])
+		self.table2.addColumn("F", "list", variant=["clean", "+", "-"])
 		self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
 #		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
-#		self.table2.addColumn("T", "str", "Текст")
+		self.table2.addColumn("FT", "str", "Текст")
+		self.table2.addColumn("MT", "str", "Текст")
 		self.table2.updateTable()
 
-
-
+		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
+		self.table1.addColumn("Fr", "list", variant=["clean", "+", "-"])
+		self.table1.addColumn("FrT", "str", "Текст")
+		self.table1.updateTable()
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
+		self.vlayout.addWidget(QLabel("Распределённые силы:"))
+		self.vlayout.addWidget(self.table1)
 		self.vlayout.addWidget(QLabel("Локальные силы:"))
 		self.vlayout.addWidget(self.table2)
 		self.vlayout.addWidget(self.sett)
 
 
 		self.table.updated.connect(self.redraw)
+		self.table1.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
 
 
+		self.shemetype.texteditor = QTextEdit()
+		self.shemetype.texteditor.textChanged.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
 
 		self.setLayout(self.vlayout)
 
 	def add_action(self):
 		self.sections().append(self.sect())
+		self.shemetype.task["sectforce"].append(self.sectforce())
 		self.shemetype.task["betsect"].append(self.betsect())
 		self.redraw()
 		self.table.updateTable()
+		self.table1.updateTable()
 		self.table2.updateTable()
 
 	def del_action(self):
@@ -143,8 +172,10 @@ class ConfWidget(common.ConfWidget):
 
 		del self.sections()[-1]
 		del self.shemetype.task["betsect"][-1]
+		del self.shemetype.task["sectforce"][-1]
 		self.redraw()
 		self.table.updateTable()
+		self.table1.updateTable()
 		self.table2.updateTable()
 
 	def inittask(self):
@@ -278,7 +309,7 @@ class PaintWidget(paintwdg.PaintWidget):
 	def draw_body(self,hcenter, left, right):
 		painter = QPainter(self)
 
-		prefix = 20
+		prefix = 30
 		hsect = self.shemetype.base_section_height.get()
 
 		flen = right - left - 2*prefix
@@ -292,10 +323,129 @@ class PaintWidget(paintwdg.PaintWidget):
 			wpnts.append(cur)
 
 		painter.setPen(self.pen)
+
+
+
+
+		for i in range(len(self.bsections())):
+			fdown = False
+			arrow_size = self.shemetype.arrow_size.get()
+			rad = 60
+	
+			if self.bsections()[i].M != "clean":
+				fdown=True
+				pnt = QPoint(wpnts[i], hcenter)
+				if self.bsections()[i].M == "+":
+					paintool.half_moment_arrow_common(
+						painter=painter, 
+						pnt=pnt, 
+						rad=rad, 
+						angle=deg(60), 
+						angle2=deg(120),
+						#left=True, 
+						#inverse = False, 
+						arrow_size=arrow_size)
+				if self.bsections()[i].M == "-":
+					paintool.half_moment_arrow_common(
+						painter=painter, 
+						pnt=pnt, 
+						rad=rad, 
+						angle=deg(120), 
+						angle2=deg(60),
+						#left=True, 
+						#inverse = False, 
+						arrow_size=arrow_size)
+
+			if self.bsections()[i].F != "clean":
+				apnt=QPoint(wpnts[i], hcenter-rad) 
+				bpnt=QPoint(wpnts[i], hcenter)
+				if fdown:
+					apnt = apnt + QPoint(0, rad)
+					bpnt = bpnt + QPoint(0, rad)
+				if self.bsections()[i].F == "-":
+					paintool.common_arrow(painter,
+						apnt, bpnt,
+						arrow_size=arrow_size
+					)
+				if self.bsections()[i].F == "+":
+					paintool.common_arrow(painter,  
+						bpnt, apnt,
+						arrow_size=self.shemetype.arrow_size.get()
+					)
+					#F_text_policy = "up"
+					#F_level = - sectrad(i) * 3.2/2 + hcenter
+				
+			if self.bsections()[i].M != "clean":
+				paintool.draw_text_centered(
+					painter,
+					pnt=QPoint(wpnts[i], hcenter-rad-5), 
+					text=self.bsections()[i].MT,
+					font=self.font)
+
+			if self.bsections()[i].F != "clean" and fdown == False:
+				paintool.draw_text_centered(
+					painter,
+					pnt=QPoint(wpnts[i], hcenter-rad-5), 
+					text=self.bsections()[i].FT,
+					font=self.font)
+
+			if self.bsections()[i].F != "clean" and fdown == True:
+				painter.drawText(
+					QPoint(wpnts[i]+10, hcenter+25), 
+					self.bsections()[i].FT)
+
+
+		rad2 = rad/2
+		step = 10
+		# Отрисовка распределённых нагрузок:
+		for i in range(len(self.sectforce())):
+			#отрисовка распределённой силы.
+			if self.sectforce()[i].Fr != "clean":
+				if self.sectforce()[i].Fr == "+":
+					paintool.raspred_force_vertical(painter=painter,
+						apnt=QPoint(wpnts[i], hcenter-3),
+						bpnt=QPoint(wpnts[i+1], hcenter-3),
+						step=step,
+						offset=QPoint(0, -rad2),
+						dim = True,
+					arrow_size=arrow_size/3*2)
+				elif self.sectforce()[i].Fr == "-":
+					paintool.raspred_force_vertical(painter=painter,
+						apnt=QPoint(wpnts[i], hcenter-3),
+						bpnt=QPoint(wpnts[i+1], hcenter-3),
+						step=step,
+						offset=QPoint(0, -rad2),
+						dim = False,
+						arrow_size=arrow_size/3*2)
+
+				paintool.draw_text_centered(
+					painter,
+					QPoint((wpnts[i] + wpnts[i+1])/2, hcenter-8-rad2),
+					self.sectforce()[i].FrT,
+					font=self.font
+				)
+			
+		painter.setBrush(Qt.white)
+		painter.setPen(self.pen)
+
+
+
 		painter.drawRect(QRect(
 			QPoint(left+prefix, hcenter-hsect/2),
 			QPoint(right-prefix, hcenter+hsect/2),
 		))
+
+		#dimlines
+		for i in range(len(self.bsections())-1):
+			paintool.dimlines(painter, 
+				QPoint(wpnts[i], hcenter), 
+				QPoint(wpnts[i+1], hcenter), 
+				hcenter+80)
+			text = util.text_prepare_ltext(self.sections()[i].l)
+			paintool.draw_text_centered(painter, 
+				QPoint((wpnts[i]+wpnts[i+1])/2, 
+					hcenter+80-5), text, self.font)
+
 
 		termpos = wpnts[0] if self.shemetype.leftterm.get() else wpnts[-1]
 		termangle = math.pi if self.shemetype.leftterm.get() else 0
@@ -303,20 +453,22 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter, 
 				pnt=QPoint(termpos, hcenter), 
 				angle=termangle, 
-				rad=6, 
-				termrad=20, 
+				rad=5.5, 
+				termrad=25, 
 				termx=20, 
-				termy=10, pen=self.pen, halfpen=self.halfpen)
+				termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
 
 		for i in range(len(self.bsections())):
-			paintool.draw_sharnir_1dim(
-				painter, 
-				pnt=QPoint(wpnts[i], hcenter), 
-				angle=math.pi/2, 
-				rad=6, 
-				termrad=20, 
-				termx=20, 
-				termy=10, pen=self.pen, halfpen=self.halfpen)
+			if self.bsections()[i].sharn:
+				hoff = 0 if i == 0 or i == len(self.bsections()) - 1 else 8
+				paintool.draw_sharnir_1dim(
+					painter, 
+					pnt=QPoint(wpnts[i], hcenter + hoff), 
+					angle=math.pi/2, 
+					rad=5.5, 
+					termrad=25, 
+					termx=20, 
+					termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
 
 
 
@@ -354,6 +506,11 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		actual_width = fini_width - strt_width
 
+		addtext = self.shemetype.texteditor.toPlainText()
+		arrow_line_size = 50
+		hcenter = height/2 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2
+
+
 		if section_enable:
 		#	section_width = actual_width / 4
 
@@ -368,3 +525,13 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		self.draw_body(
 			hcenter=hcenter, left=strt_width, right=fini_width)
+
+		painter = QPainter(self)
+		painter.setPen(self.pen)
+		painter.setFont(self.font)
+		painter.setBrush(Qt.black)
+		for i, l in enumerate(addtext.splitlines()):
+			painter.drawText(QPoint(
+				40, 
+				hcenter + 75 + 30 + QFontMetrics(self.font).height()*i), 
+			paintool.greek(l))
