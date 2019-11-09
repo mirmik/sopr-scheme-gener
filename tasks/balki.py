@@ -706,7 +706,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		addtext = self.shemetype.texteditor.toPlainText()
 		arrow_line_size = 50
-		hcenter = height/2 -15 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2
+		hcenter = height/2 -10 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2
 
 
 		if section_enable:
