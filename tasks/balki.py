@@ -90,8 +90,13 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
 			defval=1,
 			variant=[
-				"ring", 
-				"square - circle"
+				"Круг",  
+				"Толстая труба",
+				"Тонкая труба",
+				"Прямоугольник",
+				"Треугольник. Тип1",
+				"Треугольник. Тип2",
+				"Квадрат - окружность",
 			])
 
 		self.shemetype.section_txt0 = self.sett.add("Сечение.Текст1:", "str", "D")
@@ -200,7 +205,39 @@ class PaintWidget(paintwdg.PaintWidget):
 		ctxt = self.shemetype.section_txt2.get()
 
 		arrow_size = self.shemetype.arrow_size.get()
-		if section_type == "ring":
+		
+
+		if section_type == "Круг":
+			center = QPoint(right - 10 - arg0/2, hcenter)
+			section_width = arg0 + 120
+
+			#dimlines_off = arg0 + 20
+
+			painter.setPen(self.pen)
+
+			painter.setBrush(QBrush(Qt.BDiagPattern))
+			painter.drawEllipse(
+				QRect(center - QPoint(arg0,arg0), center + QPoint(arg0,arg0)))
+
+			painter.setPen(self.halfpen)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center-QPoint(0,arg0),
+				bpnt = center+QPoint(0,arg0),
+				offset = QPoint(-dimlines_off,0),
+				textoff = QPoint(-10, 0),
+				text = atxt,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			painter.setPen(self.axpen)
+			llen = arg0 + 10
+			painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
+			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
+
+		elif section_type == "Тонкая труба":
 			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
 			section_width = arg0 + 120
 
@@ -223,8 +260,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				apnt = center-QPoint(0,arg0),
 				bpnt = center+QPoint(0,arg0),
 				offset = QPoint(-dimlines_off,0),
-				textoff = QPoint(-10, 0),
-				text = "D",
+				textoff = QPoint(-10, 0) - QPoint(QFontMetrics(self.font).width(atxt), 0),
+				text = atxt,
 				arrow_size = arrow_size / 3 * 2
 			)
 
@@ -234,7 +271,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				bpnt = center+QPoint(+ math.cos(math.pi/4) * arg0, + math.sin(math.pi/4) * arg0),
 				offset = QPoint(0,0),
 				textoff = QPoint(+ math.cos(math.pi/4) * (arg0-arg1) + 15, + math.sin(math.pi/4) * (arg0-arg1)),
-				text = "d",
+				text = btxt,
 				arrow_size = arrow_size / 3 * 2,
 				splashed=True,
 				textline_from = "bpnt"
@@ -245,7 +282,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
 			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
 
-		elif section_type == "square - circle":
+		elif section_type == "Квадрат - окружность":
 			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
 			section_width = arg0 + 120
 
