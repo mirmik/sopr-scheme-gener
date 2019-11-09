@@ -405,7 +405,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				if task["betsect"][i].T != "":
 					painter.drawText(QPoint(
 						wsect(i) + 14, 
-						hcenter - msectrad2(i)-14), text)
+						hcenter - msectrad2(i)-14), task["betsect"][i].T)
 
 		# Отрисовка распределённых нагрузок:
 		for i in range(len(task["sectforce"])):
