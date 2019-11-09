@@ -101,7 +101,7 @@ class ConfWidget_T0(common.ConfWidget):
 		self.table.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
-#		self.table1.addColumn("mkr", "list", variant=["clean", "+", "-"])
+		self.table1.addColumn("mkr", "list", variant=["clean", "+", "-"])
 		self.table1.addColumn("Fr", "list", variant=["clean", "+", "-"])
 		self.table1.addColumn("mkrT", "str", "Текст")
 		self.table1.updateTable()
