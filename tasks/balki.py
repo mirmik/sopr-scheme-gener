@@ -96,7 +96,7 @@ class ConfWidget(common.ConfWidget):
 				"Толстая труба",
 				"Тонкая труба",
 				"Прямоугольник",
-				"Ромб",
+				"Квадрат повёрнутый",
 				"Треугольник",
 				"Квадрат - окружность",
 			])
@@ -512,20 +512,20 @@ class PaintWidget(paintwdg.PaintWidget):
 			paintool.draw_dimlines(
 				painter = painter,
 				apnt = center+QPoint(0,arg0),
-				bpnt = center+QPoint(0,-arg0),
-				offset = QPoint(-20-arg0,0),
-				textoff = QPoint(-10, 0),
+				bpnt = center+QPoint(arg0,0),
+				offset = QPoint(10, 10),
+				textoff = QPoint(10, 10),
 				text = atxt,
 				arrow_size = arrow_size / 3 * 2
 			)
 
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center+QPoint(arg1,arg0),
-				bpnt = center+QPoint(-arg1,arg0),
-				offset = QPoint(0,25),
-				textoff = QPoint(0, -6),
-				text = btxt,
+				apnt = center+QPoint(0,-arg0),
+				bpnt = center+QPoint(arg0,0),
+				offset = QPoint(10, -10),
+				textoff = QPoint(10, -10),
+				text = atxt,
 				arrow_size = arrow_size / 3 * 2
 			)
 
