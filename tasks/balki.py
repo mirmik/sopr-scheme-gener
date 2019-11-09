@@ -357,8 +357,8 @@ class PaintWidget(paintwdg.PaintWidget):
 						arrow_size=arrow_size)
 
 			if self.bsections()[i].F != "clean":
-				apnt=QPoint(wpnts[i], hcenter-rad) 
-				bpnt=QPoint(wpnts[i], hcenter)
+				apnt=QPoint(wpnts[i], hcenter-rad-hsect/2) 
+				bpnt=QPoint(wpnts[i], hcenter-hsect/2)
 				if fdown:
 					apnt = apnt + QPoint(0, rad)
 					bpnt = bpnt + QPoint(0, rad)
