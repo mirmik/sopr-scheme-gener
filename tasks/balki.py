@@ -425,7 +425,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
 
 
-		elif section_type == "Треугольник. Тип1":
+		elif section_type == "Треугольник":
 			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
 			section_width = arg1 + 120
 
