@@ -357,11 +357,14 @@ class PaintWidget(paintwdg.PaintWidget):
 						arrow_size=arrow_size)
 
 			if self.bsections()[i].F != "clean":
-				apnt=QPoint(wpnts[i], hcenter-rad-hsect/2) 
-				bpnt=QPoint(wpnts[i], hcenter-hsect/2)
+				apnt=QPoint(wpnts[i], hcenter-rad) 
+				bpnt=QPoint(wpnts[i], hcenter)
 				if fdown:
-					apnt = apnt + QPoint(0, rad)
-					bpnt = bpnt + QPoint(0, rad)
+					apnt = apnt + QPoint(0, rad+hsect/2)
+					bpnt = bpnt + QPoint(0, rad+hsect/2)
+				else:
+					apnt = apnt + QPoint(0, -hsect/2)
+					bpnt = bpnt + QPoint(0, -hsect/2)
 				if self.bsections()[i].F == "-":
 					paintool.common_arrow(painter,
 						apnt, bpnt,
