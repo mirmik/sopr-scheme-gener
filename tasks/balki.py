@@ -585,7 +585,7 @@ class PaintWidget(paintwdg.PaintWidget):
 					self.bsections()[i].FT)
 
 			if self.bsections()[i].sectname != "":
-				off = 9 if self.bsections()[i].sharn else 5
+				off = 11 if self.bsections()[i].sharn else 5
 				painter.drawText(
 					QPoint(wpnts[i]-off-QFontMetrics(self.font).width(self.bsections()[i].sectname), hcenter+21), 
 					self.bsections()[i].sectname)
