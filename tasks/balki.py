@@ -28,7 +28,8 @@ class ConfWidget(common.ConfWidget):
 			self.l=l
 
 	class betsect:
-		def __init__(self, sharn = False, F="clean", M="clean", Mkr="clean", MT="", FT=""):
+		def __init__(self, sharn = False, sectname="", F="clean", M="clean", Mkr="clean", MT="", FT=""):
+			self.sectname = sectname
 			self.M = M
 			self.Mkr = Mkr 
 			self.F=F
@@ -55,7 +56,7 @@ class ConfWidget(common.ConfWidget):
 			"betsect":
 			[
 				self.betsect(M = "-", MT="M"),
-				self.betsect(sharn =True),
+				self.betsect(sharn =True, sectname="K"),
 				self.betsect(F = "+", FT="F"),
 				self.betsect(sharn=True)
 			],
@@ -578,6 +579,11 @@ class PaintWidget(paintwdg.PaintWidget):
 					font=self.font)
 
 			if self.bsections()[i].F != "clean" and fdown == True:
+				painter.drawText(
+					QPoint(wpnts[i]+10, hcenter+25), 
+					self.bsections()[i].FT)
+
+			if self.bsections()[i].sectname != "":
 				painter.drawText(
 					QPoint(wpnts[i]+10, hcenter+25), 
 					self.bsections()[i].FT)
