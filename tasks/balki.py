@@ -88,14 +88,13 @@ class ConfWidget(common.ConfWidget):
 				
 		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
 		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
-			defval=1,
+			defval=4,
 			variant=[
 				"Круг",  
 				"Толстая труба",
 				"Тонкая труба",
 				"Прямоугольник",
-				"Треугольник. Тип1",
-				"Треугольник. Тип2",
+				"Треугольник",
 				"Квадрат - окружность",
 			])
 
@@ -206,12 +205,11 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		arrow_size = self.shemetype.arrow_size.get()
 		
-
 		if section_type == "Круг":
-			center = QPoint(right - 10 - arg0/2, hcenter)
-			section_width = arg0 + 120
+			center = QPoint(right - 10 -20 - arg0/2, hcenter)
+			section_width = arg0 + 100
 
-			#dimlines_off = arg0 + 20
+			dimlines_off = arg0 + 30
 
 			painter.setPen(self.pen)
 
@@ -223,10 +221,10 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center-QPoint(0,arg0),
-				bpnt = center+QPoint(0,arg0),
-				offset = QPoint(-dimlines_off,0),
-				textoff = QPoint(-10, 0),
+				apnt = center-QPoint(arg0, 0),
+				bpnt = center+QPoint(arg0, 0),
+				offset = QPoint(0,dimlines_off),
+				textoff = QPoint(0, -10),
 				text = atxt,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -235,7 +233,6 @@ class PaintWidget(paintwdg.PaintWidget):
 			llen = arg0 + 10
 			painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
 			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
-
 
 		elif section_type == "Тонкая труба":
 			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
@@ -260,7 +257,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				apnt = center-QPoint(0,arg0),
 				bpnt = center+QPoint(0,arg0),
 				offset = QPoint(-dimlines_off,0),
-				textoff = QPoint(-10, 0) - QPoint(QFontMetrics(self.font).width(atxt), 0),
+				textoff = QPoint(-10, 0) - QPoint(QFontMetrics(self.font).width(atxt)/2, 0),
 				text = atxt,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -277,6 +274,49 @@ class PaintWidget(paintwdg.PaintWidget):
 				textline_from = "bpnt"
 			)
 
+			painter.setPen(self.axpen)
+			llen = arg0 + 10
+			painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
+			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
+		elif section_type == "Толстая труба":
+			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
+			section_width = arg0 + 120
+
+			dimlines_off = arg0 + 20
+
+			painter.setPen(self.pen)
+
+			painter.setBrush(QBrush(Qt.BDiagPattern))
+			painter.drawEllipse(
+				QRect(center - QPoint(arg0,arg0), center + QPoint(arg0,arg0)))
+
+			painter.setBrush(QBrush(Qt.white))
+			painter.drawEllipse(
+				QRect(center - QPoint(arg1,arg1), center + QPoint(arg1,arg1)))
+
+			painter.setPen(self.halfpen)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center-QPoint(0,arg0),
+				bpnt = center+QPoint(0,arg0),
+				offset = QPoint(-dimlines_off,0),
+				textoff = QPoint(-10, 0) - QPoint(QFontMetrics(self.font).width(atxt)/2, 0),
+				text = atxt,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
+				bpnt = center+QPoint(- math.cos(math.pi/4) * arg1, - math.sin(math.pi/4) * arg1),
+				offset = QPoint(0,0),
+				textoff = QPoint(10,-10),
+				text = btxt,
+				arrow_size = arrow_size / 3 * 2,
+			)
+			
 			painter.setPen(self.axpen)
 			llen = arg0 + 10
 			painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
@@ -334,6 +374,114 @@ class PaintWidget(paintwdg.PaintWidget):
 			llen = arg0 + 10
 			painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
 			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
+		elif section_type == "Прямоугольник":
+			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
+			section_width = arg1 + 120
+
+			painter.setPen(self.pen)
+
+			painter.setBrush(QBrush(Qt.BDiagPattern))
+			painter.drawRect(
+				QRect(center - QPoint(arg1,arg0), center + QPoint(arg1,arg0)))
+
+			painter.setBrush(QBrush(Qt.white))
+	
+			painter.setPen(self.halfpen)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(-arg1,arg0),
+				bpnt = center+QPoint(-arg1,-arg0),
+				offset = QPoint(-20,0),
+				textoff = QPoint(-10, 0),
+				text = atxt,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(arg1,arg0),
+				bpnt = center+QPoint(-arg1,arg0),
+				offset = QPoint(0,25),
+				textoff = QPoint(0, -6),
+				text = btxt,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			#paintool.draw_dimlines(
+			#	painter = painter,
+			#	apnt = center+QPoint(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
+			#	bpnt = center+QPoint(- math.cos(math.pi/4) * arg1, - math.sin(math.pi/4) * arg1),
+			#	offset = QPoint(0,0),
+			#	textoff = QPoint(8,-8),
+			#	text = ctxt,
+			#	arrow_size = arrow_size / 3 * 2
+			#)
+
+			painter.setPen(self.axpen)
+			llen = arg0 + 10
+			painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
+			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
+
+		elif section_type == "Треугольник. Тип1":
+			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
+			section_width = arg1 + 120
+
+			painter.setPen(self.pen)
+
+			painter.setBrush(QBrush(Qt.BDiagPattern))
+			painter.drawPolygon(
+				QPolygon([
+					center+QPoint(-arg1, arg0),
+					center+QPoint(arg1, arg0),
+					center+QPoint(0, -arg0),
+				])
+			)
+
+			painter.setBrush(QBrush(Qt.white))
+	
+			painter.setPen(self.halfpen)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(0,arg0),
+				bpnt = center+QPoint(0,-arg0),
+				offset = QPoint(-20-arg0,0),
+				textoff = QPoint(-10, 0),
+				text = atxt,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(arg1,arg0),
+				bpnt = center+QPoint(-arg1,arg0),
+				offset = QPoint(0,25),
+				textoff = QPoint(0, -6),
+				text = btxt,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			#paintool.draw_dimlines(
+			#	painter = painter,
+			#	apnt = center+QPoint(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
+			#	bpnt = center+QPoint(- math.cos(math.pi/4) * arg1, - math.sin(math.pi/4) * arg1),
+			#	offset = QPoint(0,0),
+			#	textoff = QPoint(8,-8),
+			#	text = ctxt,
+			#	arrow_size = arrow_size / 3 * 2
+			#)
+
+			painter.setPen(self.axpen)
+			llen = arg0 + 10
+			painter.drawLine(center + QPoint(-llen,-arg0+4/3*arg0), center + QPoint(llen,-arg0+4/3*arg0))
+			painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
+		else:
+			print("Unresolved section type:", section_type)
+			exit(0)
 
 		return section_width
 
