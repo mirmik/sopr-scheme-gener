@@ -669,8 +669,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter, 
 				pnt=QPointF(termpos+0.5, hcenter), 
 				angle=termangle, 
-				termx=20, 
-				termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)			
+				termx=25, 
+				termy=15, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)			
 
 
 		for i in range(len(self.bsections())):
