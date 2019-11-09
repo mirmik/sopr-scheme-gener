@@ -781,6 +781,9 @@ def draw_sharnir_1dim(painter, pnt, angle, rad, termrad, termx, termy, pen, half
 	painter.drawEllipse(circrect)
 	painter.drawEllipse(circrect2)
 
+def draw_zadelka(painter, pnt, angle, termx, termy, pen, halfpen, doublepen=None):
+	draw_sharnir_terminator_rect(painter, pnt, angle, termx, termy, pen, halfpen)
+
 def draw_sharnir_2dim(painter, pnt, angle, rad, termrad, termx, termy, pen, halfpen):
 	painter.setPen(pen)
 

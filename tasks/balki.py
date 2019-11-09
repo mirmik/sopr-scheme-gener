@@ -85,7 +85,8 @@ class ConfWidget(common.ConfWidget):
 
 		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
 		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "6")
-		self.shemetype.leftterm = self.sett.add("Левый терминатор:", "bool", True)
+		self.shemetype.leftterm = self.sett.add("Закрепление слева:", "bool", True)
+		self.shemetype.sharnterm = self.sett.add("Закрепление заделка/шарнир:", "bool", True)
 				
 		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
 		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
@@ -579,12 +580,10 @@ class PaintWidget(paintwdg.PaintWidget):
 					font=self.font)
 
 			if self.bsections()[i].F != "clean" and fdown == False:
-				paintool.draw_text_centered(
-					painter,
-					pnt=QPoint(wpnts[i], hcenter-rad-5), 
-					text=paintool.greek(self.bsections()[i].FT),
-					font=self.font)
-
+				painter.drawText(
+					QPoint(wpnts[i]+10, hcenter-rad), 
+					paintool.greek(self.bsections()[i].FT))
+					
 			if self.bsections()[i].F != "clean" and fdown == True:
 				painter.drawText(
 					QPoint(wpnts[i]+10, hcenter+25), 
@@ -651,16 +650,28 @@ class PaintWidget(paintwdg.PaintWidget):
 					hcenter+80-5), text, self.font)
 
 
+		# Рисуем терминатор:
 		termpos = wpnts[0] if self.shemetype.leftterm.get() else wpnts[-1]
 		termangle = math.pi if self.shemetype.leftterm.get() else 0
-		paintool.draw_sharnir_1dim(
+
+		if self.shemetype.sharnterm.get():
+			paintool.draw_sharnir_1dim(
+					painter, 
+					pnt=QPointF(termpos, hcenter), 
+					angle=termangle, 
+					rad=5.5, 
+					termrad=25, 
+					termx=20, 
+					termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
+
+		else:
+			paintool.draw_zadelka(
 				painter, 
-				pnt=QPoint(termpos, hcenter), 
+				pnt=QPointF(termpos+0.5, hcenter), 
 				angle=termangle, 
-				rad=5.5, 
-				termrad=25, 
 				termx=20, 
-				termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
+				termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)			
+
 
 		for i in range(len(self.bsections())):
 			if self.bsections()[i].sharn:
