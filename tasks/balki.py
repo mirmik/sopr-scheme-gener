@@ -51,20 +51,20 @@ class ConfWidget(common.ConfWidget):
 			[
 				self.sect(l=1),
 				self.sect(l=1),
-				self.sect(l=2),
+				self.sect(l=1),
 			],
 			"betsect":
 			[
-				self.betsect(M = "-", MT="M"),
-				self.betsect(sharn =True, sectname="K"),
-				self.betsect(F = "+", FT="F"),
-				self.betsect(sharn=True)
+				self.betsect(),
+				self.betsect(),
+				self.betsect(),
+				self.betsect()
 			],
 			"sectforce":
 			[
 				self.sectforce(),
 				self.sectforce(),
-				self.sectforce(Fr="+", FrT="ql")
+				self.sectforce()
 			]
 		}
 		
