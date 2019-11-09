@@ -85,7 +85,7 @@ class ConfWidget(common.ConfWidget):
 
 		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
 		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "6")
-		self.shemetype.leftterm = self.sett.add("Закрепление слева:", "bool", True)
+		self.shemetype.leftterm = self.sett.add("Закрепление:", "list", 1, variant=["", "слева", "справа"])
 		self.shemetype.sharnterm = self.sett.add("Закрепление заделка/шарнир:", "bool", True)
 				
 		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
