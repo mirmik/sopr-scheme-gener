@@ -101,7 +101,7 @@ class ConfWidget_T0(common.ConfWidget):
 		self.table.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
-		self.table1.addColumn("mkr", "list", variant=["clean", "+", "-"])
+#		self.table1.addColumn("mkr", "list", variant=["clean", "+", "-"])
 		self.table1.addColumn("Fr", "list", variant=["clean", "+", "-"])
 		self.table1.addColumn("mkrT", "str", "Текст")
 		self.table1.updateTable()
@@ -308,23 +308,34 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			lW = QFontMetrics(font).width(text_l)
 			AW = QFontMetrics(font).width(text_A)
 
-
-			if kruch_flag:
-				if task["sections"][i].text == "":
-					text = "{}, {}".format(text_l, text_A)
+			if text_A or text_l:
+				if kruch_flag:
+					if task["sections"][i].text == "":
+						text = "{}, {}".format(text_l, text_A)
+					else:
+						text = paintool.greek(task["sections"][i].text)
 				else:
-					text = paintool.greek(task["sections"][i].text)
+					if task["sections"][i].text == "":
+						text = "{}, {}, {}".format(text_l, text_A, text_E)
+					else:
+						text = paintool.greek(task["sections"][i].text)
 			else:
-				if task["sections"][i].text == "":
-					text = "{}, {}, {}".format(text_l, text_A, text_E)
-				else:
-					text = paintool.greek(task["sections"][i].text)
-				
+				text = paintool.greek(task["sections"][i].text)
+
 			if razm:
 				painter.setPen(self.halfpen)
-				paintool.dimlines(painter, QPoint(wsect(i), fini_height), QPoint(wsect(i+1), fini_height), dimlines_level)
-				paintool.draw_text_centered(painter, QPoint((wsect(i)+wsect(i+1))/2, dimlines_level-5), text, self.font)
+				splashed = wsect(i+1) - wsect(i) < 20
 
+				paintool.draw_dimlines(
+					painter, 
+					QPoint(wsect(i), fini_height), 
+					QPoint(wsect(i+1), fini_height), 
+					offset=QPoint(0, dimlines_level- fini_height), 
+					textoff=QPoint(0, -3 -QFontMetrics(self.font).height()/2),
+					arrow_size=10,
+					text=text,
+					splashed=splashed)
+				
 				painter.setBrush(self.default_brush)
 				painter.setPen(self.default_pen)
 		
@@ -369,6 +380,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			if task["betsect"][i].M == "-":
 				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), hcenter), 20), True)
 
+			painter.setPen(self.pen)
 			if task["betsect"][i].Mkr == "+":
 				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad2(i)+10, 11, False)
 
@@ -466,6 +478,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				
 				step = 20
 
+				painter.setPen(self.pen)
 				paintool.raspred_force(painter=painter,
 					apnt=QPointF(fxa, hcenter),
 					bpnt=QPointF(fxb, hcenter),
