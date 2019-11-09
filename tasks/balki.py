@@ -490,7 +490,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		elif section_type == "Квадрат повёрнутый":
 			l = arg0/math.sqrt(2) 
-			center = QPoint(right - 20 - 10 - arg0/2, hcenter)
+			center = QPoint(right - 20 - 20 - arg0/2, hcenter)
 			section_width = arg1 + 80
 
 			painter.setPen(self.pen)
