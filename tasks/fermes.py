@@ -185,7 +185,7 @@ class ConfWidget_T4(common.ConfWidget):
 		self.shemetype.section_arg1 = self.sett.add("Сечение.Аргумент2:", "int", "50")
 		self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
 
-		self.shemetype.postfix = self.sett.add("Постфикс:", "str", ",E,Ix")
+		self.shemetype.postfix = self.sett.add("Постфикс:", "str", ",EIx")
 		
 		self.setLayout(self.vlayout)
 
