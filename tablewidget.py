@@ -71,7 +71,7 @@ class TableWidget(QTableWidget):
 					variant = self.columns[i].variant
 
 					obj = QComboBox()
-					obj.setFixedWidth(60)
+					#obj.setFixedWidth(0)
 					obj.addItems(variant)
 					obj.sig = sig
 					obj.currentIndexChanged.connect(sig.emit_signal)

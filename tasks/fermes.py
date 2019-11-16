@@ -24,8 +24,7 @@ class ShemeTypeT4(common.SchemeType):
 
 class ConfWidget_T4(common.ConfWidget):
 	class sect:
-		def __init__(self, direct=1, strt=("",""), fini=(1,1), lsharn="нет", rsharn="нет", txt="", alttxt=False, 
-				smaker="", fmaker="", smaker_pos="сверху", fmaker_pos="сверху"):
+		def __init__(self, direct=1, strt=("",""), fini=(1,1), lsharn="нет", rsharn="нет", txt="", alttxt=False):
 			self.xstrt=str(strt[0])
 			self.ystrt=str(strt[1])
 			self.xfini=str(fini[0])
@@ -35,10 +34,13 @@ class ConfWidget_T4(common.ConfWidget):
 			self.txt = txt
 			self.alttxt = alttxt
 
+	class label:
+		def __init__(self, smaker="", fmaker="", smaker_pos="сверху", fmaker_pos="сверху"):
 			self.smaker = smaker
 			self.fmaker = fmaker
 			self.smaker_pos = smaker_pos
 			self.fmaker_pos = fmaker_pos
+
 
 	class sectforce:
 		def __init__(self, distrib="clean", txt=""):
@@ -81,6 +83,13 @@ class ConfWidget_T4(common.ConfWidget):
 				self.betsect(),
 				self.betsect()
 			],
+
+			"label": 
+			[
+				self.label(),
+				self.label(),
+				self.label()
+			],
 		}
 
 	def __init__(self, sheme):
@@ -114,10 +123,6 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table.addColumn("rsharn", "list", "ШарнирП", variant=sharnir_arr)
 		self.table.addColumn("txt", "str", "Текст")
 		self.table.addColumn("alttxt", "bool", "alt")
-		self.table.addColumn("smaker", "str", "Метка")
-		self.table.addColumn("fmaker", "str", "Метка")
-		self.table.addColumn("smaker_pos", "list", "Метка", variant=elements.storoni)
-		self.table.addColumn("fmaker_pos", "list", "Метка", variant=elements.storoni)
 		self.table.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
@@ -139,6 +144,13 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table2.addColumn("fr_txt_alt", "bool", "Falt")
 		self.table2.updateTable()
 
+		self.table3 = tablewidget.TableWidget(self.shemetype, "label")
+		self.table3.addColumn("smaker", "str", "Метка")
+		self.table3.addColumn("fmaker", "str", "Метка")
+		self.table3.addColumn("smaker_pos", "list", "Метка", variant=elements.storoni)
+		self.table3.addColumn("fmaker_pos", "list", "Метка", variant=elements.storoni)
+		self.table3.updateTable()
+
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
 		
@@ -147,12 +159,16 @@ class ConfWidget_T4(common.ConfWidget):
 		
 		self.vlayout.addWidget(QLabel("Локальные силы:"))
 		self.vlayout.addWidget(self.table2)
+
+		self.vlayout.addWidget(QLabel("Метки:"))
+		self.vlayout.addWidget(self.table3)
 		
 		self.vlayout.addWidget(self.sett)
 
 		self.table.updated.connect(self.redraw)
 		self.table1.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
+		self.table3.updated.connect(self.redraw)
 
 		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "12")
 
@@ -195,6 +211,7 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table.updateTable()
 		self.table1.updateTable()
 		self.table2.updateTable()
+		self.table3.updateTable()
 
 class PaintWidget_T4(paintwdg.PaintWidget):
 
@@ -297,8 +314,8 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(self, strt, fini, txt, alttxt)
 
-			elements.draw_element_label(self, pnt=strt, txt=sect.smaker, type=sect.smaker_pos)
-			elements.draw_element_label(self, pnt=fini, txt=sect.fmaker, type=sect.fmaker_pos)
+			elements.draw_element_label(self, pnt=strt, txt=self.shemetype.task["label"][i].smaker, type=self.shemetype.task["label"][i].smaker_pos)
+			elements.draw_element_label(self, pnt=fini, txt=self.shemetype.task["label"][i].fmaker, type=self.shemetype.task["label"][i].fmaker_pos)
 		
 		# Распределённая нагрузка
 		for i in range(len(self.sections())):
