@@ -133,7 +133,11 @@ class PaintWidget(QWidget):
 		self.default_brush.setColor(Qt.white)
 		painter.setBrush(self.default_brush)
 
-		#painter.drawRect(QRect(0,0,self.width(),self.height()))
+		painter.setPen(Qt.NoPen)
+		painter.setBrush(Qt.white)
+		painter.drawRect(QRect(0,0,self.width(),self.height()))
+		painter.setPen(self.pen)
+		painter.setBrush(Qt.white)
 		self.painter = painter
 		
 	def paintEvent(self, ev):
