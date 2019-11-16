@@ -199,7 +199,7 @@ def draw_element_sharn(self, pnt, type, inangle):
 
 	return
 
-def draw_text_by_points(self, strt, fini, txt, alttxt, off=10):
+def draw_text_by_points(self, strt, fini, txt, alttxt, off=14):
 	if strt == fini:
 		return
 	painter = self.painter
@@ -247,7 +247,7 @@ def draw_element_distribload(self, type,
 def draw_element_label(self, type, pnt, txt):
 	center = pnt + QPointF(0, QFontMetrics(self.font).height() / 4)
 	angle = storoni_angles[type]
-	rad = 17
+	rad = 14
 	center = center + QPointF(math.cos(angle)*rad, -math.sin(angle)*rad)
 
 	paintool.draw_text_centered(self.painter, center, txt, self.font)
