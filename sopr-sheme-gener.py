@@ -113,8 +113,8 @@ class CentralWidget(QWidget):
 		#self.hlayout.addWidget(self.work_layout_wdg)
 		self.hsplitter.addWidget(self.settings_layout_wdg)
 		self.hsplitter.addWidget(self.work_layout_wdg)
-		self.hsplitter.setStretchFactor(0, 1)
-		self.hsplitter.setStretchFactor(1, 1)
+		self.hsplitter.setStretchFactor(0, 150)
+		self.hsplitter.setStretchFactor(1, 100)
 
 		common.PAINT_CONTAINER = self.container_paint
 		self.container_paint.setFixedSize(600,400)
