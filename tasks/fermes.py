@@ -302,6 +302,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		for i in range(len(self.sections())):
 			strt, fini = coordes[i]
 			rstrt, rfini = raw_coordes[i]
+			painter.setPen(self.doublepen)
 			painter.drawLine(strt, fini)
 			sect = self.sections()[i]
 

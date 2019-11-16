@@ -309,6 +309,7 @@ def circular_arrow2(painter, pnt, rad, angle, angle2, arrow_size):
 		), aangle, arrow_size)
 
 def half_moment_arrow_common(painter, pnt, rad, angle, angle2, arrow_size):
+	painter.setPen(halfpen)
 	angle = -angle
 	angle2 = -angle2
 	pnt2 = pnt+QPointF(
