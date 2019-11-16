@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import *
 
 class ShemeTypeT4(common.SchemeType):
 	def __init__(self):
-		super().__init__("Свободная ферма")
+		super().__init__("Рамы")
 		self.setwidgets(ConfWidget_T4(self), PaintWidget_T4(), common.TableWidget())
 
 class ConfWidget_T4(common.ConfWidget):
