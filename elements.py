@@ -127,9 +127,12 @@ def draw_element_torque(self, pnt, type, rad, arrow_size, txt):
 	elif textpolicy[0] == "right":
 		paintool.draw_text_centered(painter, textpnt + textpolicy[1], txt, self.font)
 
-def draw_element_force(self, pnt, type, rad, arrow_size, txt, alt):
+def draw_element_force(self, pnt, type, rad, arrow_size, txt, alt, pen = None):
 	painter = self.painter
-	painter.setPen(self.halfpen)	
+	if not pen:
+		painter.setPen(self.halfpen)	
+	else:
+		painter.setPen(pen)
 	angle = None
 
 	if type == "нет":
@@ -214,7 +217,7 @@ def draw_element_sharn(self, pnt, type, inangle):
 
 	return
 
-def draw_text_by_points(self, strt, fini, txt, alttxt, off=14):
+def draw_text_by_points(self, strt, fini, txt, alttxt, off=14, polka=None):
 	if strt == fini:
 		return
 	painter = self.painter
@@ -232,6 +235,54 @@ def draw_text_by_points(self, strt, fini, txt, alttxt, off=14):
 
 	#print("HERE")
 	paintool.draw_text_centered(painter, center, txt, self.font)
+
+	if polka:
+		painter.drawLine(
+			center + QPointF(-QFontMetrics(self.font).width(txt)/2, QFontMetrics(self.font).height()/8),
+			center + QPointF(QFontMetrics(self.font).width(txt)/2, QFontMetrics(self.font).height()/8)
+		)
+
+		mul = -1 if not alttxt else 1 
+
+		painter.drawLine(
+			polka,
+			center + QPointF(mul*QFontMetrics(self.font).width(txt)/2, QFontMetrics(self.font).height()/8)
+		)
+
+def draw_text_by_points_angled(self, strt, fini, txt, alttxt, off=14):
+	if strt == fini:
+		return
+	painter = self.painter
+	diff = (fini.x() - strt.x(), fini.y() - strt.y())
+	
+	angle = math.atan2(diff[1], diff[0])
+
+	center = QPointF((strt.x() + fini.x())/2, (strt.y() + fini.y())/2 + QFontMetrics(self.font).height() / 4)	
+	
+	self.painter.end()
+
+	painter = QPainter(self)
+	painter.save();
+	painter.setFont(self.font)
+	painter.translate(center)
+	painter.rotate(angle / math.pi * 180)
+	painter.drawText(
+		-QFontMetrics(self.font).width(txt)/2+5, 
+		-QFontMetrics(self.font).height()/4, 
+		txt)
+	painter.restore()
+	painter.end()
+
+	self.painter = QPainter(self)
+
+	#self.painter.restore()
+	#self.painter.end()
+	#self.painter = QPainter(self)
+	#self.painter.setPen(self.pen)
+	#self.painter.setBrush(Qt.white)
+	#painter.rotate(1810)
+	#painter.drawText(100, 100, "hellos")
+	#painter.end()
 	
 def draw_element_distribload(self, type, 
 					apnt, bpnt, step, 

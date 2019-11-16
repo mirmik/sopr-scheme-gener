@@ -166,8 +166,10 @@ def common_arrow(painter, spnt, fpnt, arrow_size):
 	diff = fpnt - spnt
 	angle = math.atan2(-diff.y(), diff.x())
 
-	angled_arrow_head_top(painter, fpnt, angle, arrow_size)
+
 	painter.drawLine(spnt, fpnt)
+	painter.setPen(pen)
+	angled_arrow_head_top(painter, fpnt, angle, arrow_size)
 
 def arrow_head(painter, pnt, angle, headsize):
 	return angled_arrow_head_top(painter, pnt, angle, headsize)
