@@ -145,7 +145,7 @@ def draw_element_force(self, pnt, type, rad, arrow_size, txt, alt):
 	paintool.common_arrow(painter, p1, p2, arrow_size)
 
 	txt = paintool.greek(txt)
-	textpnt = p2
+	textpnt = (p2 + p1) / 2
 	
 	if not alt:
 		textpolicy = force_textpolicy(type, self.font, txt)
