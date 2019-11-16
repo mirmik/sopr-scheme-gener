@@ -102,6 +102,7 @@ def draw_element_torque(self, pnt, type, rad, arrow_size, txt):
 	
 	angle = None
 	angle2 = None
+	painter.setPen(self.halfpen)
 
 	if type == "нет":
 		return
@@ -127,7 +128,7 @@ def draw_element_torque(self, pnt, type, rad, arrow_size, txt):
 
 def draw_element_force(self, pnt, type, rad, arrow_size, txt, alt):
 	painter = self.painter
-	
+	painter.setPen(self.halfpen)	
 	angle = None
 
 	if type == "нет":
@@ -247,7 +248,7 @@ def draw_element_distribload(self, type,
 def draw_element_label(self, type, pnt, txt):
 	center = pnt + QPointF(0, QFontMetrics(self.font).height() / 4)
 	angle = storoni_angles[type]
-	rad = 14
+	rad = 17
 	center = center + QPointF(math.cos(angle)*rad, -math.sin(angle)*rad)
 
 	paintool.draw_text_centered(self.painter, center, txt, self.font)

@@ -96,7 +96,7 @@ class ConfWidget_T4(common.ConfWidget):
 		super().__init__(sheme)
 
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "90")
+		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "100")
 		#self.shemetype.base_d = self.sett.add("Базовая длина:", "int", "40")
 		#self.shemetype.base_h = self.sett.add("Базовая толщина:", "int", "20")
 		#self.shemetype.zadelka = self.sett.add("Заделка:", "bool", True)
@@ -172,7 +172,7 @@ class ConfWidget_T4(common.ConfWidget):
 
 		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "12")
 
-		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
+		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", False)
 		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
 			defval=4,
 			variant=sections.section_variant)
@@ -185,6 +185,7 @@ class ConfWidget_T4(common.ConfWidget):
 		self.shemetype.section_arg1 = self.sett.add("Сечение.Аргумент2:", "int", "50")
 		self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
 
+		self.shemetype.postfix = self.sett.add("Постфикс:", "str", ",E,Ix")
 		
 		self.setLayout(self.vlayout)
 
@@ -311,7 +312,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 
 			if txt == "":
 				dist = math.sqrt((rfini[0] - rstrt[0])**2 + (rfini[1] - rstrt[1])**2) 
-				txt = util.text_prepare_ltext(dist)
+				txt = util.text_prepare_ltext(dist) + self.shemetype.postfix.get()
 
 			elements.draw_text_by_points(self, strt, fini, txt, alttxt)
 
@@ -353,6 +354,8 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 			sectforce = self.sectforce()[i]
 			bsect = self.bsections()[i]
 			angle = common.angle(strt, fini) 
+
+			painter.setPen(self.pen)
 
 			elements.draw_element_torque(self, strt, bsect.menl, rad, arrow_size, txt=bsect.ml_txt)
 			elements.draw_element_torque(self, fini, bsect.menr, rad, arrow_size, txt=bsect.mr_txt)
