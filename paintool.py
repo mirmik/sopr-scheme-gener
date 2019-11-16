@@ -789,6 +789,41 @@ def draw_sharnir_1dim(painter, pnt, angle, rad, termrad, termx, termy, pen, half
 	painter.drawEllipse(circrect)
 	painter.drawEllipse(circrect2)
 
+
+def draw_sharnir_1dim_remastered(painter, pnt, angle, rad, termrad, termx, termy, pen, halfpen, center_off=0, doublepen=None):
+	painter.setPen(halfpen)
+
+	cpnt = QPointF(
+		center_off*math.cos(angle), 
+		center_off*math.sin(angle)) + pnt
+
+	circrect = QRect(cpnt.x()-rad, cpnt.y()-rad, 2*rad , 2*rad)
+	bpnt = QPointF(
+		termrad*math.cos(angle), 
+		termrad*math.sin(angle)) + pnt
+
+	bpnt_draw = QPointF(
+		(termrad-rad)*math.cos(angle), 
+		(termrad-rad)*math.sin(angle)) + pnt
+
+	painter.setBrush(Qt.white)
+	if doublepen:
+		painter.setPen(doublepen)
+	else:
+		painter.setPen(pen)
+	painter.drawLine(pnt, bpnt)
+
+	painter.setPen(pen)
+	circrect2 = radrect(bpnt_draw, rad)
+	#painter.drawLine(pnt, bpnt)
+
+	draw_sharnir_terminator_rect(painter, bpnt, angle, termx, termy, pen, halfpen)
+
+	painter.setPen(pen)
+	painter.setBrush(Qt.white)
+	painter.drawEllipse(circrect)
+	painter.drawEllipse(circrect2)
+
 def draw_zadelka(painter, pnt, angle, termx, termy, pen, halfpen, doublepen=None):
 	draw_sharnir_terminator_rect(painter, pnt, angle, termx, termy, pen, halfpen)
 

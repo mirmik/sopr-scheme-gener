@@ -18,6 +18,7 @@ fen_arr = ["нет", "слева от", "слева к", "справа от", "�
 sharn_arr = ["нет", 
 "слева шарн1", "справа шарн1", "сверху шарн1", "снизу шарн1",
 "слева шарн2", "справа шарн2", "сверху шарн2", "снизу шарн2",
+"слева врез1", "справа врез1", "сверху врез1", "снизу врез1",
 "заделка"]
 
 
@@ -171,7 +172,7 @@ def draw_element_sharn(self, pnt, type, inangle):
 	elif "сверху" in type: angle = deg(270)
 	elif "снизу" in type: angle = deg(90)
 
-	if "шарн1" in type:
+	if "врез1" in type:
 		paintool.draw_sharnir_1dim(
 			painter=painter, 
 			pnt=pnt, 
@@ -180,6 +181,19 @@ def draw_element_sharn(self, pnt, type, inangle):
 			termrad=15, 
 			termx=15, 
 			termy=10, 
+			pen=self.default_pen,
+			halfpen=self.halfpen)
+
+	if "шарн1" in type:
+		paintool.draw_sharnir_1dim_remastered(
+			painter=painter, 
+			pnt=pnt, 
+			angle=angle, 
+			rad=4, 
+			termrad=25, 
+			termx=15, 
+			termy=10, 
+			center_off=6,
 			pen=self.default_pen,
 			halfpen=self.halfpen)
 
