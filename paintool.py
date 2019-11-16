@@ -289,6 +289,7 @@ def circular_arrow2(painter, pnt, rad, angle, angle2, arrow_size):
 	x2 = pnt.x() + rad
 	y2 = pnt.y() + rad
 
+	rangle= angle
 	rangle2= angle2
 	angle = rad2deg(angle)
 	angle2 = rad2deg(angle2)
@@ -296,9 +297,9 @@ def circular_arrow2(painter, pnt, rad, angle, angle2, arrow_size):
 	painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -(angle2 - angle)*16)
 
 	if angle > angle2:
-		aangle = - rangle2 + deg(90)
+		aangle = - rangle2 + deg(90) - deg(10)
 	else:
-		aangle = - rangle2 - deg(90)
+		aangle = - rangle2 - deg(90) + deg(10)
 	
 
 	angled_arrow_head_top(painter, 
@@ -716,6 +717,8 @@ def draw_distribload(painter, apnt, bpnt, step, arrow_size, alen, pen=None):
 		painter.setPen(pen)
 
 	dist = math.sqrt((apnt.x()-bpnt.x())**2 + (apnt.y()-bpnt.y())**2)
+	if dist < 2*step:
+		return
 	count = int(dist / step)
 	count = count - count % 2 + 1
 

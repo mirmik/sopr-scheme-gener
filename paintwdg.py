@@ -125,28 +125,22 @@ class PaintWidget(QWidget):
 		self.doublepen.setWidth(lwidth*2)
 		paintool.doublepen = self.doublepen
 
-		axpen = QPen(Qt.DashDotLine)
-		axpen.setWidth(lwidth/2)
-		paintool.axpen = axpen
-		self.axpen = axpen
-
+		self.axpen = QPen(Qt.DashDotLine)
+		self.axpen.setWidth(lwidth/2)
+		paintool.axpen = self.axpen
+		
 		self.default_brush = QBrush(Qt.SolidPattern)
 		self.default_brush.setColor(Qt.white)
 		painter.setBrush(self.default_brush)
 
-		pen = QPen(Qt.NoPen)
-		painter.setPen(pen)
-
-		brush = QBrush(Qt.SolidPattern)
-		brush.setColor(Qt.white)
-		painter.setBrush(brush)
-
 		painter.drawRect(QRect(0,0,self.width(),self.height()))
+		self.painter = painter
 		
 	def paintEvent(self, ev):
 		try:
 			self.paintEventCommon()			
 			self.paintEventImplementation(ev)
+			self.painter.end()
 		except Exception as ex:
 			if EXIT_ON_EXCEPT:
 				traceback.print_exc()

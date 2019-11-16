@@ -14,7 +14,7 @@ import task0kr
 import task1
 import task2
 import task3
-import task4
+import tasks.fermes
 import tasks.balki
 import common
 import container
@@ -57,7 +57,7 @@ class CentralWidget(QWidget):
 			task1.ShemeTypeT1(),
 			task2.ShemeTypeT2(),
 			task3.ShemeTypeT3(),
-			task4.ShemeTypeT4(),
+			tasks.fermes.ShemeTypeT4(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]
@@ -113,7 +113,7 @@ class CentralWidget(QWidget):
 		#self.hlayout.addWidget(self.work_layout_wdg)
 		self.hsplitter.addWidget(self.settings_layout_wdg)
 		self.hsplitter.addWidget(self.work_layout_wdg)
-		self.hsplitter.setStretchFactor(0, 0)
+		self.hsplitter.setStretchFactor(0, 1)
 		self.hsplitter.setStretchFactor(1, 1)
 
 		common.PAINT_CONTAINER = self.container_paint
