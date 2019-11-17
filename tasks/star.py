@@ -15,26 +15,26 @@ from PyQt5.QtWidgets import *
 
 class ShemeTypeT1(common.SchemeType):
 	def __init__(self):
-		super().__init__("Тип1 (Соедиение звезда)")
+		super().__init__("Тип соедиения звезда.")
 		self.setwidgets(ConfWidget_T1(self), PaintWidget_T1(), common.TableWidget())
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, l=1, angle=30, ztype=0, text="", display_angle=False, force=0):
+		def __init__(self, l=1, angle=30, body=True, force="нет", ftxt=""):
 			self.l = l
+			self.body = body
+			self.force = force
 			self.angle = angle
-			self.ztype = ztype 
-			self.text = text
-			self.display_angle = False
-			self.force = 0
-
+			self.ftxt = ftxt
+			
 	def create_task_structure(self):
 		self.shemetype.task = {
 			"sections": 
 			[
 				self.sect(l=1.5, angle=135),
 				self.sect(l=1, angle=90),
-				self.sect(l=1, angle=0)
+				self.sect(l=1, angle=0),
+				self.sect(l=1, angle=-90, body=False, force="к", ftxt="F")
 			],
 		}
 
@@ -43,7 +43,7 @@ class ConfWidget_T1(common.ConfWidget):
 	def __init__(self, sheme):
 		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
+		#self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
 		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
 		self.sett.updated.connect(self.redraw)
 
@@ -51,8 +51,11 @@ class ConfWidget_T1(common.ConfWidget):
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table.addColumn("l", "float")
-		self.table.addColumn("angle", "float")
+		self.table.addColumn("l", "float", "Длина")
+		self.table.addColumn("angle", "float", "Угол")
+		self.table.addColumn("body", "bool", "Стержень")
+		self.table.addColumn("force", "list", "Сила", variant=["нет", "к", "от"])
+		self.table.addColumn("ftxt", "str", "Сила")
 		self.table.updateTable()
 
 		self.vlayout.addWidget(self.table)
@@ -90,8 +93,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 	def paintEventImplementation(self, ev):
 		sects = self.shemetype.task["sections"]
 
-		firstdir = self.shemetype.first_dir.get()
-		angle = deg(180) if firstdir else deg(90)
+		#firstdir = self.shemetype.first_dir.get()
+		#angle = deg(180) if firstdir else deg(90)
 
 		width = self.width()
 		height = self.height()
@@ -114,24 +117,38 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		br.setWidth(lwidth)
 		painter.setPen(br)
 
-
-		ster = []
-		for s in sects:
-			if s.l != 0:
-				ster.append(s)
-
 		brush = QBrush(Qt.SolidPattern)
 		brush.setColor(Qt.white)
 		painter.setBrush(brush)
 
-		for s in ster:
-			length = s.l * base_length
-			pnt = center + QPoint(math.cos(angle) * length, math.sin(angle) * length)
-			painter.drawLine(center, pnt)
-			#painter.drawEllipse(QRect(pnt - QPoint(5, 5), pnt + QPoint(5, 5)))
-			
-			paintool.zadelka_sharnir(painter, pnt, angle, 30, 10, 5)
+		# Расчитываем центр.
 
-			angle -= deg(s.angle)
+		xmin, ymin = 0, 0
+		xmax, ymax = 0, 0
+
+		for i in range(len(sects)):
+			sect = self.sections()[i]
+			angle = deg(sect.angle)
+			length = sect.l
+
+			point = (
+				math.cos(angle) * length,
+				-math.sin(angle) * length,
+			)
+
+			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
+			ymin, ymax = min(ymin, point[0]) , max(ymax, point[0])
+
+
+
+		for i in range(len(sects)):
+			sect = self.sections()[i]
+			angle = deg(sect.angle)
+
+			if sect.body:
+				length = sect.l * base_length
+				pnt = center + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
+				painter.drawLine(center, pnt)
+				paintool.zadelka_sharnir(painter, pnt, -angle, 30, 10, 5)
 
 		painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))

@@ -11,9 +11,10 @@ import argparse
 
 import task0
 import task0kr
-import task1
+import tasks.star
 import tasks.sharn_sterhen
-import task3
+import tasks.star
+import tasks.plastina
 import tasks.fermes
 import tasks.balki
 import common
@@ -54,9 +55,9 @@ class CentralWidget(QWidget):
 			task0.ShemeTypeT0(),
 			task0kr.ShemeTypeT01(),
 			tasks.balki.ShemeType(),
-			task1.ShemeTypeT1(),
+			tasks.star.ShemeTypeT1(),
 			tasks.sharn_sterhen.ShemeTypeT2(),
-			task3.ShemeTypeT3(),
+			tasks.plastina.ShemeTypeT3(),
 			tasks.fermes.ShemeTypeT4(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
