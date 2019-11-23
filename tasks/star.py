@@ -65,7 +65,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("l", "float", "Длина")
 		self.table.addColumn("angle", "float", "Угол")
 		self.table.addColumn("body", "bool", "Стержень")
-		self.table.addColumn("force", "list", "Сила", variant=["нет", "к", "от"])
+		self.table.addColumn("force", "list", "Сила", variant=["нет", "к", "от", "вдоль"])
 		self.table.addColumn("ftxt", "str", "Сила")
 		self.table.addColumn("alttxt", "bool", "Пол.Ткст.")
 		self.table.addColumn("addangle", "float", "Доб.Угол")
@@ -232,7 +232,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				Atxt = util.text_prepare_ltext(sect.A, suffix="A")
 				txt = "{},{},E".format(ltxt,Atxt)
 
-				elements.draw_text_by_points_angled(self, strt, pnt, off=12, txt=txt, alttxt=sect.alttxt)
+				elements.draw_text_by_points_angled(self, strt, pnt, off=14, txt=txt, alttxt=sect.alttxt)
 
 		# риуем силы
 		for i in range(len(sects)):
@@ -274,15 +274,51 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 						apnt, 
 						bpnt,
 						arrow_size=15)	
+				elif sect.force == "вдоль":
+					rad = 20
+					vec = QPointF(math.cos(angle) * rad, - math.sin(angle) * rad)
+					norm = QPointF(vec.y(), -vec.x())
 
-				elements.draw_text_by_points(
-					self, 
-					cpnt, 
-					bpnt, 
-					paintool.greek(sect.ftxt), 
-					alttxt=sect.alttxt, 
-					off=12, 
-					polka=None)
+					apnt1 = strt + norm
+					bpnt1 = strt - norm
+					apnt2 = strt + norm + vec
+					bpnt2 = strt - norm + vec
+					cpnt1 = strt 
+					cpnt2 = strt + vec
+					
+					paintool.common_arrow(
+						self.painter, 
+						apnt1, 
+						apnt2,
+						arrow_size=10)	
+					paintool.common_arrow(
+						self.painter, 
+						bpnt1, 
+						bpnt2,
+						arrow_size=10)	
+
+					self.painter.drawLine(apnt1, bpnt1)
+
+
+				if sect.force != "вдоль":
+					elements.draw_text_by_points(
+						self, 
+						cpnt, 
+						bpnt, 
+						paintool.greek(sect.ftxt), 
+						alttxt=sect.alttxt, 
+						off=12, 
+						polka=None)
+
+				else:
+					elements.draw_text_by_points(
+						self, 
+						cpnt1, 
+						cpnt2, 
+						paintool.greek(sect.ftxt), 
+						alttxt=sect.alttxt, 
+						off=12 + 15, 
+						polka=None)
 
 		self.painter.setPen(self.pen)
 		self.painter.setBrush(Qt.white)
