@@ -255,7 +255,9 @@ def draw_text_by_points(self, strt, fini, txt, alttxt, off=14, polka=None):
 			center + QPointF(mul*QFontMetrics(self.font).width(txt)/2, QFontMetrics(self.font).height()/8)
 		)
 
-def draw_text_by_points_angled(self, strt, fini, txt, alttxt, off=14):
+def draw_text_by_points_angled(self, strt, fini, txt, alttxt, off=10):
+	if alttxt:
+		strt, fini = fini, strt
 	if strt == fini:
 		return
 	painter = self.painter
@@ -263,7 +265,7 @@ def draw_text_by_points_angled(self, strt, fini, txt, alttxt, off=14):
 	
 	angle = math.atan2(diff[1], diff[0])
 
-	center = QPointF((strt.x() + fini.x())/2, (strt.y() + fini.y())/2 + QFontMetrics(self.font).height() / 4)	
+	center = QPointF((strt.x() + fini.x())/2, (strt.y() + fini.y())/2)# + QFontMetrics(self.font).height() / 4)	
 	
 	self.painter.end()
 
@@ -273,8 +275,11 @@ def draw_text_by_points_angled(self, strt, fini, txt, alttxt, off=14):
 	painter.translate(center)
 	painter.rotate(angle / math.pi * 180)
 	painter.drawText(
-		-QFontMetrics(self.font).width(txt)/2+5, 
-		-QFontMetrics(self.font).height()/4, 
+		QPointF(
+			-QFontMetrics(self.font).width(txt)/2,
+			+QFontMetrics(self.font).height()/4 - off),
+		#-QFontMetrics(self.font).width(txt)/2+5, 
+		#-QFontMetrics(self.font).height()/4, 
 		txt)
 	painter.restore()
 	painter.end()

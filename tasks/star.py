@@ -6,6 +6,8 @@ import tablewidget
 import paintool
 import taskconf_menu
 
+import elements
+import util
 from paintool import deg
 
 from PyQt5 import *
@@ -20,12 +22,14 @@ class ShemeTypeT1(common.SchemeType):
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, l=1, angle=30, body=True, force="нет", ftxt=""):
+		def __init__(self, l=1, A=1, angle=30, body=True, force="нет", ftxt="", alttxt=False):
 			self.l = l
+			self.A = A
 			self.body = body
 			self.force = force
 			self.angle = angle
 			self.ftxt = ftxt
+			self.alttxt = alttxt
 			
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -56,6 +60,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("body", "bool", "Стержень")
 		self.table.addColumn("force", "list", "Сила", variant=["нет", "к", "от"])
 		self.table.addColumn("ftxt", "str", "Сила")
+		self.table.addColumn("alttxt", "bool", "Пол.Ткст.")
 		self.table.updateTable()
 
 		self.vlayout.addWidget(self.table)
@@ -105,24 +110,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		lwidth = self.shemetype.line_width.get()
 
 		base_length = self.shemetype.base_length.get()
-
-
-		painter = QPainter(self)
-		font = painter.font()
-		font.setItalic(True)
-		font.setPointSize(font_size)
-		painter.setFont(font)
-
-		br = QPen()
-		br.setWidth(lwidth)
-		painter.setPen(br)
-
-		brush = QBrush(Qt.SolidPattern)
-		brush.setColor(Qt.white)
-		painter.setBrush(brush)
-
+		
 		# Расчитываем центр.
-
 		xmin, ymin = 0, 0
 		xmax, ymax = 0, 0
 
@@ -144,11 +133,56 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		for i in range(len(sects)):
 			sect = self.sections()[i]
 			angle = deg(sect.angle)
+			self.painter.setPen(self.pen)
 
 			if sect.body:
 				length = sect.l * base_length
 				pnt = center + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
-				painter.drawLine(center, pnt)
-				paintool.zadelka_sharnir(painter, pnt, -angle, 30, 10, 5)
+				self.painter.drawLine(center, pnt)
+				paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, 5)
 
-		painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))
+				ltxt = util.text_prepare_ltext(sect.l, suffix="l")
+				Atxt = util.text_prepare_ltext(sect.A, suffix="A")
+				txt = "{},{}".format(ltxt,Atxt)
+
+				elements.draw_text_by_points_angled(self, center, pnt, txt=txt, alttxt=sect.alttxt)
+
+		# риуем силы
+		for i in range(len(sects)):
+			sect = self.sections()[i]
+			angle = deg(sect.angle)
+			rad = 50
+			circrad = 6
+
+			self.painter.setBrush(Qt.black)
+			if sect.force != "нет":
+				apnt = center + QPointF(math.cos(angle) * circrad, - math.sin(angle) * circrad)
+				bpnt = center + QPointF(math.cos(angle) * rad, - math.sin(angle) * rad)
+				cpnt = center + QPointF(math.cos(angle) * rad/2, - math.sin(angle) * rad/2)
+
+				if sect.force == "к":
+					paintool.common_arrow(
+						self.painter, 
+						bpnt,
+						apnt, 
+						arrow_size=15)	
+				elif sect.force == "от":
+					paintool.common_arrow(
+						self.painter, 
+						apnt, 
+						bpnt,
+						arrow_size=15)	
+
+				elements.draw_text_by_points(
+					self, 
+					cpnt, 
+					bpnt, 
+					paintool.greek(sect.ftxt), 
+					alttxt=sect.alttxt, 
+					off=12, 
+					polka=None)
+
+		self.painter.setPen(self.pen)
+		self.painter.setBrush(Qt.white)
+		self.painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))
+
