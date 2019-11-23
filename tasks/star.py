@@ -133,21 +133,34 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 		for i in range(len(sects)):
 			sect = self.sections()[i]
-			angle = deg(sect.angle)
+			angle = sects[i].angle
 
 			if sect.addangle != 0:
 				rad = 50
+				rad2 = 60
+				rad3 = 65
 				tgtangle = sect.angle + sect.addangle
-				self.painter.setPen(Qt.DashDotLine)
+				pen = QPen(Qt.DashDotLine)
+				pen.setWidth(2)
+				self.painter.setPen(pen)
 
-				pnt1 = center + rad * QPointF(math.cos(deg(angle)), -math.sin(deg(angle)))
-				pnt2 = center + rad * QPointF(math.cos(deg(tgtangle)), -math.sin(deg(tgtangle)))
+				pnt1 = center + rad2 * QPointF(math.cos(deg(angle)), -math.sin(deg(angle)))
+				pnt2 = center + rad2 * QPointF(math.cos(deg(tgtangle)), -math.sin(deg(tgtangle)))
+				cpnt = center + rad3 * QPointF(math.cos(deg(tgtangle+angle)/2), -math.sin(deg(tgtangle+angle)/2))
 
 				self.painter.drawLine(center, pnt1)
 				self.painter.drawLine(center, pnt2)
-				painter.drawArc(paintool.radrect(center, rad), 
+
+				self.painter.setPen(self.halfpen)
+				self.painter.drawArc(paintool.radrect(center, rad), 
 					angle*16, 
-					arc_angle*16)
+					sect.addangle*16)
+
+				paintool.draw_text_centered(
+					painter=self.painter, 
+					pnt=cpnt, 
+					text=paintool.greek(str(sect.addangle)+"\\degree"), 
+					font=self.font)
 
 
 		for i in range(len(sects)):
