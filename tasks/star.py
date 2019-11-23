@@ -22,12 +22,13 @@ class ShemeTypeT1(common.SchemeType):
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, xoff=0, yoff=0, l=1, A=1, angle=30, body=True, force="нет", ftxt="", alttxt=False, addangle=0):
+		def __init__(self, xoff=0, yoff=0, l=1, A=1, angle=30, sharn=True, body=True, force="нет", ftxt="", alttxt=False, addangle=0):
 			self.yoff = xoff
 			self.xoff = yoff
 			self.l = l
 			self.A = A
 			self.body = body
+			self.sharn = sharn
 			self.force = force
 			self.angle = angle
 			self.ftxt = ftxt
@@ -67,6 +68,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("ftxt", "str", "Сила")
 		self.table.addColumn("alttxt", "bool", "Пол.Ткст.")
 		self.table.addColumn("addangle", "float", "Доб.Угол")
+		self.table.addColumn("sharn", "bool", "Шарн.")
 		self.table.updateTable()
 
 		self.vlayout.addWidget(self.table)
@@ -110,8 +112,6 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		width = self.width()
 		height = self.height()
 
-		center = QPoint(width/2, height/2)
-
 		font_size = self.shemetype.font_size.get()
 		lwidth = self.shemetype.line_width.get()
 
@@ -127,17 +127,21 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			length = sect.l
 
 			point = (
-				math.cos(angle) * (length + sect.xoff),
-				-math.sin(angle) * (length+ sect.yoff),
+				math.cos(angle) * (length)  + sect.xoff,
+				-math.sin(angle) * (length) + sect.yoff,
 			)
 
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
 			ymin, ymax = min(ymin, point[0]) , max(ymax, point[0])
 
+		center = QPoint(width/2, height/2) + \
+			QPoint(xmax - xmin, -ymax + ymin) / 2
 
 		for i in range(len(sects)):
+			# Рисуем доб угол
 			sect = self.sections()[i]
 			angle = sects[i].angle
+			strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
 
 			if sect.addangle != 0:
 				rad = 50
@@ -148,9 +152,9 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				pen.setWidth(2)
 				self.painter.setPen(pen)
 
-				pnt1 = center + rad2 * QPointF(math.cos(deg(angle)), -math.sin(deg(angle)))
-				pnt2 = center + rad2 * QPointF(math.cos(deg(tgtangle)), -math.sin(deg(tgtangle)))
-				cpnt = center + rad3 * QPointF(math.cos(deg(tgtangle+angle)/2), -math.sin(deg(tgtangle+angle)/2))
+				pnt1 = strt + rad2 * QPointF(math.cos(deg(angle)), -math.sin(deg(angle)))
+				pnt2 = strt + rad2 * QPointF(math.cos(deg(tgtangle)), -math.sin(deg(tgtangle)))
+				cpnt = strt + rad3 * QPointF(math.cos(deg(tgtangle+angle)/2), -math.sin(deg(tgtangle+angle)/2))
 
 				self.painter.drawLine(center, pnt1)
 				self.painter.drawLine(center, pnt2)
@@ -173,16 +177,22 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			self.painter.setPen(self.pen)
 
 			if sect.body:
-				length = sect.l * base_length
-				pnt = center + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
-				self.painter.drawLine(center, pnt)
-				paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, 5)
+				length = sect.l * base_length			
+				strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
+
+				spnt = strt + QPoint(math.cos(angle) * 6, -math.sin(angle) * 6)
+				pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
+				self.painter.drawLine(spnt, pnt)
+				if sect.sharn:
+					paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, 5)
+				else:
+					self.painter.drawEllipse(paintool.radrect(pnt,5))
 
 				ltxt = util.text_prepare_ltext(sect.l, suffix="l")
 				Atxt = util.text_prepare_ltext(sect.A, suffix="A")
 				txt = "{},{}".format(ltxt,Atxt)
 
-				elements.draw_text_by_points_angled(self, center, pnt, txt=txt, alttxt=sect.alttxt)
+				elements.draw_text_by_points_angled(self, strt, pnt, txt=txt, alttxt=sect.alttxt)
 
 		# риуем силы
 		for i in range(len(sects)):
@@ -191,11 +201,13 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			rad = 50
 			circrad = 6
 
+			strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
+
 			self.painter.setBrush(Qt.black)
 			if sect.force != "нет":
-				apnt = center + QPointF(math.cos(angle) * circrad, - math.sin(angle) * circrad)
-				bpnt = center + QPointF(math.cos(angle) * rad, - math.sin(angle) * rad)
-				cpnt = center + QPointF(math.cos(angle) * rad/2, - math.sin(angle) * rad/2)
+				apnt = strt + QPointF(math.cos(angle) * circrad, - math.sin(angle) * circrad)
+				bpnt = strt + QPointF(math.cos(angle) * rad, - math.sin(angle) * rad)
+				cpnt = strt + QPointF(math.cos(angle) * rad/2, - math.sin(angle) * rad/2)
 
 				if sect.force == "к":
 					paintool.common_arrow(
