@@ -288,7 +288,7 @@ def draw_text_by_points_angled(self, strt, fini, txt, alttxt, off=10):
 	painter.drawText(
 		QPointF(
 			-QFontMetrics(self.font).width(txt)/2,
-			+QFontMetrics(self.font).height()/4 - off),
+			+QFontMetrics(self.font).height()/4 - off + 1),
 		#-QFontMetrics(self.font).width(txt)/2+5, 
 		#-QFontMetrics(self.font).height()/4, 
 		txt)
