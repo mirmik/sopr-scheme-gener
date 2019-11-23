@@ -33,13 +33,19 @@ class ConfWidget_T2(common.ConfWidget):
 			A=1,
 			lbl="",
 			F = "нет",
-			Ftxt=""
+			Ftxt="",
+			zazor = False,
+			zazor_txt = "\\Delta",
+			sharn="нет"
 		):
 			self.l = l
 			self.A = A
 			self.lbl = lbl
 			self.F = F
 			self.Ftxt = Ftxt
+			self.zazor = zazor
+			self.zazor_txt = zazor_txt
+			self.sharn = sharn 
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -64,7 +70,8 @@ class ConfWidget_T2(common.ConfWidget):
 	def __init__(self, sheme):
 		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "10")
+		self.shemetype.zadelka = self.sett.add("Заделка:", "list", defval=0, variant=["нет", "1", "2"])
+		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "15")
 		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "60")
 		self.shemetype.dimlines_level2 = self.sett.add("Уровень размерных линий2:", "int", "60")
 		self.shemetype.arrow_size = self.sett.add("Размер стрелок:", "int", "10")
@@ -83,6 +90,9 @@ class ConfWidget_T2(common.ConfWidget):
 		self.table2.addColumn("lbl", "str", "Метка")
 		self.table2.addColumn("F", "list", "Сила", variant=["нет", "+", "-"])
 		self.table2.addColumn("Ftxt", "str", "Текст")
+		self.table2.addColumn("zazor", "bool", "Зазор")
+		self.table2.addColumn("zazor_txt", "str", "Текст")
+		self.table2.addColumn("sharn", "list", variant=["нет", "1", "2"])
 		self.table2.updateTable()
 		
 		self.vlayout.addWidget(self.table)
@@ -161,7 +171,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 		left_span = 60
 		right_span = 30 if not hasright else 10 + dimlines_level2
-		up_span = 20
+		up_span = 30
 		down_span = 20 if hasnegative else 10 + dimlines_level
 
 		smax = 0
@@ -226,14 +236,51 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		self.painter.drawLine(ld, rd)
 		self.painter.drawLine(rd, ru)
 
-
+		#Рисуем стержни
 		for i in range(len(bsects)):
+			#Доп. Шарниры
+			if bsects[i].sharn != "нет":
+				if bsects[i].sharn == "1":
+					sharn_type = "снизу врез1"
+				elif bsects[i].sharn == "2":
+					sharn_type = "снизу шарн2"
+				elements.draw_element_sharn(self,
+					pnt=QPoint(xnode(i), hbase+base_height),
+					type=sharn_type,
+					termrad=25,
+					termx=25,
+					termy=10,
+					rad=5
+				)
+
+			# Рисуем стержень
 			if bsects[i].l != 0:
-				self.painter.setPen(self.doublepen)
-				self.painter.drawLine(QPoint(xnode(i), hbase), QPoint(xnode(i), hbase - bsects[i].l*hkoeff))
 				
-				self.painter.setPen(self.pen)
-				self.painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase), 5))
+				if bsects[i].zazor is False:
+					self.painter.setPen(self.doublepen)
+					self.painter.drawLine(QPoint(xnode(i), hbase), QPoint(xnode(i), hbase - bsects[i].l*hkoeff))
+				
+					self.painter.setPen(self.pen)
+					self.painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase), 5))
+
+				else:
+					self.painter.setPen(self.doublepen)
+					self.painter.drawLine(QPoint(xnode(i), hbase - 20), QPoint(xnode(i), hbase - bsects[i].l*hkoeff))				
+					self.painter.setPen(self.pen)					
+
+					self.painter.setPen(self.halfpen)
+					paintool.draw_dimlines(
+						painter=self.painter, 
+						apnt=QPoint(xnode(i), hbase - 20), 
+						bpnt=QPoint(xnode(i), hbase), 
+						offset=QPoint(-20,0), 
+						textoff=QPoint(-10-QFontMetrics(self.font).width(paintool.greek(bsects[i].zazor_txt))/2,0), 
+						text=paintool.greek(bsects[i].zazor_txt), 
+						arrow_size=10, 
+						splashed=True, 
+						textline_from=None)
+					self.painter.setPen(self.pen)
+
 
 				if (bsects[i].l < 0):
 					angle = deg(90)
@@ -273,12 +320,13 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 						alttxt=False
 					)
 
+					# рисуем метку
 					if bsects[i].lbl != "":
 						elements.draw_text_by_points(
 							self,
 							QPoint(xnode(i), hbase+cp),
 							QPoint(xnode(i), hbase+bp),
-							txt=bsects[i].lbl,
+							txt=paintool.greek(bsects[i].lbl),
 							alttxt=False,
 							polka=QPointF(xnode(i), hbase+cp/2+5)
 
@@ -300,7 +348,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 							self,
 							QPoint(xnode(i), hbase+ap),
 							QPoint(xnode(i), hbase+cp),
-							txt=bsects[i].lbl,
+							txt=paintool.greek(bsects[i].lbl),
 							alttxt=True,
 							polka=QPointF(xnode(i), hbase+cp/2+5)
 
@@ -363,6 +411,22 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 						
 				
 
+		# Рисуем заделку на левом крае
+		if self.shemetype.zadelka.get() == "2":
+			#paintool.zadelka_sharnir_type2(self.painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
+			elements.draw_element_sharn(self, 
+				pnt=QPoint(xnode(0), hbase), 
+				type="слева шарн2", 
+				termrad=25,
+				termx=25,
+				termy=10,
+				rad=5)
 
-		paintool.zadelka_sharnir_type2(self.painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
-			
+		elif self.shemetype.zadelka.get() == "1":
+			elements.draw_element_sharn(self, 
+				pnt=QPoint(xnode(0), hbase), 
+				type="слева врез1", 
+				termrad=25,
+				termx=25,
+				termy=10,
+				rad=5)

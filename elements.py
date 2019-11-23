@@ -166,7 +166,8 @@ def draw_element_force(self, pnt, type, rad, arrow_size, txt, alt, pen = None):
 	elif textpolicy[0] == "right":
 		paintool.draw_text_centered(painter, textpnt + textpolicy[1], txt, self.font)
 
-def draw_element_sharn(self, pnt, type, inangle):
+def draw_element_sharn(self, 
+		pnt, type, rad=4, inangle=0, termx=15, termy=10, termrad=15):
 	painter = self.painter
 	
 	angle=None
@@ -180,10 +181,10 @@ def draw_element_sharn(self, pnt, type, inangle):
 			painter=painter, 
 			pnt=pnt, 
 			angle=angle, 
-			rad=4, 
-			termrad=15, 
-			termx=15, 
-			termy=10, 
+			rad=rad, 
+			termrad=termrad, 
+			termx=termx, 
+			termy=termy, 
 			pen=self.default_pen,
 			halfpen=self.halfpen)
 
@@ -192,10 +193,10 @@ def draw_element_sharn(self, pnt, type, inangle):
 			painter=painter, 
 			pnt=pnt, 
 			angle=angle, 
-			rad=4, 
-			termrad=25, 
-			termx=15, 
-			termy=10, 
+			rad=rad, 
+			termrad=termrad, 
+			termx=termx, 
+			termy=termy, 
 			center_off=6,
 			pen=self.default_pen,
 			halfpen=self.halfpen)
@@ -205,15 +206,20 @@ def draw_element_sharn(self, pnt, type, inangle):
 			painter=painter, 
 			pnt=pnt, 
 			angle=angle, 
-			rad=4, 
-			termrad=15, 
-			termx=15, 
-			termy=10, 
+			rad=rad, 
+			termrad=termrad, 
+			termx=termx, 
+			termy=termy, 
 			pen=self.default_pen,
 			halfpen=self.halfpen)
 
 	if "заделка" in type:
-		paintool.draw_zadelka(painter, pnt, inangle, 15, 10, self.pen, self.halfpen, self.doublepen)
+		paintool.draw_zadelka(painter, pnt, inangle, 
+			termx=termx, 
+			termy=termy, 
+			pen=self.pen, 
+			halfpen=self.halfpen, 
+			doublepen=self.doublepen)
 
 	return
 
