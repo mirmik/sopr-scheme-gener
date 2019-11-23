@@ -420,7 +420,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					pnt = QPointF(xnode(i), hbase+base_height) 
 				else:
 					type = "сверху от" if bsects[i].F == "+" else "сверху к"
-					pnt = QPointF(xnode(i), hbase+4)
+					pnt = QPointF(xnode(i), hbase)
 					
 				elements.draw_element_force(self, 
 					pnt, type, 

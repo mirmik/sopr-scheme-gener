@@ -22,7 +22,7 @@ class ShemeTypeT1(common.SchemeType):
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, l=1, A=1, angle=30, body=True, force="нет", ftxt="", alttxt=False):
+		def __init__(self, l=1, A=1, angle=30, body=True, force="нет", ftxt="", alttxt=False, addangle=0):
 			self.l = l
 			self.A = A
 			self.body = body
@@ -30,6 +30,7 @@ class ConfWidget_T1(common.ConfWidget):
 			self.angle = angle
 			self.ftxt = ftxt
 			self.alttxt = alttxt
+			self.addangle = addangle
 			
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -37,7 +38,7 @@ class ConfWidget_T1(common.ConfWidget):
 			[
 				self.sect(l=1.5, angle=135),
 				self.sect(l=1, angle=90),
-				self.sect(l=1, angle=0),
+				self.sect(l=1, angle=0, addangle=45),
 				self.sect(l=1, angle=-90, body=False, force="к", ftxt="F")
 			],
 		}
@@ -61,6 +62,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("force", "list", "Сила", variant=["нет", "к", "от"])
 		self.table.addColumn("ftxt", "str", "Сила")
 		self.table.addColumn("alttxt", "bool", "Пол.Ткст.")
+		self.table.addColumn("addangle", "float", "Доб.Угол")
 		self.table.updateTable()
 
 		self.vlayout.addWidget(self.table)
@@ -128,6 +130,21 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
 			ymin, ymax = min(ymin, point[0]) , max(ymax, point[0])
 
+
+		for i in range(len(sects)):
+			sect = self.sections()[i]
+			angle = deg(sect.angle)
+
+			if sect.addangle != 0:
+				rad = 50
+				tgtangle = sect.angle + sect.addangle
+				self.painter.setPen(Qt.DashDotLine)
+
+				pnt1 = center + rad * QPointF(math.cos(deg(angle)), -math.sin(deg(angle)))
+				pnt2 = center + rad * QPointF(math.cos(deg(tgtangle)), -math.sin(deg(tgtangle)))
+
+				self.painter.drawLine(center, pnt1)
+				self.painter.drawLine(center, pnt2)
 
 
 		for i in range(len(sects)):
