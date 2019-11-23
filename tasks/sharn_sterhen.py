@@ -261,24 +261,32 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 			# Рисуем стержень
 			if bsects[i].l != 0:
+				if bsects[i].l > 0:
+					strt = QPointF(xnode(i), hbase)
+					strt_z = QPointF(xnode(i), hbase - 20)
+					fini = QPointF(xnode(i), hbase - bsects[i].l*hkoeff)
+				else:
+					strt = QPoint(xnode(i), hbase + base_height)
+					strt_z = QPointF(xnode(i), hbase + base_height + 20)
+					fini = QPointF(xnode(i), hbase - bsects[i].l*hkoeff)
 				
 				if bsects[i].zazor is False:
 					self.painter.setPen(self.doublepen)
-					self.painter.drawLine(QPoint(xnode(i), hbase), QPoint(xnode(i), hbase - bsects[i].l*hkoeff))
+					self.painter.drawLine(strt, fini)
 				
 					self.painter.setPen(self.pen)
-					self.painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase), 5))
+					self.painter.drawEllipse(paintool.radrect(strt, 5))
 
 				else:
 					self.painter.setPen(self.doublepen)
-					self.painter.drawLine(QPoint(xnode(i), hbase - 20), QPoint(xnode(i), hbase - bsects[i].l*hkoeff))				
+					self.painter.drawLine(strt_z, fini)				
 					self.painter.setPen(self.pen)					
 
 					self.painter.setPen(self.halfpen)
 					paintool.draw_dimlines(
 						painter=self.painter, 
-						apnt=QPoint(xnode(i), hbase - 20), 
-						bpnt=QPoint(xnode(i), hbase), 
+						apnt=strt, 
+						bpnt=strt_z, 
 						offset=QPoint(-20,0), 
 						textoff=QPoint(-10-QFontMetrics(self.font).width(paintool.greek(bsects[i].zazor_txt))/2,0), 
 						text=paintool.greek(bsects[i].zazor_txt), 
@@ -304,30 +312,44 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				txt2 = util.text_prepare_ltext(abs(bsects[i].A), "A")
 				txt2 = txt2 + ",E"
 
+				txt = txt+","+txt2
+				txt_var2 = txt_var2+","+txt2
+
+				dimlines_level2=0
 				if bsects[i].F2 == "нет":
-					paintool.dimlines_vertical(self.painter,
-						QPoint(xnode(i), hbase + ap),
-						QPoint(xnode(i), hbase + bp),
-						xnode(i) + dimlines_level2)
+				#	paintool.dimlines_vertical(self.painter,
+				#		QPoint(xnode(i), hbase + ap),
+				#		QPoint(xnode(i), hbase + bp),
+				#		xnode(i) + dimlines_level2)
 				
-					elements.draw_text_by_points_angled(
-						self,
-						QPoint(xnode(i)+dimlines_level2, hbase + ap),
-						QPoint(xnode(i)+dimlines_level2, hbase + bp),
-						txt=txt,
-						alttxt=False
-					)
+					if bsects[i].l > 0:
+						elements.draw_text_by_points_angled(
+							self,
+							QPoint(xnode(i)+dimlines_level2, hbase + ap),
+							QPoint(xnode(i)+dimlines_level2, hbase + bp),
+							txt=txt,
+							alttxt=False
+						)
+					else:
+						elements.draw_text_by_points_angled(
+							self,
+							QPoint(xnode(i)+dimlines_level2, hbase + ap),
+							QPoint(xnode(i)+dimlines_level2, hbase + (ap+bp)/2),
+							txt=txt,
+							alttxt=False
+						)
+						
 
 				else:
 					cp = (ap+bp)/2
-					paintool.dimlines_vertical(self.painter,
-						QPoint(xnode(i), hbase + ap),
-						QPoint(xnode(i), hbase + cp),
-						xnode(i) + dimlines_level2)
-					paintool.dimlines_vertical(self.painter,
-						QPoint(xnode(i), hbase + cp),
-						QPoint(xnode(i), hbase + bp),
-						xnode(i) + dimlines_level2)
+					#paintool.dimlines_vertical(self.painter,
+					#	QPoint(xnode(i), hbase + ap),
+					#	QPoint(xnode(i), hbase + cp),
+					#	xnode(i) + dimlines_level2)
+					#paintool.dimlines_vertical(self.painter,
+					#	QPoint(xnode(i), hbase + cp),
+					#	QPoint(xnode(i), hbase + bp),
+					#	xnode(i) + dimlines_level2)
 					elements.draw_text_by_points_angled(
 						self,
 						QPoint(xnode(i)+dimlines_level2, hbase + ap),
@@ -345,13 +367,13 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					
 				if bp == 0:
 					cp = ap/2
-					elements.draw_text_by_points(
-						self,
-						QPoint(xnode(i), hbase+cp),
-						QPoint(xnode(i), hbase+ap),
-						txt=txt2,
-						alttxt=False
-					)
+				#	elements.draw_text_by_points(
+				#		self,
+				#		QPoint(xnode(i), hbase+cp),
+				#		QPoint(xnode(i), hbase+ap),
+				#		txt=txt2,
+				#		alttxt=False
+				#	)
 
 					# рисуем метку
 					if bsects[i].lbl != "":
@@ -368,13 +390,13 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 				if ap == 0:
 					cp = bp/2
-					elements.draw_text_by_points(
-						self,
-						QPoint(xnode(i), hbase+bp),
-						QPoint(xnode(i), hbase+cp),
-						txt=txt2,
-						alttxt=False
-					)
+				#	elements.draw_text_by_points(
+				#		self,
+				#		QPoint(xnode(i), hbase+bp),
+				#		QPoint(xnode(i), hbase+cp),
+				#		txt=txt2,
+				#		alttxt=False
+				#	)
 
 					if bsects[i].lbl != "":
 						elements.draw_text_by_points(
