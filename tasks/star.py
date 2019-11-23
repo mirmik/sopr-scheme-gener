@@ -182,7 +182,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				length = sect.l * base_length			
 				strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
 
-				spnt = strt + QPoint(math.cos(angle) * 6, -math.sin(angle) * 6)
+				spnt = strt + QPoint(math.cos(angle) * 7, -math.sin(angle) * 7)
 				pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
 				self.painter.setPen(self.doublepen)
 				self.painter.drawLine(spnt, pnt)
