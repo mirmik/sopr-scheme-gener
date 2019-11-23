@@ -22,7 +22,9 @@ class ShemeTypeT1(common.SchemeType):
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, l=1, A=1, angle=30, body=True, force="нет", ftxt="", alttxt=False, addangle=0):
+		def __init__(self, xoff=0, yoff=0, l=1, A=1, angle=30, body=True, force="нет", ftxt="", alttxt=False, addangle=0):
+			self.yoff = xoff
+			self.xoff = yoff
 			self.l = l
 			self.A = A
 			self.body = body
@@ -56,6 +58,8 @@ class ConfWidget_T1(common.ConfWidget):
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
+		self.table.addColumn("xoff", "float", "Смещ")
+		self.table.addColumn("yoff", "float", "Смещ")
 		self.table.addColumn("l", "float", "Длина")
 		self.table.addColumn("angle", "float", "Угол")
 		self.table.addColumn("body", "bool", "Стержень")
@@ -123,8 +127,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			length = sect.l
 
 			point = (
-				math.cos(angle) * length,
-				-math.sin(angle) * length,
+				math.cos(angle) * (length + sect.xoff),
+				-math.sin(angle) * (length+ sect.yoff),
 			)
 
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
