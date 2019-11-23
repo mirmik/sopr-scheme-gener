@@ -134,6 +134,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
 			ymin, ymax = min(ymin, point[1]) , max(ymax, point[1])
 
+		print(xmin, xmax, ymin, ymax)
 		center = QPoint(width/2, height/2) + \
 			QPoint(-(xmax - xmin)* base_length, (ymax - ymin)* base_length)/4
 
