@@ -167,7 +167,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 				paintool.draw_text_centered(
 					painter=self.painter, 
-					pnt=cpnt, 
+					pnt=cpnt + QPointF(0,QFontMetrics(self.font).height()/2), 
 					text=paintool.greek(str(sect.addangle)+"\\degree"), 
 					font=self.font)
 
