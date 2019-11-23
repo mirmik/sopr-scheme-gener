@@ -22,13 +22,14 @@ class ShemeTypeT1(common.SchemeType):
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, xoff=0, yoff=0, l=1, A=1, angle=30, sharn=True, body=True, force="нет", ftxt="", alttxt=False, addangle=0):
+		def __init__(self, xoff=0, yoff=0, l=1, A=1, angle=30, sharn="шарн+заделка", insharn="шарн", body=True, force="нет", ftxt="", alttxt=False, addangle=0):
 			self.yoff = xoff
 			self.xoff = yoff
 			self.l = l
 			self.A = A
 			self.body = body
 			self.sharn = sharn
+			self.insharn = insharn
 			self.force = force
 			self.angle = angle
 			self.ftxt = ftxt
@@ -68,7 +69,8 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("ftxt", "str", "Сила")
 		self.table.addColumn("alttxt", "bool", "Пол.Ткст.")
 		self.table.addColumn("addangle", "float", "Доб.Угол")
-		self.table.addColumn("sharn", "bool", "Шарн.")
+		self.table.addColumn("sharn", "list", "Шарн.", variant=["нет", "шарн", "шарн+заделка"])
+		#self.table.addColumn("insharn", "list", "ВхШарн.", variant=["нет", "шарн"])
 		self.table.updateTable()
 
 		self.vlayout.addWidget(self.table)
@@ -138,6 +140,37 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		center = QPoint(width/2, height/2) + \
 			QPoint(-(xmax + xmin)* base_length, -(ymax + ymin)* base_length)/2
 
+		def get_coord(i):
+			sect = self.sections()[i]
+			angle=sect.angle
+			length = sect.l * base_length			
+			strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
+			pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
+			return pnt
+
+		def hasnode(pnt):
+			jpnt = center
+			print(pnt, jpnt)
+			diff = math.sqrt((pnt.x()-jpnt.x())**2 + (pnt.y()-jpnt.y())**2)
+			if diff < 0.1:
+				print("True 2") 
+				return True
+			
+			for i in range(len(self.sections())):
+				if self.sections()[i].body==False or self.sections()[i].sharn=="нет":
+					continue
+				jpnt = get_coord(i)
+				print(pnt, jpnt)
+				diff = math.sqrt((pnt.x()-jpnt.x())**2 + (pnt.y()-jpnt.y())**2)
+				print(diff)
+				if diff < 0.1: 
+					print("True 1")
+					return True
+
+			print("False")
+			return False
+
+
 		# Рисуем доб угол
 		for i in range(len(sects)):
 			sect = self.sections()[i]
@@ -182,31 +215,47 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				length = sect.l * base_length			
 				strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
 
-				spnt = strt + QPoint(math.cos(angle) * 7, -math.sin(angle) * 7)
+				if hasnode(strt):
+					spnt = strt + QPoint(math.cos(angle) * 7, -math.sin(angle) * 7)
+				else:
+					spnt = strt
 				pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
 				self.painter.setPen(self.doublepen)
 				self.painter.drawLine(spnt, pnt)
 				self.painter.setPen(self.pen)
-				if sect.sharn:
+				if sect.sharn=="шарн+заделка":
 					paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, 5)
-				else:
+				elif sect.sharn=="шарн":
 					self.painter.drawEllipse(paintool.radrect(pnt,5))
 
 				ltxt = util.text_prepare_ltext(sect.l, suffix="l")
 				Atxt = util.text_prepare_ltext(sect.A, suffix="A")
 				txt = "{},{},E".format(ltxt,Atxt)
 
-				elements.draw_text_by_points_angled(self, strt, pnt, txt=txt, alttxt=sect.alttxt)
+				elements.draw_text_by_points_angled(self, strt, pnt, off=12, txt=txt, alttxt=sect.alttxt)
 
 		# риуем силы
 		for i in range(len(sects)):
 			sect = self.sections()[i]
 			angle = deg(sect.angle)
 			rad = 50
-			circrad = 6
-
+			circrad = 0		
+		
 			strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
 
+			for j in range(len(sects)):
+				jsect = self.sections()[j]
+				#length = jsect.l * base_length		
+				#pnt = strt + QPoint(math.cos(jsect.angle) * length, -math.sin(jsect.angle) * length)
+				
+				print("STRT", strt)
+				if hasnode(strt):
+					print("hasnode")
+					circrad = 6
+					break
+				else:
+					circrad = 0
+			
 			self.painter.setBrush(Qt.black)
 			if sect.force != "нет":
 				apnt = strt + QPointF(math.cos(angle) * circrad, - math.sin(angle) * circrad)
