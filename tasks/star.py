@@ -145,6 +145,9 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 				self.painter.drawLine(center, pnt1)
 				self.painter.drawLine(center, pnt2)
+				painter.drawArc(paintool.radrect(center, rad), 
+					angle*16, 
+					arc_angle*16)
 
 
 		for i in range(len(sects)):
