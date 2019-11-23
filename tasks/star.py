@@ -132,13 +132,13 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			)
 
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
-			ymin, ymax = min(ymin, point[0]) , max(ymax, point[0])
+			ymin, ymax = min(ymin, point[1]) , max(ymax, point[1])
 
 		center = QPoint(width/2, height/2) + \
-			QPoint(xmax - xmin, -ymax + ymin) / 2
+			QPoint(-(xmax - xmin)* base_length, (ymax - ymin)* base_length)/4
 
+		# Рисуем доб угол
 		for i in range(len(sects)):
-			# Рисуем доб угол
 			sect = self.sections()[i]
 			angle = sects[i].angle
 			strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
@@ -156,11 +156,11 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				pnt2 = strt + rad2 * QPointF(math.cos(deg(tgtangle)), -math.sin(deg(tgtangle)))
 				cpnt = strt + rad3 * QPointF(math.cos(deg(tgtangle+angle)/2), -math.sin(deg(tgtangle+angle)/2))
 
-				self.painter.drawLine(center, pnt1)
-				self.painter.drawLine(center, pnt2)
+				self.painter.drawLine(strt, pnt1)
+				self.painter.drawLine(strt, pnt2)
 
 				self.painter.setPen(self.halfpen)
-				self.painter.drawArc(paintool.radrect(center, rad), 
+				self.painter.drawArc(paintool.radrect(strt, rad), 
 					angle*16, 
 					sect.addangle*16)
 
@@ -171,6 +171,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 					font=self.font)
 
 
+		# Рисуем тело
 		for i in range(len(sects)):
 			sect = self.sections()[i]
 			angle = deg(sect.angle)

@@ -407,8 +407,9 @@ def zadelka_sharnir(painter, pnt, angle, w, h, s):
 	oldbrush = painter.brush()
 	oldpen = painter.pen()
 	
-	sect = -angle / math.pi / 2
-	if (0.25 < sect < 0.5) or (0.75 < sect < 1):
+	sect = angle / (math.pi * 2) - angle // (math.pi * 2) 
+	print("A:",sect)
+	if (0 < sect < 0.25) or (0.5 < sect < 0.75):
 		brush = QBrush(Qt.FDiagPattern)
 	else:
 		brush = QBrush(Qt.BDiagPattern)
