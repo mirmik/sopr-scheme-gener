@@ -34,6 +34,8 @@ class ConfWidget_T2(common.ConfWidget):
 			lbl="",
 			F = "нет",
 			Ftxt="",
+			F2 = "нет",
+			F2txt="",
 			zazor = False,
 			zazor_txt = "\\Delta",
 			sharn="нет"
@@ -43,6 +45,8 @@ class ConfWidget_T2(common.ConfWidget):
 			self.lbl = lbl
 			self.F = F
 			self.Ftxt = Ftxt
+			self.F2 = F2
+			self.F2txt = F2txt
 			self.zazor = zazor
 			self.zazor_txt = zazor_txt
 			self.sharn = sharn 
@@ -90,6 +94,8 @@ class ConfWidget_T2(common.ConfWidget):
 		self.table2.addColumn("lbl", "str", "Метка")
 		self.table2.addColumn("F", "list", "Сила", variant=["нет", "+", "-"])
 		self.table2.addColumn("Ftxt", "str", "Текст")
+		self.table2.addColumn("F2", "list", "Ст.Сила", variant=["нет", "+", "-"])
+		self.table2.addColumn("F2txt", "str", "Ст.Текст")
 		self.table2.addColumn("zazor", "bool", "Зазор")
 		self.table2.addColumn("zazor_txt", "str", "Текст")
 		self.table2.addColumn("sharn", "list", variant=["нет", "1", "2"])
@@ -192,8 +198,8 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 		lu = QPoint(left_span, hbase)
 		ru = QPoint(width - right_span, hbase)
-		ld = QPoint(left_span + base_height, hbase+base_height)
-		rd = QPoint(width - right_span - base_height, hbase+base_height)
+		ld = QPoint(left_span, hbase+base_height)
+		rd = QPoint(width - right_span, hbase+base_height)
 
 		fsize = width - right_span - left_span
 		lsum = 0
@@ -293,23 +299,50 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				ap = -upnt if bsects[i].l < 0 else 0
 				bp = 0 if bsects[i].l < 0 else -upnt
 
-				paintool.dimlines_vertical(self.painter,
-					QPoint(xnode(i), hbase + ap),
-					QPoint(xnode(i), hbase + bp),
-					xnode(i) + dimlines_level2)
-
 				txt = util.text_prepare_ltext(abs(bsects[i].l))
+				txt_var2 = util.text_prepare_ltext(abs(bsects[i].l/2))
 				txt2 = util.text_prepare_ltext(abs(bsects[i].A), "A")
 				txt2 = txt2 + ",E"
 
-				elements.draw_text_by_points_angled(
-					self,
-					QPoint(xnode(i)+dimlines_level2, hbase + ap),
-					QPoint(xnode(i)+dimlines_level2, hbase + bp),
-					txt=txt,
-					alttxt=False
-				)
+				if bsects[i].F2 == "нет":
+					paintool.dimlines_vertical(self.painter,
+						QPoint(xnode(i), hbase + ap),
+						QPoint(xnode(i), hbase + bp),
+						xnode(i) + dimlines_level2)
+				
+					elements.draw_text_by_points_angled(
+						self,
+						QPoint(xnode(i)+dimlines_level2, hbase + ap),
+						QPoint(xnode(i)+dimlines_level2, hbase + bp),
+						txt=txt,
+						alttxt=False
+					)
 
+				else:
+					cp = (ap+bp)/2
+					paintool.dimlines_vertical(self.painter,
+						QPoint(xnode(i), hbase + ap),
+						QPoint(xnode(i), hbase + cp),
+						xnode(i) + dimlines_level2)
+					paintool.dimlines_vertical(self.painter,
+						QPoint(xnode(i), hbase + cp),
+						QPoint(xnode(i), hbase + bp),
+						xnode(i) + dimlines_level2)
+					elements.draw_text_by_points_angled(
+						self,
+						QPoint(xnode(i)+dimlines_level2, hbase + ap),
+						QPoint(xnode(i)+dimlines_level2, hbase + cp),
+						txt=txt_var2,
+						alttxt=False
+					)
+					elements.draw_text_by_points_angled(
+						self,
+						QPoint(xnode(i)+dimlines_level2, hbase + cp),
+						QPoint(xnode(i)+dimlines_level2, hbase + bp),
+						txt=txt_var2,
+						alttxt=False
+					)
+					
 				if bp == 0:
 					cp = ap/2
 					elements.draw_text_by_points(
@@ -360,52 +393,59 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		# Рисуем силы
 		for i in range(len(bsects)):
 			if bsects[i].F != "нет":
-				if bsects[i].l == 0:
+				if bsects[i].l > 0:
 					type = "снизу к" if bsects[i].F == "+" else "снизу от"
-					elements.draw_element_force(self, 
-						QPointF(xnode(i), hbase+base_height), type, 
-						dimlines_level*2/3, arrow_size, bsects[i].Ftxt, 
-						True, pen=self.pen)
+					pnt = QPointF(xnode(i), hbase+base_height) 
+				else:
+					type = "сверху от" if bsects[i].F == "+" else "сверху к"
+					pnt = QPointF(xnode(i), hbase+4)
+					
+				elements.draw_element_force(self, 
+					pnt, type, 
+					dimlines_level*2/3, arrow_size, bsects[i].Ftxt, 
+					True, pen=self.pen)
 
+
+			if bsects[i].F2 != "нет":
 				h = bsects[i].l * hkoeff
 				if bsects[i].l != 0:
-					if bsects[i].F == "+":
+					if bsects[i].F2 == "+":
 						paintool.common_arrow(self.painter, 
-							QPointF(xnode(i)+15, hbase - h/2 + dimlines_level/5), 
-							QPointF(xnode(i)+15, hbase - h/2 - dimlines_level/5), 
+							QPointF(xnode(i)+15, hbase - h/2), 
+							QPointF(xnode(i)+15, hbase - h/2 - dimlines_level/2.5), 
 							arrow_size)
 	
 						paintool.common_arrow(self.painter, 
-							QPointF(xnode(i)-15, hbase - h/2 + dimlines_level/5), 
-							QPointF(xnode(i)-15, hbase - h/2 - dimlines_level/5), 
+							QPointF(xnode(i)-15, hbase - h/2), 
+							QPointF(xnode(i)-15, hbase - h/2 - dimlines_level/2.5), 
 							arrow_size)
 	
 						self.painter.setPen(self.halfpen)
 						self.painter.drawLine(
-							QPointF(xnode(i)-15, hbase - h/2 + dimlines_level/5),
-							QPointF(xnode(i)+15, hbase - h/2 + dimlines_level/5)
+							QPointF(xnode(i)-15, hbase - h/2),
+							QPointF(xnode(i)+15, hbase - h/2)
 						)
 					else:
 						paintool.common_arrow(self.painter, 
-							QPointF(xnode(i)+15, hbase - h/2 - dimlines_level/5), 
-							QPointF(xnode(i)+15, hbase - h/2 + dimlines_level/5), 
+							QPointF(xnode(i)+15, hbase - h/2), 
+							QPointF(xnode(i)+15, hbase - h/2 + dimlines_level/2.5), 
 							arrow_size)
 		
 						paintool.common_arrow(self.painter, 
-							QPointF(xnode(i)-15, hbase - h/2 - dimlines_level/5), 
-							QPointF(xnode(i)-15, hbase - h/2 + dimlines_level/5), 
+							QPointF(xnode(i)-15, hbase - h/2), 
+							QPointF(xnode(i)-15, hbase - h/2 + dimlines_level/2.5), 
 							arrow_size)
 		
 						self.painter.setPen(self.halfpen)
 						self.painter.drawLine(
-							QPointF(xnode(i)-15, hbase - h/2 - dimlines_level/5),
-							QPointF(xnode(i)+15, hbase - h/2 - dimlines_level/5)
+							QPointF(xnode(i)-15, hbase - h/2),
+							QPointF(xnode(i)+15, hbase - h/2)
 						)
-					if bsects[i].Ftxt != "":
+					if bsects[i].F2txt != "":
 						elements.draw_text_by_points(self, 
 							QPointF(xnode(i)-15, hbase - h/2 - dimlines_level/5), 
 							QPointF(xnode(i)-15, hbase - h/2 + dimlines_level/5), 
-							txt = bsects[i].Ftxt,
+							txt = bsects[i].F2txt,
 							alttxt = False,
 							off = 10)
 						
