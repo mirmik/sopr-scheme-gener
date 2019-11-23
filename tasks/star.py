@@ -147,7 +147,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			if sect.addangle != 0:
 				rad = 50
 				rad2 = 60
-				rad3 = 65
+				rad3 = 70
 				tgtangle = sect.angle + sect.addangle
 				pen = QPen(Qt.DashDotLine)
 				pen.setWidth(2)
@@ -167,8 +167,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 				paintool.draw_text_centered(
 					painter=self.painter, 
-					pnt=cpnt + QPointF(0,QFontMetrics(self.font).height()/2), 
-					text=paintool.greek(str(sect.addangle)+"\\degree"), 
+					pnt=cpnt + QPointF(0,QFontMetrics(self.font).height()/4), 
+					text=paintool.greek(str(abs(sect.addangle))+"\\degree"), 
 					font=self.font)
 
 
