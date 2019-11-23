@@ -136,7 +136,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 		print(xmin, xmax, ymin, ymax)
 		center = QPoint(width/2, height/2) + \
-			QPoint(-(xmax - xmin)* base_length, (ymax - ymin)* base_length)/4
+			QPoint(-(xmax + xmin)* base_length, -(ymax + ymin)* base_length)/2
 
 		# Рисуем доб угол
 		for i in range(len(sects)):
