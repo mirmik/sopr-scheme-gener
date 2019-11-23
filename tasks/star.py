@@ -184,7 +184,9 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 				spnt = strt + QPoint(math.cos(angle) * 6, -math.sin(angle) * 6)
 				pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
+				self.painter.setPen(self.doublepen)
 				self.painter.drawLine(spnt, pnt)
+				self.painter.setPen(self.pen)
 				if sect.sharn:
 					paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, 5)
 				else:
@@ -192,7 +194,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 				ltxt = util.text_prepare_ltext(sect.l, suffix="l")
 				Atxt = util.text_prepare_ltext(sect.A, suffix="A")
-				txt = "{},{}".format(ltxt,Atxt)
+				txt = "{},{},E".format(ltxt,Atxt)
 
 				elements.draw_text_by_points_angled(self, strt, pnt, txt=txt, alttxt=sect.alttxt)
 
