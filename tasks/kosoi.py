@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import *
 
 class ShemeType(common.SchemeType):
 	def __init__(self):
-		super().__init__("3д консоль")
+		super().__init__("Внецентренный изгиб")
 		self.setwidgets(ConfWidget(self), PaintWidget(), common.TableWidget())
 
 
