@@ -739,7 +739,7 @@ class PaintWidget(paintwdg.PaintWidget):
 						self.sections()[i].Fz_txt_alttxt
 					)
 				
-				elif self.sections()[i].Fy == "-":
+				elif self.sections()[i].Fz == "-":
 					force(
 						refpoints[i],
 						refpoints[i]+trans(0,arrlen,0)-trans(0,0,0),
