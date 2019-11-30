@@ -772,7 +772,7 @@ def draw_sharnir_terminator_rect(painter, pnt, angle, termx, termy, pen, halfpen
 def draw_sharnir_1dim(painter, pnt, angle, rad, termrad, termx, termy, pen, halfpen, doublepen=None):
 	painter.setPen(halfpen)
 
-	circrect = QRect(pnt.x()-rad, pnt.y()-rad, 2*rad , 2*rad)
+	circrect = radrect(pnt, rad)
 	bpnt = QPointF(
 		termrad*math.cos(angle), 
 		termrad*math.sin(angle)) + pnt

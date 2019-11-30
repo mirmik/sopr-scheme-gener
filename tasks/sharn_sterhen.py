@@ -75,8 +75,8 @@ class ConfWidget_T2(common.ConfWidget):
 		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.zadelka = self.sett.add("Заделка:", "list", defval=0, variant=["нет", "1", "2"])
-		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "15")
-		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "60")
+		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "22")
+		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "70")
 		self.shemetype.dimlines_level2 = self.sett.add("Уровень размерных линий2:", "int", "60")
 		self.shemetype.arrow_size = self.sett.add("Размер стрелок:", "int", "10")
 		self.sett.updated.connect(self.redraw)
@@ -256,7 +256,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					termrad=25,
 					termx=25,
 					termy=10,
-					rad=5
+					rad=4
 				)
 
 			# Рисуем стержень
@@ -275,7 +275,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					self.painter.drawLine(strt, fini)
 				
 					self.painter.setPen(self.pen)
-					self.painter.drawEllipse(paintool.radrect(strt, 5))
+					self.painter.drawEllipse(paintool.radrect(strt, 4))
 
 				else:
 					self.painter.setPen(self.doublepen)
@@ -474,21 +474,22 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				
 
 		# Рисуем заделку на левом крае
+		self.painter.setPen(self.doublepen)
 		if self.shemetype.zadelka.get() == "2":
 			#paintool.zadelka_sharnir_type2(self.painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
 			elements.draw_element_sharn(self, 
-				pnt=QPoint(xnode(0), hbase), 
+				pnt=QPoint(xnode(0), hbase+base_height/2), 
 				type="слева шарн2", 
 				termrad=25,
 				termx=25,
 				termy=10,
-				rad=5)
+				rad=4)
 
 		elif self.shemetype.zadelka.get() == "1":
 			elements.draw_element_sharn(self, 
-				pnt=QPoint(xnode(0), hbase), 
+				pnt=QPoint(xnode(0), hbase+base_height/2), 
 				type="слева врез1", 
 				termrad=25,
 				termx=25,
 				termy=10,
-				rad=5)
+				rad=4)
