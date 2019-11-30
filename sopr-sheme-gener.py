@@ -17,6 +17,7 @@ import tasks.star
 import tasks.plastina
 import tasks.fermes
 import tasks.balki
+import tasks.ar3d
 import common
 import container
 import paintwdg
@@ -59,6 +60,7 @@ class CentralWidget(QWidget):
 			tasks.sharn_sterhen.ShemeTypeT2(),
 			tasks.plastina.ShemeTypeT3(),
 			tasks.fermes.ShemeTypeT4(),
+			tasks.ar3d.ShemeType(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]

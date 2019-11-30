@@ -163,12 +163,13 @@ def angled_arrow_head_top(painter, pnt, angle, headsize):
 	paint_arrow(painter, angled_arrow_points_top(pnt.x(), pnt.y(), angle, headsize))
 
 def common_arrow(painter, spnt, fpnt, arrow_size):
-	diff = fpnt - spnt
+	diff = QPointF(fpnt) - QPointF(spnt)
 	angle = math.atan2(-diff.y(), diff.x())
 
+	difflen = math.sqrt(diff.x()*diff.x() + diff.y()*diff.y())
 
-	painter.drawLine(spnt, fpnt)
-	painter.setPen(pen)
+	painter.drawLine(spnt, spnt+diff/difflen*(difflen-arrow_size))
+	painter.setPen(halfpen)
 	angled_arrow_head_top(painter, fpnt, angle, arrow_size)
 
 def arrow_head(painter, pnt, angle, headsize):

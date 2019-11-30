@@ -88,7 +88,6 @@ class ConfWidget(StyleWidget):
 
 	def __init__(self, sheme=None):
 		super().__init__()
-
 		self.shemetype = sheme
 
 		if sheme:
@@ -118,9 +117,12 @@ class TableWidget(QWidget):
 		super().__init__()
 
 class ConfView(QWidget):
+	update_after = pyqtSignal()
+
 	"""Общие настройки"""
 	def __init__(self, sheme=None):
 		super().__init__()
+		self.update_after.connect(self.updated, Qt.QueuedConnection)
 		self.layout = QGridLayout()
 		self.layout = QVBoxLayout()
 
