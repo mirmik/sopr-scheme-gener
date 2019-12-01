@@ -500,7 +500,7 @@ class PaintWidget(paintwdg.PaintWidget):
 					self,
 					trans(-w2-marrlen,coord(i),0),
 					trans(-w2-marrlen,coord(i)+off,0),
-					txt=bsects[i].yMtxt, 
+					txt=paintool.greek(bsects[i].yMtxt), 
 					alttxt=alttxt, off=14, polka=None
 				)
 
@@ -533,7 +533,7 @@ class PaintWidget(paintwdg.PaintWidget):
 					self,
 					trans(0,coord(i),w2+marrlen),
 					trans(0,coord(i)-off,+w2+marrlen),
-					txt=bsects[i].xMtxt, 
+					txt=paintool.greek(bsects[i].xMtxt), 
 					alttxt=alttxt, off=14, polka=None
 				)
 
@@ -565,7 +565,7 @@ class PaintWidget(paintwdg.PaintWidget):
 						self,
 							trans(w2+arrlen,coord(i),0),
 						trans(w2+arrlen/2,coord(i),0),
-						txt=bsects[i].xFtxt, 
+						txt=paintool.greek(bsects[i].xFtxt), 
 						alttxt=False, off=14, polka=None
 					)
 
@@ -584,7 +584,7 @@ class PaintWidget(paintwdg.PaintWidget):
 						self,
 						trans(0,coord(i),w2+arrlen),
 						trans(0,coord(i),w2+arrlen/2),
-						txt=bsects[i].yFtxt, 
+						txt=paintool.greek(bsects[i].yFtxt), 
 						alttxt=False, off=14, polka=None
 					)
 	
