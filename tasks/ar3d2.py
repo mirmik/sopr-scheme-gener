@@ -71,7 +71,7 @@ class ConfWidget(common.ConfWidget):
 			],
 			"betsect":
 			[
-				self.betsect(xS="+"),
+				self.betsect(),
 				self.betsect(),
 				self.betsect(),
 			#	self.betsect(sharn="2"),
@@ -79,7 +79,7 @@ class ConfWidget(common.ConfWidget):
 			],
 			"sectforce":
 			[
-				self.sectforce(xF="+"),
+				self.sectforce(),
 				self.sectforce(),
 			]
 		}
@@ -160,9 +160,9 @@ class ConfWidget(common.ConfWidget):
 		self.table2.addColumn("yMtxt", "str", "yM")
 		
 
-		self.table2.addColumn("xS", "list", variant=["нет", "+", "-"])
-		self.table2.addColumn("yS", "list", variant=["нет", "+", "-"])
-		self.table2.addColumn("zS", "list", variant=["нет", "+", "-"])
+		self.table2.addColumn("xS", "list", variant=["нет", "+1", "-1", "+2", "-2"])
+		self.table2.addColumn("yS", "list", variant=["нет", "+1", "-1", "+2", "-2"])
+		self.table2.addColumn("zS", "list", variant=["нет", "+1", "-1", "+2", "-2"])
 
 		#self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
 #		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
@@ -432,22 +432,22 @@ class PaintWidget(paintwdg.PaintWidget):
 				alttxt=True, 
 				off=10)
 
-		for i in range(len(self.sections())):
+		for i in range(len(self.sections())+1):
 			self.painter.setPen(self.doublepen)
 			if bsects[i].xF != "нет":
 				if bsects[i].xF == "+":
 					paintool.common_arrow(
 						self.painter,
-						trans(-w2-arrlen,coord(i+1),0),
-						trans(-w2,coord(i+1),0),
+						trans(-w2-arrlen,coord(i),0),
+						trans(-w2,coord(i),0),
 						arrow_size=arrow_size
 					)
 
 					self.painter.setPen(self.pen)
 					elements.draw_text_by_points(
 						self,
-						trans(-w2-arrlen,coord(i+1),0),
-						trans(-w2-arrlen/2,coord(i+1),0),
+						trans(-w2-arrlen,coord(i),0),
+						trans(-w2-arrlen/2,coord(i),0),
 						txt=bsects[i].xFtxt, 
 						alttxt=False, off=14, polka=None
 					)
@@ -457,21 +457,21 @@ class PaintWidget(paintwdg.PaintWidget):
 				if bsects[i].yF == "+":
 					paintool.common_arrow(
 						self.painter,
-						trans(0,coord(i+1),-w2-arrlen),
-						trans(0,coord(i+1),-w2),
+						trans(0,coord(i),-w2-arrlen),
+						trans(0,coord(i),-w2),
 						arrow_size=arrow_size
 					)
 					
 					self.painter.setPen(self.pen)
 					elements.draw_text_by_points(
 						self,
-						trans(0,coord(i+1),-w2-arrlen),
-						trans(0,coord(i+1),-w2-arrlen/2),
+						trans(0,coord(i),-w2-arrlen),
+						trans(0,coord(i),-w2-arrlen/2),
 						txt=bsects[i].yFtxt, 
 						alttxt=False, off=10, polka=None
 					)
 
-			self.painter.setPen(self.doublepen)
+			self.painter.setPen(self.pen)
 			if bsects[i].yM != "нет":
 				if bsects[i].yM == "-":
 					off = -moff
@@ -486,25 +486,25 @@ class PaintWidget(paintwdg.PaintWidget):
 					ws = -w2
 
 				self.painter.drawLine(
-					trans(ws,coord(i+1),0),
-					trans(-w2-marrlen,coord(i+1),0)
+					trans(ws,coord(i),0),
+					trans(-w2-marrlen,coord(i),0)
 					)
 				paintool.common_arrow(
 					self.painter,
-					trans(-w2-marrlen,coord(i+1),0),
-					trans(-w2-marrlen,coord(i+1)+off,0),
+					trans(-w2-marrlen,coord(i),0),
+					trans(-w2-marrlen,coord(i)+off,0),
 					arrow_size=arrow_size,
 				)
 				self.painter.setPen(self.pen)
 				elements.draw_text_by_points(
 					self,
-					trans(-w2-marrlen,coord(i+1),0),
-					trans(-w2-marrlen,coord(i+1)+off,0),
+					trans(-w2-marrlen,coord(i),0),
+					trans(-w2-marrlen,coord(i)+off,0),
 					txt=bsects[i].yMtxt, 
 					alttxt=alttxt, off=14, polka=None
 				)
 
-			self.painter.setPen(self.doublepen)
+			self.painter.setPen(self.pen)
 			if bsects[i].xM != "нет":
 				if bsects[i].xM == "-":
 					off = moff
@@ -519,20 +519,20 @@ class PaintWidget(paintwdg.PaintWidget):
 					ws = w2
 
 				self.painter.drawLine(
-					trans(0,coord(i+1),-ws),
-					trans(0,coord(i+1),-w2-marrlen)
+					trans(0,coord(i),-ws),
+					trans(0,coord(i),-w2-marrlen)
 					)
 				paintool.common_arrow(
 					self.painter,
-					trans(0,coord(i+1),-w2-marrlen),
-					trans(0,coord(i+1)+off,-w2-marrlen),
+					trans(0,coord(i),-w2-marrlen),
+					trans(0,coord(i)+off,-w2-marrlen),
 					arrow_size=arrow_size,
 				)
 				self.painter.setPen(self.pen)
 				elements.draw_text_by_points(
 					self,
-					trans(0,coord(i+1),w2+marrlen),
-					trans(0,coord(i+1)-off,+w2+marrlen),
+					trans(0,coord(i),w2+marrlen),
+					trans(0,coord(i)-off,+w2+marrlen),
 					txt=bsects[i].xMtxt, 
 					alttxt=alttxt, off=14, polka=None
 				)
@@ -549,22 +549,22 @@ class PaintWidget(paintwdg.PaintWidget):
 #			self.painter.drawLine(self.trans(-w2,c,w2), self.trans(w2,c,w2))
 
 
-		for i in range(len(self.sections())):
+		for i in range(len(self.sections())+1):
 			self.painter.setPen(self.doublepen)
 			if bsects[i].xF != "нет":
 				if bsects[i].xF == "-":
 					paintool.common_arrow(
 						self.painter,
-						trans(w2+arrlen,coord(i+1),0),
-						trans(w2,coord(i+1),0),
+						trans(w2+arrlen,coord(i),0),
+						trans(w2,coord(i),0),
 						arrow_size=arrow_size,
 					)
 
 					self.painter.setPen(self.pen)
 					elements.draw_text_by_points(
 						self,
-							trans(w2+arrlen,coord(i+1),0),
-						trans(w2+arrlen/2,coord(i+1),0),
+							trans(w2+arrlen,coord(i),0),
+						trans(w2+arrlen/2,coord(i),0),
 						txt=bsects[i].xFtxt, 
 						alttxt=False, off=14, polka=None
 					)
@@ -574,23 +574,23 @@ class PaintWidget(paintwdg.PaintWidget):
 				if bsects[i].yF == "-":
 					paintool.common_arrow(
 						self.painter,
-						trans(0,coord(i+1),w2+arrlen),
-						trans(0,coord(i+1),w2),
+						trans(0,coord(i),w2+arrlen),
+						trans(0,coord(i),w2),
 						arrow_size=arrow_size
 					)
 
 					self.painter.setPen(self.pen)
 					elements.draw_text_by_points(
 						self,
-						trans(0,coord(i+1),w2+arrlen),
-						trans(0,coord(i+1),w2+arrlen/2),
+						trans(0,coord(i),w2+arrlen),
+						trans(0,coord(i),w2+arrlen/2),
 						txt=bsects[i].yFtxt, 
 						alttxt=False, off=14, polka=None
 					)
 	
 
 
-			self.painter.setPen(self.doublepen)
+			self.painter.setPen(self.pen)
 			if bsects[i].yM != "нет":
 				if bsects[i].yM == "-":
 					off = moff
@@ -603,17 +603,17 @@ class PaintWidget(paintwdg.PaintWidget):
 					ws = w2
 
 				self.painter.drawLine(
-					trans(ws,coord(i+1),0),
-					trans(w2+marrlen,coord(i+1),0)
+					trans(ws,coord(i),0),
+					trans(w2+marrlen,coord(i),0)
 					)
 				paintool.common_arrow(
 					self.painter,
-					trans(w2+marrlen,coord(i+1),0),
-					trans(w2+marrlen,coord(i+1)+off,0),
+					trans(w2+marrlen,coord(i),0),
+					trans(w2+marrlen,coord(i)+off,0),
 					arrow_size=arrow_size,
 				)
 
-			self.painter.setPen(self.doublepen)
+			self.painter.setPen(self.pen)
 			if bsects[i].xM != "нет":
 				if bsects[i].xM == "-":
 					off = -moff
@@ -626,13 +626,13 @@ class PaintWidget(paintwdg.PaintWidget):
 					ws = w2
 
 				self.painter.drawLine(
-					trans(0,coord(i+1),ws),
-					trans(0,coord(i+1),w2+marrlen)
+					trans(0,coord(i),ws),
+					trans(0,coord(i),w2+marrlen)
 					)
 				paintool.common_arrow(
 					self.painter,
-					trans(0,coord(i+1),w2+marrlen),
-					trans(0,coord(i+1)+off,w2+marrlen),
+					trans(0,coord(i),w2+marrlen),
+					trans(0,coord(i)+off,w2+marrlen),
 					arrow_size=arrow_size,
 				)
 				self.painter.setPen(self.pen)
@@ -682,41 +682,79 @@ class PaintWidget(paintwdg.PaintWidget):
 			lxvec = 40
 			lyvec=20 
 			if bsects[i].xS != "нет":
-				if bsects[i].xS == "-":
+				if bsects[i].xS == "-1":
 					self.draw_sharn((0,coord(i),0), 
 						vec=(-40,0,0),
 						xvec=(0,lxvec,0), 
-						yvec=(-lyvec,0,0))				
+						yvec=(-lyvec,0,0), brush=Qt.FDiagPattern)				
 				
-				if bsects[i].xS == "+":
+				if bsects[i].xS == "+1":
 					self.draw_sharn((0,coord(i),0), 
 						vec=(40,0,0),
 						xvec=(0,lxvec,0), 
-						yvec=(lyvec,0,0))				
+						yvec=(lyvec,0,0), brush=Qt.FDiagPattern)				
+
+				if bsects[i].xS == "-2":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(-40,0,0),
+						xvec=(0,0,lxvec/3*2), 
+						yvec=(-lyvec/3*2,0,0), brush=Qt.FDiagPattern)				
+				
+				if bsects[i].xS == "+2":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(40,0,0),
+						xvec=(0,0,lxvec/3*2), 
+						yvec=(lyvec/3*2,0,0), brush=Qt.FDiagPattern)				
 			
-			if bsects[i].yS != "нет":
-				if bsects[i].yS == "-":
+			if bsects[i].zS != "нет":
+				if bsects[i].zS == "-1":
 					self.draw_sharn((0,coord(i),0), 
 						vec=(0,-40,0),
 						xvec=(0,0,lxvec/3*2), 
 						yvec=(0,-lyvec*3/2,0))				
 				
-				if bsects[i].yS == "+":
+				if bsects[i].zS == "+1":
 					self.draw_sharn((0,coord(i),0), 
 						vec=(0,40,0),
 						xvec=(0,0,lxvec/3*2), 
 						yvec=(0,lyvec*3/2,0))				
 			
-			if bsects[i].zS != "нет":
-				if bsects[i].zS == "-":
+				if bsects[i].zS == "-2":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(0,-40,0),
+						xvec=(lxvec/3*2,0,0), 
+						yvec=(0,-lyvec*3/2,0))				
+				
+				if bsects[i].zS == "+2":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(0,40,0),
+						xvec=(lxvec/3*2,0,0), 
+						yvec=(0,lyvec*3/2,0))				
+			
+			if bsects[i].yS != "нет":
+				if bsects[i].yS == "-1":
 					self.draw_sharn((0,coord(i),0), 
 						vec=(0,0,-35),
 						xvec=(0,lxvec,0), 
-						yvec=(0,0,-lyvec))				
+						yvec=(0,0,-lyvec/3*2),
+						brush=Qt.FDiagPattern)				
 				
-				if bsects[i].zS == "+":
+				if bsects[i].yS == "+1":
 					self.draw_sharn((0,coord(i),0), 
 						vec=(0,0,35),
 						xvec=(0,lxvec,0), 
-						yvec=(0,0,lyvec))				
+						yvec=(0,0,lyvec/3*2),
+						brush=Qt.FDiagPattern)	
+			
+				if bsects[i].yS == "-2":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(0,0,-35),
+						xvec=(lxvec/3*2,0,0), 
+						yvec=(0,0,-lyvec/3*2))				
+				
+				if bsects[i].yS == "+2":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(0,0,35),
+						xvec=(lxvec/3*2,0,0), 
+						yvec=(0,0,lyvec/3*2))				
 			
