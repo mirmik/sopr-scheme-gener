@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import *
 
 class ShemeType(common.SchemeType):
 	def __init__(self):
-		super().__init__("Косой изгиб")
+		super().__init__("Косой изгиб (вариант 2)")
 		self.setwidgets(ConfWidget(self), PaintWidget(), common.TableWidget())
 
 
@@ -32,7 +32,8 @@ class ConfWidget(common.ConfWidget):
 
 	class betsect:
 		def __init__(self, xF="нет", xFtxt="", yF="нет", yFtxt="",
-						xM="нет", xMtxt="", yM="нет", yMtxt=""):
+						xM="нет", xMtxt="", yM="нет", yMtxt="",
+						xS="нет", yS="нет", zS="нет"):
 			self.xF=xF
 			self.yF=yF
 			self.xFtxt=xFtxt
@@ -44,10 +45,17 @@ class ConfWidget(common.ConfWidget):
 			self.yMtxt=yMtxt
 			#self.sectname = sectname
 			
+			self.xS=xS
+			self.yS=yS
+			self.zS=zS
 
 	class sectforce:
-		def __init__(self):
-			pass
+		def __init__(self, xF="нет", xFtxt="", yF="нет", yFtxt=""):
+			self.xF = xF
+			self.yF = yF
+			self.xFtxt = xFtxt
+			self.yFtxt = yFtxt
+			
 			#self.mkr = mkr
 			#self.mkrT = mkrT
 	#		self.Fr = Fr
@@ -63,17 +71,17 @@ class ConfWidget(common.ConfWidget):
 			],
 			"betsect":
 			[
+				self.betsect(xS="+"),
 				self.betsect(),
 				self.betsect(),
 			#	self.betsect(sharn="2"),
 			#	self.betsect()
 			],
-			#"sectforce":
-			#[
-			#	self.sectforce(),
-			#	self.sectforce(),
-			#	self.sectforce(Fr="+", FrT="ql")
-			#]
+			"sectforce":
+			[
+				self.sectforce(xF="+"),
+				self.sectforce(),
+			]
 		}
 		
 
@@ -83,11 +91,11 @@ class ConfWidget(common.ConfWidget):
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.axonom = self.sett.add("Аксонометрия:", "bool", False)
+		self.shemetype.axonom = self.sett.add("Аксонометрия:", "bool", True)
 		self.shemetype.axonom_deg = self.sett.add("45 градусов:", "bool", True)
 		self.shemetype.xoffset = self.sett.add("Смещение:", "int", "100")
 		self.shemetype.zrot = self.sett.add("Направление:", "int", "30")
-		self.shemetype.xrot = self.sett.add("Подъём:", "int", "30")
+		self.shemetype.xrot = self.sett.add("Подъём:", "int", "20")
 		self.shemetype.L = self.sett.add("Длина:", "int", "600")
 		self.shemetype.offdown = self.sett.add("Вынос разм. линий:", "int", "100")
 		self.shemetype.arrlen = self.sett.add("Длина Стрелок:", "int", "60")
@@ -150,26 +158,37 @@ class ConfWidget(common.ConfWidget):
 		self.table2.addColumn("xMtxt", "str", "xM")
 		self.table2.addColumn("yM", "list", variant=["нет", "+", "-"])
 		self.table2.addColumn("yMtxt", "str", "yM")
+		
+
+		self.table2.addColumn("xS", "list", variant=["нет", "+", "-"])
+		self.table2.addColumn("yS", "list", variant=["нет", "+", "-"])
+		self.table2.addColumn("zS", "list", variant=["нет", "+", "-"])
+
 		#self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
 #		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
 		#self.table2.addColumn("FT", "str", "Текст")
 		#self.table2.addColumn("MT", "str", "Текст")
 		self.table2.updateTable()
 
-		#self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
-		#self.table1.addColumn("Fr", "list", variant=["clean", "+", "-"])
+		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
+		self.table1.addColumn("xF", "list", variant=["нет", "+", "-"])
+		self.table1.addColumn("xFtxt", "str", "xF")
+		self.table1.addColumn("yF", "list", variant=["нет", "+", "-"])
+		self.table1.addColumn("yFtxt", "str", "yF")
 		#self.table1.addColumn("FrT", "str", "Текст")
-		#self.table1.updateTable()
+		self.table1.updateTable()
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
 		self.vlayout.addWidget(QLabel("Локальные силы:"))
 		self.vlayout.addWidget(self.table2)
+		self.vlayout.addWidget(QLabel("Распределенные силы:"))
+		self.vlayout.addWidget(self.table1)
 		self.vlayout.addWidget(self.sett)
 
 
 		self.table.updated.connect(self.redraw)
-		#self.table1.updated.connect(self.redraw)
+		self.table1.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
 
 
@@ -181,11 +200,11 @@ class ConfWidget(common.ConfWidget):
 
 	def add_action(self):
 		self.sections().append(self.sect())
-#		self.shemetype.task["sectforce"].append(self.sectforce())
+		self.shemetype.task["sectforce"].append(self.sectforce())
 		self.shemetype.task["betsect"].append(self.betsect())
 		self.redraw()
 		self.table.updateTable()
-#		self.table1.updateTable()
+		self.table1.updateTable()
 		self.table2.updateTable()
 
 	def del_action(self):
@@ -194,10 +213,10 @@ class ConfWidget(common.ConfWidget):
 
 		del self.sections()[-1]
 		del self.shemetype.task["betsect"][-1]
-#		del self.shemetype.task["sectforce"][-1]
+		del self.shemetype.task["sectforce"][-1]
 		self.redraw()
 		self.table.updateTable()
-#		self.table1.updateTable()
+		self.table1.updateTable()
 		self.table2.updateTable()
 
 	def inittask(self):
@@ -208,6 +227,70 @@ class PaintWidget(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
 		self.AXDEG = 0.5
+
+	def draw_distribload(self, apnt, bpnt, vec, to_from=False, txt=None, alttxt=False):
+		trans = self.trans
+		apnt = numpy.array(apnt)
+		bpnt = numpy.array(bpnt)
+		vec = numpy.array(vec)
+		self.painter.setPen(self.halfpen)
+		self.painter.drawLine(trans(apnt+vec), trans(bpnt+vec))
+		self.painter.drawLine(trans(apnt+vec), trans(apnt))
+		self.painter.drawLine(trans(bpnt+vec), trans(bpnt))
+
+		diff = bpnt - apnt
+		difflen = math.sqrt(diff.dot(diff))
+
+		n = int(difflen / 30)
+		step = difflen / n
+
+		for i in range(n+1):
+			k = (n - i) / n
+			paintool.common_arrow(
+				self.painter,
+				trans(apnt * k + bpnt * (1-k) + vec),
+				trans(apnt * k + bpnt * (1-k)), 
+				arrow_size=10)
+
+		elements.draw_text_by_points(
+			self,
+			trans(apnt + vec),
+			trans(bpnt + vec), 
+			txt=txt, 
+			alttxt=alttxt, off=10
+		)
+
+	def draw_sharn(self, pnt, vec, xvec, yvec, brush = Qt.BDiagPattern):
+		trans = self.trans
+		apnt = trans(pnt)
+		bpnt = trans(numpy.array(pnt)+numpy.array(vec))
+
+		c0pnt = trans(numpy.array(pnt)+numpy.array(vec)+numpy.array(xvec))
+		c1pnt = trans(numpy.array(pnt)+numpy.array(vec)+numpy.array(xvec)+numpy.array(yvec))
+		c2pnt = trans(numpy.array(pnt)+numpy.array(vec)-numpy.array(xvec)+numpy.array(yvec))
+		c3pnt = trans(numpy.array(pnt)+numpy.array(vec)-numpy.array(xvec))
+
+		circ0 = paintool.radrect(apnt, 4)
+		circ1 = paintool.radrect(bpnt, 4)
+
+		self.painter.setPen(self.pen)
+		self.painter.setBrush(Qt.white)
+		self.painter.drawLine(apnt, bpnt)
+
+		self.painter.drawLine(c0pnt, c3pnt)
+		self.painter.setPen(Qt.NoPen)
+		self.painter.setBrush(brush)
+		self.painter.drawPolygon(
+			QPolygon([
+				c0pnt, c1pnt, c2pnt, c3pnt
+			])
+		)
+
+		self.painter.setPen(self.pen)
+		self.painter.setBrush(Qt.white)
+		self.painter.drawEllipse(circ0)
+		self.painter.drawEllipse(circ1)
+		self.painter.setPen(self.pen)
 
 	def init_trans_matrix(self):
 		t = numpy.matrix([
@@ -236,7 +319,9 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.trans_matrix = t * m1 * m0
 
 
-	def trans(self,x,y,z):
+	def trans(self,x,y=None,z=None):
+		if y is None:
+			x,y,z = x[0], x[1], x[2]
 		if self.axonom:
 			p = self.trans_matrix * numpy.array([[x],[y],[-z],[1]])
 			return QPoint(p[0], p[2])
@@ -249,6 +334,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 	def paintEventImplementation(self, ev):
 		bsects = self.bsections()
+		sforces = self.sectforces()
 		moff = 40
 		"""Рисуем сцену согласно объекта задания"""
 
@@ -307,8 +393,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		trans = self.trans
 
 		w = 50
-		L = 20
-		w2 = 8
+		L = 0
+		w2 = 0
 		L2 = L + stlen
 
 		lsum = 0
@@ -325,6 +411,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			return L + lkoeff * l
 
 		off = QPoint(0,offdown)
+		self.painter.setPen(self.halfpen)
 		for i in range(len(self.sections())):
 			paintool.draw_dimlines(
 				painter=self.painter, 
@@ -450,66 +537,16 @@ class PaintWidget(paintwdg.PaintWidget):
 					alttxt=alttxt, off=14, polka=None
 				)
 
-		self.painter.setPen(self.pen)
+		self.painter.setPen(self.doublepen)
+		self.painter.drawLine(
+			trans(0,0,0),
+			trans(0,L2,0),
+		)
 
-		self.painter.setBrush(QColor(220,220,220))		
-		self.painter.drawPolygon(QPolygon([
-			trans(w,L,-w), trans(w,L,w), trans(w,0,w), trans(w,0,-w), 
-		]))
-		self.painter.setBrush(Qt.white)
-
-		self.painter.setPen(self.axpen)
-		S=20
-		self.painter.drawLine(self.trans(-w-S,L,0), self.trans(w+S,L,0))
-		self.painter.drawLine(self.trans(0,L,-w-S), self.trans(0,L,w+S))
-		
-		self.painter.setPen(self.pen)
-		#self.painter.drawLine(self.trans(-w,0,-w), self.trans(-w,0,w))
-		self.painter.drawLine(self.trans(-w,0,w), self.trans(w,0,w))
-		self.painter.drawLine(self.trans(w,0,w), self.trans(w,0,-w))
-		#self.painter.drawLine(self.trans(w,0,-w), self.trans(-w,0,-w))
-
-		self.painter.drawLine(self.trans(-w,L,-w), self.trans(-w,L,w))
-		self.painter.drawLine(self.trans(-w,L,w), self.trans(w,L,w))
-		self.painter.drawLine(self.trans(w,L,w), self.trans(w,L,-w))
-		self.painter.drawLine(self.trans(w,L,-w), self.trans(-w,L,-w))
-
-		#self.painter.drawLine(self.trans(-w,L,-w), self.trans(-w,0,-w))
-		self.painter.drawLine(self.trans(-w,L,w), self.trans(-w,0,w))
-		self.painter.drawLine(self.trans(w,L,w), self.trans(w,0,w))
-		self.painter.drawLine(self.trans(w,L,-w), self.trans(w,0,-w))
-
-		#self.painter.drawLine(self.trans(-w2,L,-w2), self.trans(-w2,L,w2))
-		self.painter.drawLine(self.trans(-w2,L,w2), self.trans(w2,L,w2))
-		self.painter.drawLine(self.trans(w2,L,w2), self.trans(w2,L,-w2))
-		#self.painter.drawLine(self.trans(w2,L,-w2), self.trans(-w2,L,-w2))
-
-		self.painter.drawLine(self.trans(-w2,L2,-w2), self.trans(-w2,L2,w2))
-		self.painter.drawLine(self.trans(-w2,L2,w2), self.trans(w2,L2,w2))
-		self.painter.drawLine(self.trans(w2,L2,w2), self.trans(w2,L2,-w2))
-		self.painter.drawLine(self.trans(w2,L2,-w2), self.trans(-w2,L2,-w2))
-
-		#self.painter.drawLine(self.trans(-w2,L2,-w2), self.trans(-w2,L,-w2))
-		self.painter.drawLine(self.trans(-w2,L2,w2), self.trans(-w2,L,w2))
-		self.painter.drawLine(self.trans(w2,L2,w2), self.trans(w2,L,w2))
-		self.painter.drawLine(self.trans(w2,L2,-w2), self.trans(w2,L,-w2))
-
-		self.painter.setBrush(Qt.white)
-		self.painter.drawPolygon(QPolygon([
-			trans(-w2,L2,w2), trans(w2,L2,w2), trans(w2,L,w2), trans(-w2,L,w2), 
-		]))
-
-		self.painter.setBrush(QColor(220,220,220))
-		self.painter.drawPolygon(QPolygon([
-			trans(w2,L2,-w2), trans(w2,L2,w2), trans(w2,L,w2), trans(w2,L,-w2), 
-		]))
-
-
-		for i in range(len(self.sections())):
-			c = coord(i)
-
-			self.painter.drawLine(self.trans(w2,c,-w2), self.trans(w2,c,w2))
-			self.painter.drawLine(self.trans(-w2,c,w2), self.trans(w2,c,w2))
+#		for i in range(len(self.sections())):
+#			c = coord(i)
+#			self.painter.drawLine(self.trans(w2,c,-w2), self.trans(w2,c,w2))
+#			self.painter.drawLine(self.trans(-w2,c,w2), self.trans(w2,c,w2))
 
 
 		for i in range(len(self.sections())):
@@ -608,3 +645,78 @@ class PaintWidget(paintwdg.PaintWidget):
 	#					txt=bsects[i].xFtxt, 
 	#					alttxt=False, off=14, polka=None
 	#				)
+
+
+		darrlen = 40
+		for i in range(len(self.sections())):
+			self.painter.setPen(self.doublepen)
+			if sforces[i].xF != "нет":
+				if sforces[i].xF == "+":
+					self.draw_distribload((0,coord(i),0), (0,coord(i+1),0), 
+						vec=(darrlen,0,0), 
+						txt=sforces[i].xFtxt,
+						alttxt=True)
+
+				if sforces[i].xF == "-":
+					self.draw_distribload((0,coord(i),0), (0,coord(i+1),0), 
+						vec=(-darrlen,0,0), 
+						txt=sforces[i].xFtxt,
+						alttxt=False)
+
+
+			if sforces[i].yF != "нет":
+				if sforces[i].yF == "+":
+					self.draw_distribload((0,coord(i),0), (0,coord(i+1),0), 
+						vec=(0,0,darrlen), 
+						txt=sforces[i].yFtxt,
+						alttxt=False)
+
+				if sforces[i].yF == "-":
+					self.draw_distribload((0,coord(i),0), (0,coord(i+1),0), 
+						vec=(0,0,-darrlen), 
+						txt=sforces[i].yFtxt,
+						alttxt=True)
+
+
+		for i in range(len(self.bsections())):
+			lxvec = 40
+			lyvec=20 
+			if bsects[i].xS != "нет":
+				if bsects[i].xS == "-":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(-40,0,0),
+						xvec=(0,lxvec,0), 
+						yvec=(-lyvec,0,0))				
+				
+				if bsects[i].xS == "+":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(40,0,0),
+						xvec=(0,lxvec,0), 
+						yvec=(lyvec,0,0))				
+			
+			if bsects[i].yS != "нет":
+				if bsects[i].yS == "-":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(0,-40,0),
+						xvec=(0,0,lxvec/3*2), 
+						yvec=(0,-lyvec*3/2,0))				
+				
+				if bsects[i].yS == "+":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(0,40,0),
+						xvec=(0,0,lxvec/3*2), 
+						yvec=(0,lyvec*3/2,0))				
+			
+			if bsects[i].zS != "нет":
+				if bsects[i].zS == "-":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(0,0,-35),
+						xvec=(0,lxvec,0), 
+						yvec=(0,0,-lyvec))				
+				
+				if bsects[i].zS == "+":
+					self.draw_sharn((0,coord(i),0), 
+						vec=(0,0,35),
+						xvec=(0,lxvec,0), 
+						yvec=(0,0,lyvec))				
+			

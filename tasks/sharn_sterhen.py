@@ -108,6 +108,9 @@ class ConfWidget_T2(common.ConfWidget):
 		self.table.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
 
+		self.shemetype.texteditor = QTextEdit()
+		self.shemetype.texteditor.textChanged.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
 		self.setLayout(self.vlayout)
 
 	def add_action(self):
@@ -145,7 +148,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		width = self.width()
 		height = self.height()
 
-		center = QPoint(width/2, height/2)
+		center = QPoint(width/2, self.hcenter)
 
 		font_size = self.shemetype.font_size.get()
 		lwidth = self.shemetype.line_width.get()
@@ -179,6 +182,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		right_span = 30 if not hasright else 10 + dimlines_level2
 		up_span = 30
 		down_span = 20 if hasnegative else 10 + dimlines_level
+		down_span += self.text_height
 
 		smax = 0
 		smin = 0

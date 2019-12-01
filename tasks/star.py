@@ -78,6 +78,10 @@ class ConfWidget_T1(common.ConfWidget):
 
 		self.table.updated.connect(self.redraw)
 
+		self.shemetype.texteditor = QTextEdit()
+		self.shemetype.texteditor.textChanged.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
+
 		self.setLayout(self.vlayout)
 
 	def add_action(self):
@@ -124,9 +128,18 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		xmax, ymax = 0, 0
 
 		for i in range(len(sects)):
+			length=0
 			sect = self.sections()[i]
+			if sects[i].body == True:
+				length = sect.l
+
+			elif sects[i].body == False and (sects[i].force == "к" or sects[i].force == "от"):
+				length = 40 / base_length			
+
+			elif sects[i].body == False and (sects[i].force == "нет" or sects[i].force == "вдоль"):
+				continue
+
 			angle = deg(sect.angle)
-			length = sect.l
 
 			point = (
 				math.cos(angle) * (length)  + sect.xoff,
@@ -136,8 +149,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
 			ymin, ymax = min(ymin, point[1]) , max(ymax, point[1])
 
-		print(xmin, xmax, ymin, ymax)
-		center = QPoint(width/2, height/2) + \
+		center = QPoint(width/2, self.hcenter) + \
 			QPoint(-(xmax + xmin)* base_length, -(ymax + ymin)* base_length)/2
 
 		def get_coord(i):
@@ -150,24 +162,18 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 		def hasnode(pnt):
 			jpnt = center
-			print(pnt, jpnt)
 			diff = math.sqrt((pnt.x()-jpnt.x())**2 + (pnt.y()-jpnt.y())**2)
 			if diff < 0.1:
-				print("True 2") 
 				return True
 			
 			for i in range(len(self.sections())):
 				if self.sections()[i].body==False or self.sections()[i].sharn=="нет":
 					continue
 				jpnt = get_coord(i)
-				print(pnt, jpnt)
 				diff = math.sqrt((pnt.x()-jpnt.x())**2 + (pnt.y()-jpnt.y())**2)
-				print(diff)
 				if diff < 0.1: 
-					print("True 1")
 					return True
 
-			print("False")
 			return False
 
 
@@ -248,9 +254,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				#length = jsect.l * base_length		
 				#pnt = strt + QPoint(math.cos(jsect.angle) * length, -math.sin(jsect.angle) * length)
 				
-				print("STRT", strt)
 				if hasnode(strt):
-					print("hasnode")
 					circrad = 6
 					break
 				else:

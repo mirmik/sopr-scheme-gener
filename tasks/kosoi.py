@@ -82,8 +82,8 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.axonom_deg = self.sett.add("60 градусов:", "bool", True)
 	
 		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
-			defval=0,
-			variant=["прямоугольник", "круг", "ромб"])
+			defval=3,
+			variant=["прямоугольник", "круг", "ромб", "труба"])
 
 		self.shemetype.console = self.sett.add("Длина Консоли:", "int", "100")
 		self.shemetype.zrot = self.sett.add("Направление:", "int", "30")
@@ -269,7 +269,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		#stlen = 600
 
 		fini_width = self.width() - 20
-		hcenter = self.height() / 2
+		hcenter = self.hcenter
 
 		lwidth = self.shemetype.lwidth.get()
 
@@ -284,7 +284,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.init_trans_matrix()
 
 		self.base_x = self.width() / 2 - trans(0,-L,0).x() / 2
-		self.base_y = self.height() / 2 - trans(0,-L,0).y() / 2 - offdown/8*3
+		self.base_y = hcenter - trans(0,-L,0).y() / 2 - offdown/8*3
 		self.init_trans_matrix()
 
 		refpoints=[]
@@ -624,6 +624,140 @@ class PaintWidget(paintwdg.PaintWidget):
 				trans(0,0,a/2+S)
 			)
 
+			refpoints = [
+				trans(-a/2/math.sqrt(2), 0, a/2/math.sqrt(2)),
+				trans(0, 0, a/2),
+				trans(a/2/math.sqrt(2), 0, a/2/math.sqrt(2)),
+				trans(-a/2, 0, 0),
+				trans(a/2, 0, 0),
+				trans(-a/2/math.sqrt(2), 0, -a/2/math.sqrt(2)),
+				trans(0, 0, -a/2),
+				trans(a/2/math.sqrt(2), 0, -a/2/math.sqrt(2)),
+			]
+
+		elif self.shemetype.section_type.get() == "труба":
+			self.painter.setBrush(QColor(220,220,220))
+			self.painter.setPen(Qt.NoPen)
+			self.painter.drawPolygon(QPolygon([
+				trans(-a/2-S,-L,-a/2-S),
+				trans(-a/2-S,-L,a/2+S),
+				trans(a/2+S,-L,a/2+S),
+				trans(a/2+S,-L,-a/2-S),
+			]))
+
+			self.painter.setBrush(Qt.white)
+			self.painter.setPen(self.pen)
+			
+			self.painter.drawEllipse(QRect(
+				trans(-a/2,-L,-a/2),
+				trans(a/2,-L,a/2)
+			))
+
+			#self.painter.setBrush(Qt.NoBrush)
+			self.painter.setPen(Qt.NoPen)
+			self.painter.drawPolygon(QPolygon([
+				trans(0,-L,0) - QPoint(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
+				trans(0,-L,0) + QPoint(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
+				trans(0,0,0) + QPoint(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
+				trans(0,0,0) - QPoint(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
+			]))
+			self.painter.setPen(self.pen)
+			self.painter.drawLine(
+				trans(0,-L,0) - QPointF(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
+				trans(0,0,0) - QPointF(a/2*math.sin(deg(60)), a/2*math.cos(deg(60)))
+			)
+			self.painter.drawLine(
+				trans(0,-L,0) + QPointF(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
+				trans(0,0,0) + QPointF(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5)
+			)
+
+			self.painter.setPen(self.halfpen)
+			self.painter.drawLine(trans(a/2,-L,0), trans(a/2,0,0))
+			self.painter.drawLine(trans(0,-L,a/2), trans(0,0,a/2))
+			self.painter.setPen(self.pen)
+
+			self.painter.drawEllipse(QRect(
+				trans(-a/2,0,-a/2),
+				trans(a/2,0,a/2)
+			))
+
+			self.painter.drawEllipse(QRect(
+				trans(-b/2,0,-b/2),
+				trans(b/2,0,b/2)
+			))
+
+			self.painter.setPen(self.axpen)
+			self.painter.setBrush(Qt.NoBrush)
+			self.painter.drawEllipse(QRect(
+				trans(-(a+b)/4,0,-(a+b)/4),
+				trans((a+b)/4,0,(a+b)/4)
+			))
+			self.painter.setPen(self.pen)
+
+			paintool.draw_dimlines(
+				painter=self.painter, 
+				apnt=trans((a+b)/4,0,0), 
+				bpnt=trans(-(a+b)/4,0,0), 
+				offset= QPoint(0,dimoff+a/2), 
+				textoff = QPoint(), 
+				text = "", 
+				arrow_size = 12, 
+				splashed=False, 
+				textline_from=None)
+
+			ar = 67.5
+			paintool.draw_dimlines(
+				painter=self.painter, 
+				apnt=trans(a/2*math.cos(deg(ar)),0,a/2*math.sin(deg(ar))), 
+				bpnt=trans(b/2*math.cos(deg(ar)),0,b/2*math.sin(deg(ar))), 
+				offset= QPoint(0,0), 
+				textoff = (trans(a/2*math.cos(deg(ar)),0,a/2*math.sin(deg(ar))) - trans(b/2*math.cos(deg(ar)),0,b/2*math.sin(deg(ar))))/2 + QPoint(30,-30), 
+				text = greek(self.shemetype.y_txt.get()), 
+				arrow_size = 12, 
+				splashed=True, 
+				textline_from="apnt")
+
+			self.painter.setPen(self.halfpen)
+			paintool.draw_dimlines(
+				painter=self.painter, 
+				apnt=trans(a/2,-L,0),
+				bpnt=trans(a/2,0,0),
+				offset= QPoint(dimoff,0), 
+				textoff = QPoint(), 
+				text = "", 
+				arrow_size = 12, 
+				splashed=False, 
+				textline_from=None)
+		
+			elements.draw_text_by_points(
+				self, 
+				strt=trans(-a/2,0,-a/2)+QPoint(0,dimoff), 
+				fini=trans(a/2,0,-a/2)+QPoint(0,dimoff), 
+				txt=greek(self.shemetype.x_txt.get()), 
+				alttxt=True, 
+				off=14, 
+				polka=None)
+
+			elements.draw_text_by_points(
+				self, 
+				strt=trans(a/2,-L,0)+QPoint(dimoff,0), 
+				fini=trans(a/2,0,0)+QPoint(dimoff,0), 
+				txt=greek(self.shemetype.l_txt.get()), 
+				alttxt=True, 
+				off=14, 
+				polka=None)
+
+			self.painter.setPen(self.axpen)
+			self.painter.drawLine(
+				trans(-a/2-S,0,0),
+				trans(a/2+S,0,0)
+			)
+			self.painter.drawLine(
+				trans(0,0,-a/2-S),
+				trans(0,0,a/2+S)
+			)
+
+			a = (a+b)/2
 			refpoints = [
 				trans(-a/2/math.sqrt(2), 0, a/2/math.sqrt(2)),
 				trans(0, 0, a/2),

@@ -140,10 +140,27 @@ class PaintWidget(QWidget):
 		painter.setBrush(Qt.white)
 		self.painter = painter
 		
+	def eval_hcenter(self):
+		addtext = self.shemetype.texteditor.toPlainText()
+		self.hcenter = self.height()/2 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2
+		self.text_height = QFontMetrics(self.font).height() * len(addtext.splitlines())
+
 	def paintEvent(self, ev):
 		try:
 			self.paintEventCommon()			
+			self.eval_hcenter()
 			self.paintEventImplementation(ev)
+
+			addtext = self.shemetype.texteditor.toPlainText()
+			self.painter.setPen(self.pen)
+			self.painter.setFont(self.font)
+			self.painter.setBrush(Qt.black)
+			n = len(addtext.splitlines())
+			for i, l in enumerate(addtext.splitlines()):
+				self.painter.drawText(QPoint(
+				40, 
+				self.height() - QFontMetrics(self.font).height()*(n-i)), 
+				paintool.greek(l))
 			self.painter.end()
 		except Exception as ex:
 			if EXIT_ON_EXCEPT:
@@ -159,3 +176,6 @@ class PaintWidget(QWidget):
 
 	def sectforce(self):
 		return self.shemetype.task["sectforce"]
+
+	def sectforces(self):
+		return self.sectforce()

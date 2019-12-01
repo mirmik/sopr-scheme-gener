@@ -429,9 +429,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		actual_width = fini_width - strt_width
 
-		addtext = self.shemetype.texteditor.toPlainText()
 		arrow_line_size = 50
-		hcenter = height/2 -10 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2
+		hcenter = self.hcenter
 
 
 		if section_enable:
@@ -464,12 +463,3 @@ class PaintWidget(paintwdg.PaintWidget):
 			hcenter=hcenter, left=strt_width, right=fini_width)
 
 		#painter = QPainter(self)
-		painter = self.painter
-		painter.setPen(self.pen)
-		painter.setFont(self.font)
-		painter.setBrush(Qt.black)
-		for i, l in enumerate(addtext.splitlines()):
-			painter.drawText(QPoint(
-				40, 
-				hcenter + 75 + 30 + QFontMetrics(self.font).height()*i), 
-			paintool.greek(l))

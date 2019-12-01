@@ -18,6 +18,7 @@ import tasks.plastina
 import tasks.fermes
 import tasks.balki
 import tasks.ar3d
+import tasks.ar3d2
 import tasks.kosoi
 import common
 import container
@@ -62,6 +63,7 @@ class CentralWidget(QWidget):
 			tasks.plastina.ShemeTypeT3(),
 			tasks.fermes.ShemeTypeT4(),
 			tasks.ar3d.ShemeType(),
+			tasks.ar3d2.ShemeType(),
 			tasks.kosoi.ShemeType(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())

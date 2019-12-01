@@ -163,11 +163,10 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 	def paintEventImplementation(self, ev):
 		"""Рисуем сцену согласно объекта задания"""
 		font_size = self.shemetype.font_size.get()
-		painter = QPainter(self)
-		font = painter.font()
+		font = self.painter.font()
 		font.setItalic(True)
 		font.setPointSize(font_size)
-		painter.setFont(font)
+		self.painter.setFont(font)
 
 		lwidth = self.shemetype.lwidth.get()
 
@@ -190,7 +189,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		addtext = self.shemetype.texteditor.toPlainText()
 
 		arrow_line_size = 50
-		hcenter = height/2 - QFontMetrics(font).height() * len(addtext.splitlines()) / 2
+		hcenter = self.hcenter
 
 		height_zone = base_section_height
 
@@ -205,7 +204,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 		br = QPen()
 		br.setWidth(lwidth)
-		painter.setPen(br)
+		self.painter.setPen(br)
 
 
 		maxl = 0
@@ -303,7 +302,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			text_E = paintool.greek(text_E)
 
 			if not task["sections"][i].delta:
-				painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height)
+				self.painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height)
 
 			lW = QFontMetrics(font).width(text_l)
 			AW = QFontMetrics(font).width(text_A)
@@ -323,11 +322,11 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				text = paintool.greek(task["sections"][i].text)
 
 			if razm:
-				painter.setPen(self.halfpen)
+				self.painter.setPen(self.halfpen)
 				splashed = wsect(i+1) - wsect(i) < 20
 
 				paintool.draw_dimlines(
-					painter, 
+					self.painter, 
 					QPoint(wsect(i), fini_height), 
 					QPoint(wsect(i+1), fini_height), 
 					offset=QPoint(0, dimlines_level- fini_height), 
@@ -336,12 +335,12 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					text=text,
 					splashed=splashed)
 				
-				painter.setBrush(self.default_brush)
-				painter.setPen(self.default_pen)
+				self.painter.setBrush(self.default_brush)
+				self.painter.setPen(self.default_pen)
 		
 		#Отрисовка граничных эффектов
 		for i in range(len(task["betsect"])):
-			painter.setPen(self.default_pen)
+			self.painter.setPen(self.default_pen)
 			arrow_head_size = 15
 
 			F_text_policy = "simple"
@@ -352,9 +351,9 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 				if task["betsect"][i].F == "+":
 					if not next_raspred(i):
-						paintool.right_arrow(painter, QPoint(wsect(i), hcenter), arrow_line_size, arrow_head_size)
+						paintool.right_arrow(self.painter, QPoint(wsect(i), hcenter), arrow_line_size, arrow_head_size)
 					else:
-						paintool.right_arrow_double(painter, 
+						paintool.right_arrow_double(self.painter, 
 							QPoint(wsect(i), hcenter), 
 							arrow_line_size, 
 							arrow_head_size,
@@ -364,9 +363,9 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				
 				if task["betsect"][i].F == "-":
 					if not prev_raspred(i):
-						paintool.left_arrow(painter, QPoint(wsect(i), hcenter), arrow_line_size, arrow_head_size)
+						paintool.left_arrow(self.painter, QPoint(wsect(i), hcenter), arrow_line_size, arrow_head_size)
 					else:
-						paintool.left_arrow_double(painter, 
+						paintool.left_arrow_double(self.painter, 
 							QPoint(wsect(i), hcenter), 
 							arrow_line_size, 
 							arrow_head_size,
@@ -375,17 +374,17 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 						F_level = - sectrad(i-1) * 3.2/2 + hcenter					
 
 			if task["betsect"][i].M == "+":
-				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), hcenter), 20), False)
+				paintool.circular_arrow_base(self.painter, paintool.radrect(QPoint(wsect(i), hcenter), 20), False)
 
 			if task["betsect"][i].M == "-":
-				paintool.circular_arrow_base(painter, paintool.radrect(QPoint(wsect(i), hcenter), 20), True)
+				paintool.circular_arrow_base(self.painter, paintool.radrect(QPoint(wsect(i), hcenter), 20), True)
 
-			painter.setPen(self.pen)
+			self.painter.setPen(self.pen)
 			if task["betsect"][i].Mkr == "+":
-				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad2(i)+10, 11, False)
+				paintool.kr_arrow(self.painter, QPoint(wsect(i), hcenter), msectrad2(i)+10, 11, False)
 
 			if task["betsect"][i].Mkr == "-":
-				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad2(i)+10, 11, True)
+				paintool.kr_arrow(self.painter, QPoint(wsect(i), hcenter), msectrad2(i)+10, 11, True)
 
 
 			if task["betsect"][i].F != "clean":
@@ -399,7 +398,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					desp = +arrow_line_size/2 if task["betsect"][i].F == "+" else -arrow_line_size/2
 					
 					if F_text_policy == "simple":
-						paintool.placedtext(painter,
+						paintool.placedtext(self.painter,
 							QPoint(wsect(i)+desp, hcenter), 
 							max(leftA, rightA) * height_zone / 2 + 10, 
 							size, 
@@ -407,7 +406,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 							right = task["betsect"][i].M == 2)
 	
 					if F_text_policy == "up":
-						paintool.draw_text_centered(painter,
+						paintool.draw_text_centered(self.painter,
 							QPoint(
 								wsect(i)+desp, 
 								F_level -3), 
@@ -415,7 +414,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 			elif task["betsect"][i].Mkr != "clean":
 				if task["betsect"][i].T != "":
-					painter.drawText(QPoint(
+					self.painter.drawText(QPoint(
 						wsect(i) + 14, 
 						hcenter - msectrad2(i)-14), task["betsect"][i].T)
 
@@ -447,7 +446,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				else:
 					tp = False
 	
-				paintool.raspred_torsion(painter=painter,
+				paintool.raspred_torsion(painter=self.painter,
 					apnt=QPointF(xa, strt_height),
 					bpnt=QPointF(xb, strt_height),
 					alen=-alen,
@@ -455,7 +454,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					step=step,
 					tp = tp)
 	
-				paintool.raspred_torsion(painter=painter,
+				paintool.raspred_torsion(painter=self.painter,
 					apnt=QPointF(xa, fini_height),
 					bpnt=QPointF(xb, fini_height),
 					alen=alen,
@@ -464,7 +463,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					tp = not tp)
 	
 				if task["sectforce"][i].mkrT:
-					painter.drawText(QPointF((xa+xb)/2, strt_height - 3 - alen - rad), 
+					self.painter.drawText(QPointF((xa+xb)/2, strt_height - 3 - alen - rad), 
 						task["sectforce"][i].mkrT)
 
 
@@ -478,8 +477,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				
 				step = 20
 
-				painter.setPen(self.pen)
-				paintool.raspred_force(painter=painter,
+				self.painter.setPen(self.pen)
+				paintool.raspred_force(painter=self.painter,
 					apnt=QPointF(fxa, hcenter),
 					bpnt=QPointF(fxb, hcenter),
 					step=step,
@@ -490,7 +489,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
 	
 					size = QFontMetrics(font).width(task["sectforce"][i].mkrT)
-					paintool.placedtext(painter,
+					paintool.placedtext(self.painter,
 						QPoint((fxa + fxb)/2, hcenter), 
 						max(leftA, rightA) * height_zone / 2 + 10, 
 						size, 
@@ -500,23 +499,17 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 		if zleft:
 			y = math.sqrt(task["sections"][0].A) * height_zone
-			paintool.zadelka(painter, wsect(0) - 10, wsect(0), hcenter-y, hcenter+y, left_border=False, right_border=True)
+			paintool.zadelka(self.painter, wsect(0) - 10, wsect(0), hcenter-y, hcenter+y, left_border=False, right_border=True)
 
 		if zright:
 			y = math.sqrt(task["sections"][-1].A) * height_zone
-			paintool.zadelka(painter, wsect(-1), wsect(-1) + 10, hcenter-y, hcenter+y, left_border=True, right_border=False)
+			paintool.zadelka(self.painter, wsect(-1), wsect(-1) + 10, hcenter-y, hcenter+y, left_border=True, right_border=False)
 
 
 		if axis:
 			pen = QPen(Qt.CustomDashLine)
 			pen.setDashPattern([10,3,1,3])
-			painter.setPen(pen)
-			painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
+			self.painter.setPen(pen)
+			self.painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
 			pen = QPen()
-			painter.setPen(pen)
-
-		for i, l in enumerate(addtext.splitlines()):
-			painter.drawText(QPoint(
-				40, 
-				dimlines_level + 30 + QFontMetrics(font).height()*i), 
-			paintool.greek(l))
+			self.painter.setPen(pen)

@@ -409,7 +409,6 @@ def zadelka_sharnir(painter, pnt, angle, w, h, s):
 	oldpen = painter.pen()
 	
 	sect = angle / (math.pi * 2) - angle // (math.pi * 2) 
-	print("A:",sect)
 	if (0 < sect < 0.25) or (0.5 < sect < 0.75):
 		brush = QBrush(Qt.FDiagPattern)
 	else:
@@ -710,6 +709,8 @@ def draw_dimlines(painter, apnt, bpnt, offset, textoff, text, arrow_size, splash
 
 	if textline_from == "bpnt":
 		draw_textline(painter, bpnt, textpnt, text, font=font)
+	if textline_from == "apnt":
+		draw_textline(painter, apnt, textpnt, text, font=font)
 
 def draw_vertical_splashed_dimlines_with_text(painter, upnt, dpnt, arrow_size, textpnt, text, font):
 	"""подписать толщину"""

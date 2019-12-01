@@ -186,6 +186,10 @@ class ConfWidget_T4(common.ConfWidget):
 		self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
 
 		self.shemetype.postfix = self.sett.add("Постфикс:", "str", ",EIx")
+
+		self.shemetype.texteditor = QTextEdit()
+		self.shemetype.texteditor.textChanged.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
 		
 		self.setLayout(self.vlayout)
 
@@ -225,7 +229,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		width = self.width()
 		height = self.height()
 
-		center = QPoint(width/2, height/2)
+		center = QPoint(width/2, self.hcenter)
 
 		font_size = self.shemetype.font_size.get()
 		lwidth = self.shemetype.line_width.get()

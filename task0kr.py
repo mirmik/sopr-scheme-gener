@@ -108,6 +108,9 @@ class ConfWidget_T01(common.ConfWidget):
 		self.table2.updated.connect(self.redraw)
 
 
+		self.shemetype.texteditor = QTextEdit()
+		self.shemetype.texteditor.textChanged.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
 
 		self.setLayout(self.vlayout)
 
@@ -160,7 +163,7 @@ class PaintWidget_T01(paintwdg.PaintWidget):
 		width = size.width()
 		height = size.height()
 
-		hcenter = height/2
+		hcenter = self.hcenter
 
 		height_zone = base_section_height
 
@@ -177,15 +180,14 @@ class PaintWidget_T01(paintwdg.PaintWidget):
 		if zright:
 			fini_width = fini_width - 20
 
-		painter = QPainter(self)
-		font = painter.font()
+		font = self.painter.font()
 		font.setItalic(True)
 		font.setPointSize(font_size)
-		painter.setFont(font)
+		self.painter.setFont(font)
 
 		br = QPen()
 		br.setWidth(lwidth)
-		painter.setPen(br)
+		self.painter.setPen(br)
 
 
 		maxl = 0
@@ -224,13 +226,13 @@ class PaintWidget_T01(paintwdg.PaintWidget):
 
 		#Рисуем камеру, если надо:
 		if kamera:
-			paintool.draw_kamera(painter, 
+			paintool.draw_kamera(self.painter, 
 				lu=QPoint(20,20), 
 				rd=QPoint(width-20, height-20), 
 				t=10)
 		
 		if inkamera:
-			paintool.draw_inkamera(painter, 
+			paintool.draw_inkamera(self.painter, 
 				lu=QPoint(wsect(0)+inkamera_dist,inkamera_dist), 
 				rd=QPoint(wsect(-1)-inkamera_dist, height-inkamera_dist), 
 				t=20)
@@ -250,36 +252,36 @@ class PaintWidget_T01(paintwdg.PaintWidget):
 				text_d = str(float(d)) + "d"
 
 			zlen = 10
-			painter.setBrush(Qt.white)
+			self.painter.setBrush(Qt.white)
 
 			if zleft and zright and len(task["sections"]) == 1:
-				paintool.draw_rectangle(painter,wsect(i)-zlen, strt_height, wsect(i+1)-wsect(i)+zlen*2, fini_height-strt_height, zleft=True, zright=True)
+				paintool.draw_rectangle(self.painter,wsect(i)-zlen, strt_height, wsect(i+1)-wsect(i)+zlen*2, fini_height-strt_height, zleft=True, zright=True)
 
 			elif zleft and i == 0:
-				paintool.draw_rectangle(painter,wsect(i)-zlen, strt_height, wsect(i+1)-wsect(i)+zlen, fini_height-strt_height, zleft=True)
+				paintool.draw_rectangle(self.painter,wsect(i)-zlen, strt_height, wsect(i+1)-wsect(i)+zlen, fini_height-strt_height, zleft=True)
 
 			elif zright and i == len(task["sections"])-1:
-				paintool.draw_rectangle(painter,wsect(i), strt_height, wsect(i+1)-wsect(i)+zlen, fini_height-strt_height, zright=True)
+				paintool.draw_rectangle(self.painter,wsect(i), strt_height, wsect(i+1)-wsect(i)+zlen, fini_height-strt_height, zright=True)
 
 			else:
-				painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height)
+				self.painter.drawRect(wsect(i), strt_height, wsect(i+1)-wsect(i), fini_height-strt_height)
 
 
 #			if razm:
-#				painter.setPen(self.halfpen)
-#				paintool.dimlines(painter, QPoint(wsect(i), fini_height), QPoint(wsect(i+1), fini_height), dimlines_level)
-#				paintool.draw_text_centered(painter, QPoint((wsect(i)+wsect(i+1))/2, dimlines_level-5), text_l, self.font)
+#				self.painter.setPen(self.halfpen)
+#				paintool.dimlines(self.painter, QPoint(wsect(i), fini_height), QPoint(wsect(i+1), fini_height), dimlines_level)
+#				paintool.draw_text_centered(self.painter, QPoint((wsect(i)+wsect(i+1))/2, dimlines_level-5), text_l, self.font)
 
-#				painter.setBrush(self.default_brush)
-#				painter.setPen(self.default_pen)
+#				self.painter.setBrush(self.default_brush)
+#				self.painter.setPen(self.default_pen)
 		
 		#Отрисовка граничных эффектов
 		for i in range(len(task["betsect"])):
 			if task["betsect"][i].Mkr == "+":
-				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad(i)+10, 11, False)
+				paintool.kr_arrow(self.painter, QPoint(wsect(i), hcenter), msectrad(i)+10, 11, False)
 
 			if task["betsect"][i].Mkr == "-":
-				paintool.kr_arrow(painter, QPoint(wsect(i), hcenter), msectrad(i)+10, 11, True)
+				paintool.kr_arrow(self.painter, QPoint(wsect(i), hcenter), msectrad(i)+10, 11, True)
 
 			if task["betsect"][i].T != "":
 				leftA = 0 if i == 0 else task["sections"][i-1].d
@@ -290,7 +292,7 @@ class PaintWidget_T01(paintwdg.PaintWidget):
 
 
 				if task["betsect"][i].Mkr == "clean":
-					paintool.placedtext(painter,
+					paintool.placedtext(self.painter,
 						QPoint(wsect(i), hcenter), 
 						max(leftA, rightA) * height_zone / 2 + 10, 
 						size, 
@@ -298,35 +300,35 @@ class PaintWidget_T01(paintwdg.PaintWidget):
 						right = task["betsect"][i].M == 2)
 
 				else:
-					painter.drawText(QPoint(wsect(i) - size/2, hcenter - msectrad(i) - 10 - 11*2 - 5), text)
+					self.painter.drawText(QPoint(wsect(i) - size/2, hcenter - msectrad(i) - 10 - 11*2 - 5), text)
 
 		#if zleft:
 		#	y = task["sections"][0].d/2 * height_zone
-			#paintool.zadelka(painter, wsect(0) - 10, wsect(0), hcenter-y, hcenter+y, left_border=False, right_border=True)
-			#paintool.razrez(painter, QPoint(wsect(0)-10, hcenter-y), QPoint(wsect(0)-10, hcenter+y))
+			#paintool.zadelka(self.painter, wsect(0) - 10, wsect(0), hcenter-y, hcenter+y, left_border=False, right_border=True)
+			#paintool.razrez(self.painter, QPoint(wsect(0)-10, hcenter-y), QPoint(wsect(0)-10, hcenter+y))
 
 		#if zright:
 		#	y = task["sections"][-1].d/2 * height_zone
-			#paintool.zadelka(painter, wsect(-1), wsect(-1) + 10, hcenter-y, hcenter+y, left_border=True, right_border=False)
+			#paintool.zadelka(self.painter, wsect(-1), wsect(-1) + 10, hcenter-y, hcenter+y, left_border=True, right_border=False)
 			
-		#	painter.setBrush(Qt.white)
-		#	painter.setPen(Qt.white)
+		#	self.painter.setBrush(Qt.white)
+		#	self.painter.setPen(Qt.white)
 
-			#painter.drawRect(QRect(
+			#self.painter.drawRect(QRect(
 			#	QPoint(wsect(-1)-1,hcenter+y),
 			#	QPoint(wsect(-1)+10,hcenter-y)
 			#))
-		#	paintool.razrez(painter, QPoint(wsect(-1)+10, hcenter-y), QPoint(wsect(-1)+10, hcenter+y))
+		#	paintool.razrez(self.painter, QPoint(wsect(-1)+10, hcenter-y), QPoint(wsect(-1)+10, hcenter+y))
 
 
 
 		if axis:
 			pen = QPen(Qt.CustomDashLine)
 			pen.setDashPattern([10,3,1,3])
-			painter.setPen(pen)
-			painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
+			self.painter.setPen(pen)
+			self.painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
 			pen = QPen()
-			painter.setPen(pen)
+			self.painter.setPen(pen)
 
 		#Текст и линии
 		for i in range(len(task["sections"])):
@@ -350,7 +352,7 @@ class PaintWidget_T01(paintwdg.PaintWidget):
 			AW = QFontMetrics(font).width(text_d)
 
 			paintool.draw_vertical_dimlines_with_text(
-				painter, 
+				self.painter, 
 				QPoint((wsect(i)*0.35+wsect(i+1)*0.65),strt_height), 
 				QPoint((wsect(i)*0.35+wsect(i+1)*0.65),fini_height), 
 				arrow_size/2, 
