@@ -349,7 +349,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 				elements.draw_element_sharn(self, strt, sect.lsharn, inangle=angle+deg(180), termrad=termrad)
 
 			if sect.rsharn != "clean":
-				termrad = 15 if not "шарн1" in sect.lsharn else 25
+				termrad = 15 if not "шарн1" in sect.rsharn else 25
 				elements.draw_element_sharn(self, fini, sect.rsharn, inangle=angle, termrad=termrad)
 
 
