@@ -128,7 +128,7 @@ class ConfView(QWidget):
 
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.width_getter = self.sett.add("Ширина в px:", "int", "400")
-		self.height_getter = self.sett.add("Высота в px:", "int", "200")
+		self.height_getter = self.sett.add("Высота в px:", "int", "250")
 		self.font_size_getter = self.sett.add("Размер шрифта:", "int", "12")
 		self.lwidth_getter = self.sett.add("Толщина линий:", "int", "2")
 		self.arrow_size_getter = self.sett.add("Размер стрелок:", "int", "10")

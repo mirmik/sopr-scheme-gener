@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import *
 
 class TableWidget(QTableWidget):
 	updated = pyqtSignal()
+	hover_hint = pyqtSignal(int,int,str) 
+	unhover = pyqtSignal() 
 
 	class cellsig(QObject):
 		signal = pyqtSignal(int, int)
@@ -20,16 +22,19 @@ class TableWidget(QTableWidget):
 
 
 	class column:
-		def __init__(self, name, type, note, variant):
+		def __init__(self, name, type, note, variant, hint=None):
 			self.name = name
 			self.type = type
 			self.note = note
 			self.variant = variant
+			self.hint = hint
 
 	def __init__(self, sheme, modelname):
 		super().__init__()
+		self.setMouseTracking(True)
 		self.shemetype = sheme
 		self.modelname = modelname
+		self.installEventFilter(self)
 
 		self.columns = []
 
@@ -40,9 +45,30 @@ class TableWidget(QTableWidget):
 		self.cellChanged.connect(self.changed)	
 		self.protect = False
 
-	def addColumn(self, name, type, note=None, variant=None):
+	def onMouse(self):
+		pos = self.mapFromGlobal(QCursor.pos())
+		pos = pos - QPoint(self.verticalHeader().width(), self.horizontalHeader().height())
+		index = self.indexAt(pos)
+		row = index.row()
+		column = index.column()
+		if (row != -1 and column != -1):
+			self.hover_hint.emit(row,column,self.columns[column].hint)
+
+	def mouseMoveEvent(self,ev):
+		self.onMouse()
+
+	def eventFilter(self, obj, ev):
+		if (ev.type()==QEvent.MouseMove or ev.type()==QEvent.HoverMove):
+			self.onMouse()
+		return False
+
+	def leaveEvent(self, ev):
+		self.unhover.emit()
+		super().leaveEvent(ev)
+
+	def addColumn(self, name, type, note=None, variant=None, hint=None):
 		if note is None: note = name
-		self.columns.append(self.column(name, type, note, variant))
+		self.columns.append(self.column(name, type, note, variant, hint))
 
 	def updateTable(self):
 		self.protect = True

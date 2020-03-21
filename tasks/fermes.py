@@ -107,43 +107,58 @@ class ConfWidget_T4(common.ConfWidget):
 		sharnir_arr = elements.sharn_arr
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table.addColumn("xstrt", "str", "X0")
-		self.table.addColumn("ystrt", "str", "Y0")
-		self.table.addColumn("xfini", "str", "X1")
-		self.table.addColumn("yfini", "str", "Y1")
-		self.table.addColumn("lsharn", "list", "ШарнирЛ", variant=sharnir_arr)
-		self.table.addColumn("rsharn", "list", "ШарнирП", variant=sharnir_arr)
-		self.table.addColumn("txt", "str", "Текст")
-		self.table.addColumn("alttxt", "bool", "alt")
+		self.table.addColumn("xstrt", "str", "X0", hint="N0")
+		self.table.addColumn("ystrt", "str", "Y0", hint="N0")
+		self.table.addColumn("lsharn", "list", "ШарнирЛ", variant=sharnir_arr, hint="N0")
+
+		self.table.addColumn("xfini", "str", "X1", hint="N1")
+		self.table.addColumn("yfini", "str", "Y1", hint="N1")
+		self.table.addColumn("rsharn", "list", "ШарнирП", variant=sharnir_arr, hint="N1")
+
+		self.table.addColumn("txt", "str", "Текст", hint="S")
+		self.table.addColumn("alttxt", "bool", "alt", hint="S")
 		self.table.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
-		self.table1.addColumn("distrib", "list", "Распр.", variant=["clean", "+", "-"])
-		self.table1.addColumn("txt", "str", "Распр.")
+		self.table1.addColumn("distrib", "list", "Распред. нагрузка", variant=["clean", "+", "-"], hint="S")
+		self.table1.addColumn("txt", "str", "Текст q.", hint="S")
 		self.table1.updateTable()
 
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("fenl", "list", "F", variant=fen_arr)
-		self.table2.addColumn("fl_txt", "str", "F")
-		self.table2.addColumn("fenr", "list", "F", variant=fen_arr)
-		self.table2.addColumn("fr_txt", "str", "F")
-		self.table2.addColumn("menl", "list", "M", variant=men_arr)
-		self.table2.addColumn("ml_txt", "str", "M")
-		self.table2.addColumn("menr", "list", "M", variant=men_arr)
-		self.table2.addColumn("mr_txt", "str", "M")
-		self.table2.addColumn("fr_txt_alt", "bool", "Falt")
-		self.table2.addColumn("fr_txt_alt", "bool", "Falt")
+		self.table2.addColumn("fenl", "list", "0: Сила", variant=fen_arr, hint="N0")
+		self.table2.addColumn("fl_txt", "str", "0: Текст F", hint="N0")
+		self.table2.addColumn("menl", "list", "0: Момент", variant=men_arr, hint="N0")
+		self.table2.addColumn("ml_txt", "str", "0: Текст M", hint="N0")
+		self.table2.addColumn("fr_txt_alt", "bool", "0: Перенос", hint="N0")
+
+		self.table2.addColumn("fenr", "list", "1: Сила", variant=fen_arr, hint="N1")
+		self.table2.addColumn("fr_txt", "str", "1: Текст F", hint="N1")
+		self.table2.addColumn("menr", "list", "1: Момент", variant=men_arr, hint="N1")
+		self.table2.addColumn("mr_txt", "str", "1: Текст M", hint="N1")
+		self.table2.addColumn("fr_txt_alt", "bool", "1: Перенос", hint="N1")
 		self.table2.updateTable()
 
 		self.table3 = tablewidget.TableWidget(self.shemetype, "label")
-		self.table3.addColumn("smaker", "str", "Метка")
-		self.table3.addColumn("fmaker", "str", "Метка")
-		self.table3.addColumn("smaker_pos", "list", "Метка", variant=elements.storoni)
-		self.table3.addColumn("fmaker_pos", "list", "Метка", variant=elements.storoni)
+		self.table3.addColumn("smaker", "str", "0: Метка", hint="N0")
+		self.table3.addColumn("smaker_pos", "list", "0: Метка", variant=elements.storoni, hint="N0")
+
+		self.table3.addColumn("fmaker", "str", "1: Метка", hint="N1")
+		self.table3.addColumn("fmaker_pos", "list", "1: Метка", variant=elements.storoni, hint="N1")
 		self.table3.updateTable()
 
-		self.vlayout.addWidget(QLabel("Геометрия:"))
+		self.table.hover_hint.connect(self.hover_node)
+		self.table1.hover_hint.connect(self.hover_node)
+		self.table2.hover_hint.connect(self.hover_node)
+		self.table3.hover_hint.connect(self.hover_node)
+
+		self.table.unhover.connect(self.table_unhover)
+		self.table1.unhover.connect(self.table_unhover)
+		self.table2.unhover.connect(self.table_unhover)
+		self.table3.unhover.connect(self.table_unhover)
+
+
+		self.vlayout.addWidget(QLabel("Геометрия и текст:"))
 		self.vlayout.addWidget(self.table)
 		
 		self.vlayout.addWidget(QLabel("Распределённые силы:"))
@@ -169,7 +184,23 @@ class ConfWidget_T4(common.ConfWidget):
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
 		self.vlayout.addWidget(self.shemetype.texteditor)
 		
+		self.save_row = None
+		self.save_hint = None
+		self.highlited_element = None
+
 		self.setLayout(self.vlayout)
+
+	def hover_node(self, row, column, hint):
+#		if row != self.save_row or hint != self.save_hint:
+		self.shemetype.paintwidget.highlited_element = (hint, row)
+		self.redraw()
+
+		self.save_row = row
+		self.save_hint = hint
+
+	def table_unhover(self):
+		self.shemetype.paintwidget.highlited_element = None
+		self.redraw()
 
 	def init_taskconf(self):
 		self.sett.add_delimiter()	
@@ -187,7 +218,7 @@ class ConfWidget_T4(common.ConfWidget):
 		else:
 			self.section_container.hide()
 		
-	def add_action(self, strt=("",""), fini=(1,1)):
+	def _add_action(self, strt=("",""), fini=(1,1)):
 		self.shemetype.task["sections"].append(self.sect(strt=strt, fini=fini))
 		self.shemetype.task["betsect"].append(self.betsect())
 		self.shemetype.task["sectforce"].append(self.sectforce())
@@ -195,6 +226,9 @@ class ConfWidget_T4(common.ConfWidget):
 		self.redraw()
 		self.updateTables()
 
+	def add_action(self):
+		self._add_action()
+		
 	def del_action(self):
 		if len(self.shemetype.task["sections"]) == 0: return
 		del self.shemetype.task["sections"][-1]
@@ -214,16 +248,6 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table2.updateTable()
 		self.table3.updateTable()
 
-class MouseBox(QObject):
-	def __init__(self):
-		super().__init__()
-
-	def eventFilter(self, obj, ev):
-		if (ev.type==QEvent.MouseMove):
-			print("MouseMove")
-
-		return False
-
 class PaintWidget_T4(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
@@ -232,9 +256,8 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		self.hovered_point_index = None
 		self.mouse_pressed=False
 		self.point_nodes = []
+		self.highlited_element=None
 		self.setMouseTracking(True)
-		self.filter = MouseBox()
-		self.installEventFilter(self.filter)
 
 	def cartesian(self, aa,bb):
 		ret = []
@@ -244,11 +267,13 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 
 		return ret
 		
+
+	def circle(self, p, rad=2, color=Qt.green):
+		self.painter.setBrush(color)
+		self.painter.drawEllipse(QRect(p-QPoint(rad,rad),p+QPoint(rad,rad)))
+		self.painter.setBrush(Qt.black)
+
 	def draw_grid(self, center, base_length):
-		def circle(p, rad=2, color=Qt.green):
-			self.painter.setBrush(color)
-			self.painter.drawEllipse(QRect(p-QPoint(rad,rad),p+QPoint(rad,rad)))
-			self.painter.setBrush(Qt.black)
 
 		xs = center.x()
 		ys = center.y()
@@ -269,16 +294,15 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		b = np.arange(ys, yf+1, step = base_length)
 
 		if self.hovered_point is not None:
-			circle(self.hovered_point, 4, Qt.red)
+			self.circle(self.hovered_point, 4, Qt.red)
 			self.hovered_point_index = (
 				(self.hovered_point.x() - center.x()) / base_length, 
 				-(self.hovered_point.y() - center.y()) / base_length
 			)
-			print(self.hovered_point_index)
 		
 		self.point_nodes = self.cartesian(a,b)
 		for s in self.cartesian(a,b):
-			circle(s)
+			self.circle(s)
 
 
 	def paintEventImplementation(self, ev):
@@ -438,6 +462,36 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		if self.mouse_pressed:
 			painter.drawLine(self.pressed_point, self.hovered_point)
 
+		if self.highlited_element is not None:
+			hint = self.highlited_element[0]
+			row = self.highlited_element[1]
+			
+			if hint == "N0":
+				pen = QPen()
+				pen.setColor(Qt.blue)
+				pen.setWidth(5)
+				self.painter.setPen(pen)
+				self.painter.drawLine(coordes[row][0], coordes[row][1])
+				self.painter.setPen(self.pen)
+				self.circle(coordes[row][0],rad=5,color=Qt.green)
+
+			if hint == "N1":
+				pen = QPen()
+				pen.setColor(Qt.blue)
+				pen.setWidth(5)
+				self.painter.setPen(pen)
+				self.painter.drawLine(coordes[row][0], coordes[row][1])
+				self.painter.setPen(self.pen)
+				self.circle(coordes[row][1],rad=5,color=Qt.green)
+
+			if hint == "S":
+				pen = QPen()
+				pen.setColor(Qt.green)
+				pen.setWidth(5)
+				self.painter.setPen(pen)
+				self.painter.drawLine(coordes[row][0], coordes[row][1])
+				self.painter.setPen(self.pen)
+
 			#else:
 			#	self.draw_grid(coordes[0][0], base_length)
 
@@ -487,5 +541,5 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 			self.pressed_point_index = (round(self.pressed_point_index[0]), round(self.pressed_point_index[1]))
 			self.hovered_point_index = (round(self.hovered_point_index[0]), round(self.hovered_point_index[1]))
 			
-			self.shemetype.confwidget.add_action(self.pressed_point_index,self.hovered_point_index)
+			self.shemetype.confwidget._add_action(self.pressed_point_index,self.hovered_point_index)
 			self.update()
