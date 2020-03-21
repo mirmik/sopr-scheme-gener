@@ -126,17 +126,17 @@ class ConfWidget_T4(common.ConfWidget):
 
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("fenl", "list", "0: Сила", variant=fen_arr, hint="N0")
-		self.table2.addColumn("fl_txt", "str", "0: Текст F", hint="N0")
-		self.table2.addColumn("menl", "list", "0: Момент", variant=men_arr, hint="N0")
-		self.table2.addColumn("ml_txt", "str", "0: Текст M", hint="N0")
-		self.table2.addColumn("fr_txt_alt", "bool", "0: Перенос", hint="N0")
+		self.table2.addColumn("fenl", "list", "0:Сила", variant=fen_arr, hint="N0")
+		self.table2.addColumn("fl_txt", "str", "0:Т.F", hint="N0")
+		self.table2.addColumn("menl", "list", "0:Момент", variant=men_arr, hint="N0")
+		self.table2.addColumn("ml_txt", "str", "0:Т.M", hint="N0")
+		self.table2.addColumn("fr_txt_alt", "bool", "0:Alt", hint="N0")
 
-		self.table2.addColumn("fenr", "list", "1: Сила", variant=fen_arr, hint="N1")
-		self.table2.addColumn("fr_txt", "str", "1: Текст F", hint="N1")
-		self.table2.addColumn("menr", "list", "1: Момент", variant=men_arr, hint="N1")
-		self.table2.addColumn("mr_txt", "str", "1: Текст M", hint="N1")
-		self.table2.addColumn("fr_txt_alt", "bool", "1: Перенос", hint="N1")
+		self.table2.addColumn("fenr", "list", "1:Сила", variant=fen_arr, hint="N1")
+		self.table2.addColumn("fr_txt", "str", "1:Т.F", hint="N1")
+		self.table2.addColumn("menr", "list", "1:Момент", variant=men_arr, hint="N1")
+		self.table2.addColumn("mr_txt", "str", "1:Т.M", hint="N1")
+		self.table2.addColumn("fr_txt_alt", "bool", "1:Alt", hint="N1")
 		self.table2.updateTable()
 
 		self.table3 = tablewidget.TableWidget(self.shemetype, "label")
