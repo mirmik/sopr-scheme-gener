@@ -46,8 +46,9 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		self.w = self.add("Ширина:", ("str", "int"), ("a", "50"))
 		self.hh = self.add("Высота отверстия:", ("str", "int"), ("d", "20"))
 		self.hw = self.add("Ширина отверстия:", ("str", "int"), ("c", "30"))
-		self.s = self.add("Смещение:", ("bool", "str", "int"), (False, "s", "20"))
-
+		self.s = self.add("Свободное смещение:", ("bool", "str", "int"), (False, "s", "20"))
+		self.edge = self.add("Смещение к краю:", "list", defval=0, variant=["Нет", "Верх", "Низ"])
+		
 	def draw(self,
 			wdg,
 			shemetype, 
@@ -68,6 +69,13 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 
 		s = self.s.get()[2]
 		s_text = self.s.get()[1]
+		s_edge = self.edge.get() != "Нет"
+
+		if self.edge.get() == "Верх":
+			s = h/2 + hw/2
+
+		if self.edge.get() == "Низ":
+			s = 0
 
 		if self.s.get()[0]:
 			s=(h-hh)/2
@@ -81,8 +89,27 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 			QRect(center - QPoint(w,h), center + QPoint(w,h)))
 		
 		painter.setBrush(QBrush(Qt.white))
-		painter.drawRect(
-			QRect(center + QPoint(0,h-s*2) - QPoint(hw,hh*2), center + QPoint(0,h-s*2) + QPoint(hw,0)))
+		if s_edge and self.edge.get() == "Верх":
+			painter.setPen(Qt.white)
+			painter.drawRect(QRect(center + QPoint(0,h-s*2) - QPoint(hw,hh*2 + 3), center + QPoint(0,h-s*2) + QPoint(hw,0)))
+			painter.setPen(wdg.pen)
+			painter.drawLine(center + QPoint(-hw, h-s*2 - hh*2), center + QPoint(-hw,h-s*2))
+			painter.drawLine(center + QPoint(hw,h-s*2), center + QPoint(-hw,h-s*2))
+			painter.drawLine(center + QPoint(hw, h-s*2 - hh*2), center + QPoint(hw,h-s*2))
+
+		elif s_edge and self.edge.get() == "Низ":
+			painter.setPen(Qt.white)
+			painter.drawRect(QRect(center + QPoint(0,h) - QPoint(hw,hh*2), center + QPoint(0,h) + QPoint(hw,3)))
+			painter.setPen(wdg.pen)
+			painter.drawLine(center + QPoint(-hw,h - hh*2), center + QPoint(-hw,h))
+			painter.drawLine(center + QPoint(hw,h- hh*2), center + QPoint(-hw,h- hh*2))
+			painter.drawLine(center + QPoint(hw,h - hh*2), center + QPoint(hw,h))
+
+#		painter.setPen(wdg.pen)
+		
+		else:
+			painter.drawRect(
+				QRect(center + QPoint(0,h-s*2) - QPoint(hw,hh*2), center + QPoint(0,h-s*2) + QPoint(hw,0)))
 
 		painter.setPen(wdg.halfpen)
 
@@ -95,15 +122,28 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 			text = h_text,
 			arrow_size = arrow_size / 3 * 2
 		)
-		paintool.draw_dimlines( # горизонтальная
-			painter = painter,
-			apnt = center+QPoint(w,h),
-			bpnt = center+QPoint(-w,h),
-			offset = QPoint(0,23),
+
+		if self.edge.get() == "Низ":
+			paintool.draw_dimlines( # горизонтальная
+				painter = painter,
+			apnt = center+QPoint(w,h-s*2-hh*2),
+			bpnt = center+QPoint(-w,h-s*2-hh*2),
+			offset = QPoint(0,-h*2+hh*2+s*2-16),
 			textoff = QPoint(0, -7),
-			text = w_text,
-			arrow_size = arrow_size / 3 * 2
-		)
+				text = w_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+		else:
+			paintool.draw_dimlines( # горизонтальная
+				painter = painter,
+				apnt = center+QPoint(w,h),
+				bpnt = center+QPoint(-w,h),
+				offset = QPoint(0,23),
+				textoff = QPoint(0, -7),
+				text = w_text,
+				arrow_size = arrow_size / 3 * 2
+			)
 
 
 		paintool.draw_dimlines( # вертикальная отв.
@@ -115,17 +155,30 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 			text = hh_text,
 			arrow_size = arrow_size / 3 * 2
 		)
-		paintool.draw_dimlines( # горизонтальная отв.
-			painter = painter,
-			apnt = center+QPoint(hw,h-s*2-hh*2),
-			bpnt = center+QPoint(-hw,h-s*2-hh*2),
-			offset = QPoint(0,-h*2+hh*2+s*2-16),
-			textoff = QPoint(0, -7),
-			text = hw_text,
-			arrow_size = arrow_size / 3 * 2
-		)
 
-		if s != (h-hh)/2:
+		if self.edge.get() == "Низ":
+			paintool.draw_dimlines( # горизонтальная отв.
+				painter = painter,
+				apnt = center+QPoint(hw,h),
+				bpnt = center+QPoint(-hw,h),
+				offset = QPoint(0,23),
+				textoff = QPoint(0, -7),
+				text = hw_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+		else:
+			paintool.draw_dimlines( # горизонтальная отв.
+				painter = painter,
+				apnt = center+QPoint(hw,h-s*2-hh*2),
+				bpnt = center+QPoint(-hw,h-s*2-hh*2),
+				offset = QPoint(0,-h*2+hh*2+s*2-16),
+				textoff = QPoint(0, -7),
+				text = hw_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+		if s != (h-hh)/2 and not s_edge:
 			paintool.draw_dimlines(
 				painter = painter,
 				apnt = center+QPoint(hw,h),
@@ -138,7 +191,7 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 
 		painter.setPen(wdg.axpen)
 		#llen = w + 10
-		if s == (h-hh)/2:
+		if s == (h-hh)/2 and not s_edge:
 			painter.drawLine(center + QPoint(-w-10,0), center + QPoint(w+10,0))
 		painter.drawLine(center + QPoint(0,-h-10), center + QPoint(0,h+10))
 		
