@@ -23,13 +23,11 @@ class ShemeType(common.SchemeType):
 class ConfWidget(common.ConfWidget):
 	"""Виджет настроек задачи T0"""
 	class sect:
-		def __init__(self, l=1, 
-			#delta=False
-		):
+		def __init__(self, l=1):
 			self.l=l
 
 	class betsect:
-		def __init__(self, sharn = "", sectname="", F="clean", M="clean", Mkr="clean", MT="", FT=""):
+		def __init__(self, sharn = "Нет", sectname="", F="Нет", M="Нет", Mkr="Нет", MT="", FT=""):
 			self.sectname = sectname
 			self.M = M
 			self.Mkr = Mkr 
@@ -39,9 +37,7 @@ class ConfWidget(common.ConfWidget):
 			self.sharn = sharn
 
 	class sectforce:
-		def __init__(self, Fr="clean", FrT=""):
-			#self.mkr = mkr
-			#self.mkrT = mkrT
+		def __init__(self, Fr="Нет", FrT=""):
 			self.Fr = Fr
 			self.FrT = FrT
 
@@ -68,74 +64,64 @@ class ConfWidget(common.ConfWidget):
 				self.sectforce(Fr="+", FrT="ql")
 			]
 		}
+
+	def init_taskconf(self):
+		node_variant = ["Нет", "Заделка", "Шарнир"]
+
+		self.sett.add_delimiter()		
+		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
+		self.shemetype.left_node = self.sett.add("Левый узел", "list", defval=0, variant=node_variant)
+		self.shemetype.right_node = self.sett.add("Правый узел", "list", defval=0, variant=node_variant)
+		self.shemetype.postfix = self.sett.add("Постфикс:", ("bool", "str"), (False, ", EIx"))
+				
+		self.sett.add_delimiter()
+		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
+
+		self.shemetype.section_container = self.sett.add_widget(sections.SectionContainer(self.shemetype.section_enable))
+
+		self.sett.add_delimiter()
+		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "6")
+		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "15")
+		self.sett.add_delimiter()
+		
+	def section_enable_handle(self):
+		pass
+		#if self.shemetype.section_enable.get():
+		#	self.shemetype.section_container.show()
+		#else:
+		#	self.shemetype.section_container.hide()
 		
 
 	def __init__(self, sheme):
 		super().__init__(sheme)
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-
+		
 		self.sett = taskconf_menu.TaskConfMenu()
-#		self.shemetype.axis = self.sett.add("Нарисовать ось:", "bool", True)
-#		self.shemetype.zleft = self.sett.add("Разрез слева:", "bool", True)
-#		self.shemetype.zright = self.sett.add("Разрез справа:", "bool", True)
-#		self.shemetype.kamera = self.sett.add("Внешняя камера:", "bool", False)
-#		self.shemetype.inkamera = self.sett.add("Внутренняя камера:", "bool", False)
-#		self.shemetype.inkamera_dist = self.sett.add("Отступ до камеры:", "int", "30")
-		#		self.shemetype.razm = self.sett.add("Размерные линии:", "bool", True)
-
-		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
-		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "6")
-		self.shemetype.leftterm = self.sett.add("Закрепление:", "list", 1, variant=["", "слева", "справа"])
-		self.shemetype.sharnterm = self.sett.add("Закрепление заделка/шарнир:", "bool", True)
-				
-		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
-		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
-			defval=4,
-			variant=sections.section_variant)
-
-		self.shemetype.section_txt0 = self.sett.add("Сечение.Текст1:", "str", "D")
-		self.shemetype.section_txt1 = self.sett.add("Сечение.Текст2:", "str", "d")
-		self.shemetype.section_txt2 = self.sett.add("Сечение.Текст3:", "str", "d")
-
-		self.shemetype.section_arg0 = self.sett.add("Сечение.Аргумент1:", "int", "60")
-		self.shemetype.section_arg1 = self.sett.add("Сечение.Аргумент2:", "int", "50")
-		self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
-		
-
-		#self.shemetype.arrow_line_size = self.sett.add("Размер линии стрелки:", "int", "20")
-		#self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "int", "40")
-		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "15")
-		#self.shemetype.font_size = common.CONFVIEW.font_size_getter
-#		self.shemetype.left_zone = self.sett.add("Отступ слева:", "int", "20")
-#		self.shemetype.right_zone = self.sett.add("Отступ справа:", "int", "20")
-		
-		self.shemetype.font_size = common.CONFVIEW.font_size_getter
-		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
+		self.init_taskconf()
 		self.sett.updated.connect(self.redraw)
+		self.shemetype.section_container.updated.connect(self.redraw)
 
-
+		self.shemetype.section_enable.element().updated.connect(self.section_enable_handle)
 
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-#		self.table.addColumn("d", "float", "Диаметр")
-#		self.table.addColumn("dtext", "str", "Текст")
 		self.table.addColumn("l", "float", "Длина")
-		#self.table.addColumn("delta", "float", "Зазор")
 		self.table.updateTable()
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 		self.table2.addColumn("sectname", "str", "Имя")
-		self.table2.addColumn("sharn", "list", "Шарн.", variant=["", "1", "2"])
-		self.table2.addColumn("F", "list", variant=["clean", "+", "-"])
-		self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
-#		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
-		self.table2.addColumn("FT", "str", "Текст")
-		self.table2.addColumn("MT", "str", "Текст")
+		self.table2.addColumn("sharn", "list", "Шарн.", variant=["Нет", "1", "2"])
+		self.table2.addColumn("F", "list", variant=["Нет", "+", "-"])
+		self.table2.addColumn("M", "list", variant=["Нет", "+", "-"])
+		self.table2.addColumn("FT", "str", "Текст F")
+		self.table2.addColumn("MT", "str", "Текст M")
 		self.table2.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
-		self.table1.addColumn("Fr", "list", variant=["clean", "+", "-"])
-		self.table1.addColumn("FrT", "str", "Текст")
+		self.table1.addColumn("Fr", "list", "q", variant=["Нет", "+", "-"])
+		self.table1.addColumn("FrT", "str", "Текст q")
 		self.table1.updateTable()
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
@@ -187,15 +173,37 @@ class PaintWidget(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
 
-
 	def lsum(self):
 		ret = 0
 		for sect in self.sections():
 			ret += sect.l
 		return ret
 
+	def draw_terminator(self, pos, angle, type):
+		#Рисуем терминатор:
+		if type == "Нет":
+			pass
+
+		elif type == "Шарнир":
+			paintool.draw_sharnir_1dim(
+				self.painter, 
+				pnt=QPointF(pos, self.hcenter), 
+				angle=angle, 
+				rad=5.5, 
+				termrad=25, 
+				termx=20, 
+				termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
+	
+		elif type == "Заделка":
+			paintool.draw_zadelka(
+				self.painter, 
+				pnt=QPointF(pos+0.5, self.hcenter), 
+				angle=angle, 
+				termx=25, 
+				termy=15, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)			
+
+
 	def draw_body(self,hcenter, left, right):
-		#painter = QPainter(self)
 		painter = self.painter
 		painter.setFont(self.font)
 
@@ -222,7 +230,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			arrow_size = self.shemetype.arrow_size.get()
 			rad = 60
 	
-			if self.bsections()[i].M != "clean":
+			if self.bsections()[i].M != "Нет":
 				fdown=True
 				pnt = QPoint(wpnts[i], hcenter)
 				if self.bsections()[i].M == "+":
@@ -232,8 +240,6 @@ class PaintWidget(paintwdg.PaintWidget):
 						rad=rad, 
 						angle=deg(60), 
 						angle2=deg(120),
-						#left=True, 
-						#inverse = False, 
 						arrow_size=arrow_size)
 				if self.bsections()[i].M == "-":
 					paintool.half_moment_arrow_common(
@@ -242,11 +248,9 @@ class PaintWidget(paintwdg.PaintWidget):
 						rad=rad, 
 						angle=deg(120), 
 						angle2=deg(60),
-						#left=True, 
-						#inverse = False, 
 						arrow_size=arrow_size)
 
-			if self.bsections()[i].F != "clean":
+			if self.bsections()[i].F != "Нет":
 				apnt=QPoint(wpnts[i], hcenter-rad) 
 				bpnt=QPoint(wpnts[i], hcenter)
 				if fdown:
@@ -265,22 +269,20 @@ class PaintWidget(paintwdg.PaintWidget):
 						bpnt, apnt,
 						arrow_size=self.shemetype.arrow_size.get()
 					)
-					#F_text_policy = "up"
-					#F_level = - sectrad(i) * 3.2/2 + hcenter
 				
-			if self.bsections()[i].M != "clean":
+			if self.bsections()[i].M != "Нет":
 				paintool.draw_text_centered(
 					painter,
 					pnt=QPoint(wpnts[i], hcenter-rad-5), 
 					text=paintool.greek(self.bsections()[i].MT),
 					font=self.font)
 
-			if self.bsections()[i].F != "clean" and fdown == False:
+			if self.bsections()[i].F != "Нет" and fdown == False:
 				painter.drawText(
 					QPoint(wpnts[i]+10, hcenter-rad), 
 					paintool.greek(self.bsections()[i].FT))
 					
-			if self.bsections()[i].F != "clean" and fdown == True:
+			if self.bsections()[i].F != "Нет" and fdown == True:
 				painter.drawText(
 					QPoint(wpnts[i]+10, hcenter+25), 
 					paintool.greek(self.bsections()[i].FT))
@@ -297,7 +299,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		# Отрисовка распределённых нагрузок:
 		for i in range(len(self.sectforce())):
 			#отрисовка распределённой силы.
-			if self.sectforce()[i].Fr != "clean":
+			if self.sectforce()[i].Fr != "Нет":
 				if self.sectforce()[i].Fr == "+":
 					paintool.raspred_force_vertical(painter=painter,
 						apnt=QPoint(wpnts[i], hcenter-3),
@@ -339,36 +341,14 @@ class PaintWidget(paintwdg.PaintWidget):
 				QPoint(wpnts[i+1], hcenter), 
 				hcenter+80)
 			text = util.text_prepare_ltext(self.sections()[i].l)
-			if not self.shemetype.section_enable.get():
-				text += ", EIx"
+			if self.shemetype.postfix.get()[0]:
+				text += self.shemetype.postfix.get()[1]
 			paintool.draw_text_centered(painter, 
 				QPoint((wpnts[i]+wpnts[i+1])/2, 
 					hcenter+80-5), text, self.font)
 
-
-		# Рисуем терминатор:
-		termpos = wpnts[0] if self.shemetype.leftterm.get() == "слева" else wpnts[-1]
-		termangle = math.pi if self.shemetype.leftterm.get() == "слева" else 0
-
-		if self.shemetype.leftterm.get() != "":
-			if self.shemetype.sharnterm.get():
-				paintool.draw_sharnir_1dim(
-						painter, 
-						pnt=QPointF(termpos, hcenter), 
-						angle=termangle, 
-						rad=5.5, 
-						termrad=25, 
-						termx=20, 
-						termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
-	
-			else:
-				paintool.draw_zadelka(
-					painter, 
-					pnt=QPointF(termpos+0.5, hcenter), 
-					angle=termangle, 
-					termx=25, 
-					termy=15, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)			
-	
+		self.draw_terminator(pos=wpnts[0], angle=math.pi, type=self.shemetype.left_node.get())	
+		self.draw_terminator(pos=wpnts[-1], angle=0, type=self.shemetype.right_node.get())
 
 		for i in range(len(self.bsections())):
 			if self.bsections()[i].sharn == "1":
@@ -402,19 +382,6 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		lwidth = self.shemetype.lwidth.get()
 
-#		axis = True
-#		zleft = self.shemetype.zleft.get()
-#		zright = self.shemetype.zright.get()
-
-#		base_section_height = self.shemetype.base_section_height.get()
-#		arrow_size = self.shemetype.arrow_size.get()
-#		arrow_head_size = arrow_size
-#		font_size = self.shemetype.font_size.get()
-#		kamera = self.shemetype.kamera.get()
-#		inkamera = self.shemetype.inkamera.get()
-#		inkamera_dist = self.shemetype.inkamera_dist.get()
-		#razm = self.shemetype.razm.get()
-
 		section_enable = self.shemetype.section_enable.get()
 		task = self.shemetype.task
 
@@ -422,10 +389,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		width = size.width()
 		height = size.height()
 
-#		height_zone = base_section_height
-
-		strt_width = 20#self.shemetype.left_zone.get()
-		fini_width = width-20#width-self.shemetype.right_zone.get()
+		strt_width = 20
+		fini_width = width-20
 
 		actual_width = fini_width - strt_width
 
@@ -433,33 +398,42 @@ class PaintWidget(paintwdg.PaintWidget):
 		hcenter = self.hcenter
 
 
-		if section_enable:
-		#	section_width = actual_width / 4
+		section_width = sections.draw_section_routine(self, hcenter=hcenter, right=fini_width)
+		# if section_enable and self.shemetype.section_container.section_type.get() in sections.section_variant_base:
+		# 	section_width = sections.draw_section(
+		# 		wdg = self,
+		# 		section_type = self.shemetype.section_container.section_type.get(),
+		# 		arg0 = int(self.shemetype.section_container.base_section_widget.arg0.get()),
+		# 		arg1 = int(self.shemetype.section_container.base_section_widget.arg1.get()),
+		# 		arg2 = int(self.shemetype.section_container.base_section_widget.arg2.get()),
+		# 		txt0 = paintool.greek(self.shemetype.section_container.base_section_widget.txt0.get()),
+		# 		txt1 = paintool.greek(self.shemetype.section_container.base_section_widget.txt1.get()),
+		# 		txt2 = paintool.greek(self.shemetype.section_container.base_section_widget.txt2.get()),
+		# 		arrow_size = self.shemetype.arrow_size.get(),
+		# 		right = fini_width,
+		# 		hcenter=hcenter
+		# 	)
 
-			section_width = sections.draw_section(
-				wdg = self,
-				section_type = self.shemetype.section_type.get(),
-				arg0 = int(self.shemetype.section_arg0.get()),
-				arg1 = int(self.shemetype.section_arg1.get()),
-				arg2 = int(self.shemetype.section_arg2.get()),
-	
-				txt0 = paintool.greek(self.shemetype.section_txt0.get()),
-				txt1 = paintool.greek(self.shemetype.section_txt1.get()),
-				txt2 = paintool.greek(self.shemetype.section_txt2.get()),
-				arrow_size = self.shemetype.arrow_size.get(),
-				right = fini_width,
-				hcenter=hcenter
-			)
-			#self.draw_section(
-				#section_width=section_width, 
-			#	right = fini_width,
-			#	hcenter=hcenter
-			#)
+		
+		# elif section_enable: # небазовый список
+		# 	section_width = self.shemetype.section_container.draw(
+		# 		wdg=self,
+		# 		shemetype=self.shemetype, 
+		# 		right=fini_width, 
+		# 		hcenter=hcenter, 
+		# 		arrow_size=self.shemetype.arrow_size.get())
 
-			actual_width -= section_width
-			fini_width -= section_width
+		actual_width -= section_width
+		fini_width -= section_width
 
 		self.draw_body(
 			hcenter=hcenter, left=strt_width, right=fini_width)
 
-		#painter = QPainter(self)
+
+
+
+
+
+
+
+

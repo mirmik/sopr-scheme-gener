@@ -155,14 +155,14 @@ class ContainerWidget(QWidget):
 		
 		if event.type() == QtCore.QEvent.MouseMove:
 			self.mouseMoveEventHandler(event)
-			return True
+			return False
 
 		if event.type() == QtCore.QEvent.MouseButtonPress:
 			self.mousePressEventHandler(event)
-			return True
+			return False
 
 		if event.type() == QtCore.QEvent.MouseButtonRelease:
 			self.mouseReleaseEventHandler(event)
-			return True
+			return False
 
 		return False

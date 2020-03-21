@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import *
 import math
 import paintool
 
+import taskconf_menu
+
 section_variant=[
 	"Круг",  
 	"Толстая труба",
@@ -14,7 +16,192 @@ section_variant=[
 	"Квадрат повёрнутый",
 	"Треугольник",
 	"Квадрат - окружность",
+	"Прямоугольник с прямоугольным отверстием"
 ]
+
+section_variant_base=[
+	"Круг",  
+	"Толстая труба",
+	"Тонкая труба",
+	"Прямоугольник",
+	"Квадрат повёрнутый",
+	"Треугольник",
+	"Квадрат - окружность",
+]
+
+class BaseSectionType(taskconf_menu.TaskConfMenu):
+	def __init__(self):
+		super().__init__()
+		self.txt0 = self.add("Сечение.Текст1:", "str", "D")
+		self.txt1 = self.add("Сечение.Текст2:", "str", "d")
+		self.txt2 = self.add("Сечение.Текст3:", "str", "d")
+		self.arg0 = self.add("Сечение.Аргумент1:", "int", "60")
+		self.arg1 = self.add("Сечение.Аргумент2:", "int", "50")
+		self.arg2 = self.add("Сечение.Аргумент3:", "int", "10")
+
+class RectMinusRect(taskconf_menu.TaskConfMenu):
+	def __init__(self):
+		super().__init__()
+		self.h = self.add("Высота:", ("str", "int"), ("b", "70"))
+		self.w = self.add("Ширина:", ("str", "int"), ("a", "50"))
+		self.hh = self.add("Высота отверстия:", ("str", "int"), ("d", "20"))
+		self.hw = self.add("Ширина отверстия:", ("str", "int"), ("c", "30"))
+		self.s = self.add("Смещение:", ("str", "int"), ("s", "20"))
+
+	def draw(self,
+			wdg,
+			shemetype, 
+			right, 
+			hcenter, 
+			arrow_size):
+		painter = wdg.painter
+
+		h = self.h.get()[1]
+		w = self.w.get()[1]
+		h_text = self.h.get()[0]
+		w_text = self.w.get()[0]
+
+		hh = self.hh.get()[1]
+		hw = self.hw.get()[1]
+		hh_text = self.hh.get()[0]
+		hw_text = self.hw.get()[0]
+
+		s = self.s.get()[1]
+		s_text = self.s.get()[0]
+
+		center = QPoint(right - 20 - 10 - w, hcenter)
+		section_width = w + 120
+		painter.setPen(wdg.pen)
+		painter.setBrush(QBrush(Qt.BDiagPattern))
+		
+		painter.drawRect(
+			QRect(center - QPoint(w,h), center + QPoint(w,h)))
+		
+		painter.setBrush(QBrush(Qt.white))
+		painter.drawRect(
+			QRect(center + QPoint(0,h-s*2) - QPoint(hw,hh*2), center + QPoint(0,h-s*2) + QPoint(hw,0)))
+
+		painter.setPen(wdg.halfpen)
+
+		paintool.draw_dimlines( # вертикальная
+			painter = painter,
+			apnt = center+QPoint(-w,h),
+			bpnt = center+QPoint(-w,-h),
+			offset = QPoint(-18,0),
+			textoff = QPoint(-10, 0),
+			text = h_text,
+			arrow_size = arrow_size / 3 * 2
+		)
+		paintool.draw_dimlines( # горизонтальная
+			painter = painter,
+			apnt = center+QPoint(w,h),
+			bpnt = center+QPoint(-w,h),
+			offset = QPoint(0,23),
+			textoff = QPoint(0, -7),
+			text = w_text,
+			arrow_size = arrow_size / 3 * 2
+		)
+
+
+		paintool.draw_dimlines( # вертикальная отв.
+			painter = painter,
+			apnt = center+QPoint(hw,h-s*2-hh*2),
+			bpnt = center+QPoint(hw,h-s*2),
+			offset = QPoint(w-hw + 18,0),
+			textoff = QPoint(10, 0),
+			text = hh_text,
+			arrow_size = arrow_size / 3 * 2
+		)
+		paintool.draw_dimlines( # горизонтальная отв.
+			painter = painter,
+			apnt = center+QPoint(hw,h-s*2-hh*2),
+			bpnt = center+QPoint(-hw,h-s*2-hh*2),
+			offset = QPoint(0,-h*2+hh*2+s*2-16),
+			textoff = QPoint(0, -7),
+			text = hw_text,
+			arrow_size = arrow_size / 3 * 2
+		)
+
+		paintool.draw_dimlines(
+			painter = painter,
+			apnt = center+QPoint(hw,h),
+			bpnt = center+QPoint(hw,h-s*2),
+			offset = QPoint(w-hw + 18,0),
+			textoff = QPoint(10, 0),
+			text = s_text,
+			arrow_size = arrow_size / 3 * 2
+		)
+
+		painter.setPen(wdg.axpen)
+		#llen = w + 10
+		#painter.drawLine(center + QPoint(-w-10,0), center + QPoint(w+10,0))
+		painter.drawLine(center + QPoint(0,-h-10), center + QPoint(0,h+10))
+		
+		return section_width
+
+
+class SectionContainer(taskconf_menu.TaskConfMenu):
+	#updated = pyqtSignal()
+	class _SectionContainerWidget(QWidget):
+		def __init__(self):
+			super().__init__()
+
+			self.layout = QHBoxLayout()
+			self.stub = QWidget()
+			self.layout.addWidget(self.stub)
+			self.setLayout(self.layout)
+		
+		def replace(self, wdg):
+			self.widget().hide()
+			wdg.show()
+			self.layout.removeWidget(self.layout.itemAt(0).widget())
+			self.layout.addWidget(wdg)
+			self.update()
+
+		def widget(self):
+			return self.layout.itemAt(0).widget()
+
+		def set_stub(self):
+			self.replace(self.stub)
+
+
+	def section_enable_handle(self):
+		if self.checker.get():
+			self.show()
+		else:
+			self.hide()
+	
+	def __init__(self, checker):
+		super().__init__()
+
+		self.checker = checker
+		self.checker.element().updated.connect(self.section_enable_handle)
+		self.base_section_widget = BaseSectionType() 
+		self.base_section_widget.updated.connect(self.updated)
+
+		self.rect_minus_rect = RectMinusRect() 
+		self.rect_minus_rect.updated.connect(self.updated)
+
+		self.updated.connect(self.updated_selfhandle)
+		self.container = self._SectionContainerWidget()
+		self.section_type = self.add("Тип сечения:", "list", defval=4, variant=section_variant)
+		self.add_widget(self.container)
+		self.container.replace(self.base_section_widget)
+		self.oldtype = ""
+
+	def draw(self, *args, **kwargs):
+		return self.container.widget().draw(*args, **kwargs)
+
+	def updated_selfhandle(self):
+		if self.section_type.get() == self.oldtype:
+			return
+		self.oldtype = self.section_type.get()
+
+		if self.section_type.get() in section_variant_base:
+			self.container.replace(self.base_section_widget)
+
+		elif self.section_type.get() == "Прямоугольник с прямоугольным отверстием":
+			self.container.replace(self.rect_minus_rect)		 
 
 def draw_section(wdg, section_type, right, hcenter,
 	arg0, arg1, arg2, txt0, txt1, txt2, arrow_size
@@ -191,15 +378,6 @@ def draw_section(wdg, section_type, right, hcenter,
 			text = txt1,
 			arrow_size = arrow_size / 3 * 2
 		)
-		#paintool.draw_dimlines(
-		#	painter = painter,
-		#	apnt = center+QPoint(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
-		#	bpnt = center+QPoint(- math.cos(math.pi/4) * arg1, - math.sin(math.pi/4) * arg1),
-		#	offset = QPoint(0,0),
-		#	textoff = QPoint(8,-8),
-		#	text = txt2,
-		#	arrow_size = arrow_size / 3 * 2
-		#)
 		painter.setPen(self.axpen)
 		llen = arg0 + 10
 		painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
@@ -292,4 +470,38 @@ def draw_section(wdg, section_type, right, hcenter,
 	else:
 		print("Unresolved section type:", section_type)
 		exit(0)
+	return section_width
+
+
+
+def draw_section_routine(self, hcenter, right):
+	section_enable = self.shemetype.section_enable.get()
+
+	if section_enable and self.shemetype.section_container.section_type.get() in section_variant_base:
+		section_width = draw_section(
+			wdg = self,
+			section_type = self.shemetype.section_container.section_type.get(),
+			arg0 = int(self.shemetype.section_container.base_section_widget.arg0.get()),
+			arg1 = int(self.shemetype.section_container.base_section_widget.arg1.get()),
+			arg2 = int(self.shemetype.section_container.base_section_widget.arg2.get()),
+			txt0 = paintool.greek(self.shemetype.section_container.base_section_widget.txt0.get()),
+			txt1 = paintool.greek(self.shemetype.section_container.base_section_widget.txt1.get()),
+			txt2 = paintool.greek(self.shemetype.section_container.base_section_widget.txt2.get()),
+			arrow_size = self.shemetype.arrow_size.get(),
+			right = right,
+			hcenter=hcenter
+		)
+
+		
+	elif section_enable: # небазовый список
+		section_width = self.shemetype.section_container.draw(
+			wdg=self,
+			shemetype=self.shemetype, 
+			right=right, 
+			hcenter=hcenter, 
+			arrow_size=self.shemetype.arrow_size.get())
+
+	else:
+		section_width = 0
+
 	return section_width

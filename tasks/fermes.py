@@ -4,6 +4,7 @@ import math
 
 import tablewidget
 import util
+import numpy as np
 import paintool
 import taskconf_menu
 
@@ -96,15 +97,6 @@ class ConfWidget_T4(common.ConfWidget):
 		super().__init__(sheme)
 
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "100")
-		#self.shemetype.base_d = self.sett.add("Базовая длина:", "int", "40")
-		#self.shemetype.base_h = self.sett.add("Базовая толщина:", "int", "20")
-		#self.shemetype.zadelka = self.sett.add("Заделка:", "bool", True)
-		#self.shemetype.axis = self.sett.add("Центральная ось:", "bool", True)
-		#self.shemetype.zadelka_len = self.sett.add("Длина заделки:", "float", "30")
-		#self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "float", "20")
-		#self.shemetype.dimlines_step = self.sett.add("Шаг размерных линий:", "float", "40")
-		#self.shemetype.base_height = self.sett.add("Базовая высота стержня:", "int", "10")
 		self.sett.updated.connect(self.redraw)
 
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
@@ -170,22 +162,8 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table2.updated.connect(self.redraw)
 		self.table3.updated.connect(self.redraw)
 
-		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "12")
-
-		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", False)
-		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
-			defval=4,
-			variant=sections.section_variant)
-
-		self.shemetype.section_txt0 = self.sett.add("Сечение.Текст1:", "str", "D")
-		self.shemetype.section_txt1 = self.sett.add("Сечение.Текст2:", "str", "d")
-		self.shemetype.section_txt2 = self.sett.add("Сечение.Текст3:", "str", "d")
-
-		self.shemetype.section_arg0 = self.sett.add("Сечение.Аргумент1:", "int", "60")
-		self.shemetype.section_arg1 = self.sett.add("Сечение.Аргумент2:", "int", "50")
-		self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
-
-		self.shemetype.postfix = self.sett.add("Постфикс:", "str", ",EIx")
+		self.init_taskconf()
+		self.shemetype.section_container.updated.connect(self.redraw)
 
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
@@ -193,18 +171,36 @@ class ConfWidget_T4(common.ConfWidget):
 		
 		self.setLayout(self.vlayout)
 
-	def add_action(self):
-		self.shemetype.task["sections"].append(self.sect())
+	def init_taskconf(self):
+		self.sett.add_delimiter()	
+		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "100")
+		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "12")
+		self.shemetype.postfix = self.sett.add("Постфикс:", "str", ",EIx")
+
+		self.sett.add_delimiter()	
+		self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
+		self.shemetype.section_container = self.sett.add_widget(sections.SectionContainer(self.shemetype.section_enable))
+
+	def section_enable_handle(self):
+		if self.shemetype.section_enable.get():
+			self.section_container.show()
+		else:
+			self.section_container.hide()
+		
+	def add_action(self, strt=("",""), fini=(1,1)):
+		self.shemetype.task["sections"].append(self.sect(strt=strt, fini=fini))
 		self.shemetype.task["betsect"].append(self.betsect())
 		self.shemetype.task["sectforce"].append(self.sectforce())
+		self.shemetype.task["label"].append(self.label())
 		self.redraw()
 		self.updateTables()
 
 	def del_action(self):
-		if len(self.shemetype.task["sections"]) == 1: return
+		if len(self.shemetype.task["sections"]) == 0: return
 		del self.shemetype.task["sections"][-1]
 		del self.shemetype.task["betsect"][-1]
 		del self.shemetype.task["sectforce"][-1]
+		del self.shemetype.task["label"][-1]
 		self.redraw()
 		self.updateTables()
 
@@ -218,10 +214,72 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table2.updateTable()
 		self.table3.updateTable()
 
-class PaintWidget_T4(paintwdg.PaintWidget):
-
+class MouseBox(QObject):
 	def __init__(self):
 		super().__init__()
+
+	def eventFilter(self, obj, ev):
+		if (ev.type==QEvent.MouseMove):
+			print("MouseMove")
+
+		return False
+
+class PaintWidget_T4(paintwdg.PaintWidget):
+	def __init__(self):
+		super().__init__()
+		self.grid_enabled = False
+		self.hovered_point = None
+		self.hovered_point_index = None
+		self.mouse_pressed=False
+		self.point_nodes = []
+		self.setMouseTracking(True)
+		self.filter = MouseBox()
+		self.installEventFilter(self.filter)
+
+	def cartesian(self, aa,bb):
+		ret = []
+		for a in aa:
+			for b in bb:
+				ret.append(QPoint(a,b))
+
+		return ret
+		
+	def draw_grid(self, center, base_length):
+		def circle(p, rad=2, color=Qt.green):
+			self.painter.setBrush(color)
+			self.painter.drawEllipse(QRect(p-QPoint(rad,rad),p+QPoint(rad,rad)))
+			self.painter.setBrush(Qt.black)
+
+		xs = center.x()
+		ys = center.y()
+
+		while xs > 0: xs -= base_length
+		while ys > 0: ys -= base_length
+		xs += base_length
+		ys += base_length
+
+		xf = xs; yf = ys
+		while xf < self.width(): xf += base_length
+		while yf < self.height(): yf += base_length
+
+		xf -= base_length
+		yf -= base_length
+
+		a = np.arange(xs, xf+1, step = base_length)
+		b = np.arange(ys, yf+1, step = base_length)
+
+		if self.hovered_point is not None:
+			circle(self.hovered_point, 4, Qt.red)
+			self.hovered_point_index = (
+				(self.hovered_point.x() - center.x()) / base_length, 
+				-(self.hovered_point.y() - center.y()) / base_length
+			)
+			print(self.hovered_point_index)
+		
+		self.point_nodes = self.cartesian(a,b)
+		for s in self.cartesian(a,b):
+			circle(s)
+
 
 	def paintEventImplementation(self, ev):
 		assert len(self.sections()) == len(self.bsections())
@@ -251,7 +309,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		painter = self.painter
 		painter.setPen(self.pen)
 		painter.setBrush(Qt.white)
-		section_width = self.draw_section(hcenter=(self.height() - hpostfix) / 2) - 10
+		section_width = sections.draw_section_routine(self, hcenter=(self.height() - hpostfix) / 2, right=self.width() - 10) - 10
 		#section_width= 0
 
 		painter.setPen(self.pen)
@@ -267,7 +325,10 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		ymax=0
 
 		last = None
-		for s in self.sections():
+		for i, s in enumerate(self.sections()):
+			if i == 0:
+				if s.xstrt == "": s.xstrt = 0
+				if s.ystrt == "": s.ystrt = 0
 			xstrt = float(s.xstrt) if s.xstrt != "" else float(last.xfini)
 			ystrt = float(s.ystrt) if s.ystrt != "" else float(last.yfini)
 			xfini = float(s.xfini)
@@ -276,7 +337,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 			xmin = min(xmin, xstrt, xfini)
 			xmax = max(xmax, xstrt, xfini)
 			ymin = min(ymin, ystrt, yfini)
-			ymax = max(ymin, ystrt, yfini)
+			ymax = max(ymax, ystrt, yfini)
 
 			last = s
 
@@ -301,6 +362,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 					- yfini * base_length + center.y() + yshift)))
 
 			last = s
+
 
 		
 		# Начинаем рисовать
@@ -368,23 +430,62 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 			elements.draw_element_torque(self, fini, bsect.menr, rad, arrow_size, txt=bsect.mr_txt)
 			elements.draw_element_force(self, strt, bsect.fenl, rad, arrow_size, txt=bsect.fl_txt, alt=bsect.fl_txt_alt)
 			elements.draw_element_force(self, fini, bsect.fenr, rad, arrow_size, txt=bsect.fr_txt, alt=bsect.fr_txt_alt)
-				
-	def draw_section(self, hcenter):
-		if self.shemetype.section_enable.get():
-			section_width = sections.draw_section(
-				wdg = self,
-				section_type = self.shemetype.section_type.get(),
-				arg0 = int(self.shemetype.section_arg0.get()),
-				arg1 = int(self.shemetype.section_arg1.get()),
-				arg2 = int(self.shemetype.section_arg2.get()),
-	
-				txt0 = paintool.greek(self.shemetype.section_txt0.get()),
-				txt1 = paintool.greek(self.shemetype.section_txt1.get()),
-				txt2 = paintool.greek(self.shemetype.section_txt2.get()),
-				arrow_size = self.shemetype.arrow_size.get(),
-				right = self.width() - 10,
-				hcenter=hcenter
-			)
+			
+		if self.grid_enabled:
+			#if len(coordes) == 0:
+			self.draw_grid(center+QPointF(xshift,yshift), base_length)
 
-			return section_width
-		return 0
+		if self.mouse_pressed:
+			painter.drawLine(self.pressed_point, self.hovered_point)
+
+			#else:
+			#	self.draw_grid(coordes[0][0], base_length)
+
+	def enterEvent(self, ev):
+		self.grid_enabled = True
+		self.update()
+
+	def leaveEvent(self, ev):
+		self.grid_enabled = False
+		self.update()
+
+	def mouseMoveEvent(self, ev):
+		pos = ev.pos()
+		old_hovered_point = self.hovered_point
+
+		if pos.x() < 20 or self.width() - pos.x() < 20: return
+		if pos.y() < 20 or self.height() - pos.y() < 20: return
+
+		t = None
+		mindist = 10000000  
+		for s in self.point_nodes:
+			xdiff = s.x() - pos.x()
+			ydiff = s.y() - pos.y()
+			dist = math.sqrt(xdiff**2 + ydiff**2)
+			if dist < mindist:
+				mindist = dist
+				t = s
+		self.hovered_point = t
+
+		if self.hovered_point != old_hovered_point:
+			self.update()
+
+	def mousePressEvent(self, ev):
+		self.mouse_pressed=True
+		self.pressed_point = self.hovered_point
+		self.pressed_point_index = self.hovered_point_index
+
+	def mouseReleaseEvent(self, ev):
+		self.mouse_pressed=False
+		self.release_point = self.hovered_point
+
+		if self.pressed_point != self.release_point:
+			if len(self.shemetype.confwidget.sections()) == 0:
+				self.hovered_point_index = (self.hovered_point_index[0] - self.pressed_point_index[0], self.hovered_point_index[1]-self.pressed_point_index[1]) 
+				self.pressed_point_index = (0,0)
+
+			self.pressed_point_index = (round(self.pressed_point_index[0]), round(self.pressed_point_index[1]))
+			self.hovered_point_index = (round(self.hovered_point_index[0]), round(self.hovered_point_index[1]))
+			
+			self.shemetype.confwidget.add_action(self.pressed_point_index,self.hovered_point_index)
+			self.update()
