@@ -46,7 +46,7 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		self.w = self.add("Ширина:", ("str", "int"), ("a", "50"))
 		self.hh = self.add("Высота отверстия:", ("str", "int"), ("d", "20"))
 		self.hw = self.add("Ширина отверстия:", ("str", "int"), ("c", "30"))
-		self.s = self.add("Смещение:", ("str", "int"), ("s", "20"))
+		self.s = self.add("Смещение:", ("bool", "str", "int"), (False, "s", "20"))
 
 	def draw(self,
 			wdg,
@@ -66,8 +66,11 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		hh_text = self.hh.get()[0]
 		hw_text = self.hw.get()[0]
 
-		s = self.s.get()[1]
-		s_text = self.s.get()[0]
+		s = self.s.get()[2]
+		s_text = self.s.get()[1]
+
+		if self.s.get()[0]:
+			s=0
 
 		center = QPoint(right - 20 - 10 - w, hcenter)
 		section_width = w + 120
@@ -134,7 +137,8 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 
 		painter.setPen(wdg.axpen)
 		#llen = w + 10
-		#painter.drawLine(center + QPoint(-w-10,0), center + QPoint(w+10,0))
+		if s == 0:
+			painter.drawLine(center + QPoint(-w-10,0), center + QPoint(w+10,0))
 		painter.drawLine(center + QPoint(0,-h-10), center + QPoint(0,h+10))
 		
 		return section_width
