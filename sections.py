@@ -72,12 +72,12 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		s_edge = self.edge.get() != "Нет"
 
 		if self.edge.get() == "Верх":
-			s = h/2 + hw/2
+			s = h - hh
 
 		if self.edge.get() == "Низ":
 			s = 0
 
-		if self.s.get()[0]:
+		if self.s.get()[0] and not s_edge:
 			s=(h-hh)/2
 
 		center = QPoint(right - 20 - 10 - w, hcenter)
