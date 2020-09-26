@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
 
 	def make_picture_action(self):
 		filters = "*.png;;*.jpg;;*.*"
-		defaultFilter = "*.jpg"
+		defaultFilter = "*.png"
 
 		path, ext = QFileDialog.getSaveFileName(
 			self, "Сохранить изображение", 
@@ -245,7 +245,7 @@ class MainWindow(QMainWindow):
 
 	def load_action(self):
 		filters = "*.png;;*.jpg;;*.*"
-		defaultFilter = "*.jpg"
+		defaultFilter = "*.png"
 
 		path, ext = QFileDialog.getOpenFileName(
 			self, "Загрузить схему", 
