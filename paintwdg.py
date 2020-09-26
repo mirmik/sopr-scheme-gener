@@ -133,6 +133,11 @@ class PaintWidget(QWidget):
 		self.widegreen.setWidth(lwidth*2)
 		self.widegreen.setColor(Qt.green)
 		paintool.widegreen = self.widegreen
+
+		self.green = QPen()
+		self.green.setWidth(lwidth*2)
+		self.green.setColor(Qt.green)
+		paintool.green = self.green
 		
 		self.default_brush = QBrush(Qt.SolidPattern)
 		self.default_brush.setColor(Qt.white)

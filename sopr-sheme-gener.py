@@ -10,6 +10,8 @@ import sys
 import argparse
 import pickle
 
+import collections
+
 import util
 
 import tasks.task0
@@ -25,6 +27,7 @@ import tasks.kosoi
 import common
 import container
 import paintwdg
+import paintool
 
 QAPP = None
 
@@ -60,8 +63,8 @@ class CentralWidget(QWidget):
 			tasks.task0.ShemeTypeT0(),
 			#task0kr.ShemeTypeT01(),
 			tasks.balki.ShemeType(),
-			tasks.star.ShemeTypeT1(),
 			tasks.sharn_sterhen.ShemeTypeT2(),
+			tasks.star.ShemeTypeT1(),
 			tasks.plastina.ShemeTypeT3(),
 			tasks.fermes.ShemeTypeT4(),
 			tasks.ar3d.ShemeType(),
@@ -200,11 +203,11 @@ class MainWindow(QMainWindow):
 		)
 
 	def save_last_dirpath(self, lastdir):
-		settings = QSettings()
+		settings = QSettings("sopr-scheme-gener", "sopr-scheme-gener")
 		settings.setValue("lastdir", lastdir)
 
 	def get_last_dirpath(self):
-		settings = QSettings()
+		settings = QSettings("sopr-scheme-gener", "sopr-scheme-gener")
 		return settings.value("lastdir", None)
 
 	def make_picture_action(self):
@@ -291,6 +294,32 @@ class MainWindow(QMainWindow):
 	def pre_picture_action(self):
 		self.cw.current_scheme().paintwidget.predraw_dialog()
 
+	def greek_action(self):
+		txt = ""
+		
+		tbl = collections.OrderedDict()
+		for t in paintool.greek_data:
+			if t[1] in tbl:
+				tbl[t[1]][t[0]]= t[0]
+			else:
+				tbl[t[1]] = collections.OrderedDict()
+				tbl[t[1]][t[0]] = t[0]
+
+		for k, v in tbl.items():
+			kkk = ""
+			for l in v.keys():
+				kkk += "{} ".format(l)
+			txt += "{} : {}\r\n".format(k, kkk) 
+		
+		QMessageBox.about(
+			self,
+			self.tr("Справка по греческому алфавиту"),
+			(
+				txt
+			),
+		)
+
+
 	def create_action(self, text, action, tip, shortcut=None, checkbox=False):
 		act = QAction(self.tr(text), self)
 		act.setStatusTip(self.tr(tip))
@@ -310,6 +339,7 @@ class MainWindow(QMainWindow):
 		self.MakePictureAction = self.create_action("Сохранить изображение/схему...", self.make_picture_action, "Сохранение изображение/схему")
 		self.LoadAction = self.create_action("Загрузить схему...", self.load_action, "Загрузить схему")
 		self.PrePictureAction = self.create_action("Показать изображение...", self.pre_picture_action, "Показать изображение")
+		self.GreekAction = self.create_action("Греческий и спецсимволы", self.greek_action, "Показать справку по греческому алфавиту и спецсимволам")
 		self.ExitAction = self.create_action("Выход", self.close, "Выход", "Ctrl+Q")
 		self.AboutAction = self.create_action("О программе", self.action_about, "Информация о приложении")
 
@@ -322,6 +352,7 @@ class MainWindow(QMainWindow):
 		self.FileMenu.addAction(self.PrePictureAction)
 		self.FileMenu.addAction(self.ExitAction)
 		self.HelpMenu.addAction(self.AboutAction)
+		self.HelpMenu.addAction(self.GreekAction)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--type", default="-1")

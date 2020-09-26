@@ -13,12 +13,14 @@ class Element(QWidget):
 		         type, 
 		         defval=None, 
 		         variant=None,
-		         vars=None):
+		         vars=None,
+		         serlbl=None):
 		super().__init__()
 		self.label = QLabel(label)
 		self.type = type
 		self.vars = vars
 		self.variant = variant
+		self.serlbl = serlbl
 
 		self.label.setFixedWidth(200)
 		self.layout = QHBoxLayout()
@@ -72,6 +74,9 @@ class Element(QWidget):
 			def element(self):
 				return self.parent
 
+			def label(self):
+				return self.parent.label
+
 			def _get(self, type, obj):
 				if (type == "text" or type == "str"):
 					return obj.text()
@@ -103,31 +108,44 @@ class Element(QWidget):
 				else:
 					return self._get(self.type, self.obj)
 				
+			def _set(self, type, obj, val):
+				if (type == "text" or type=="str"):
+					obj.setText(val)
+					return 
+
+				if (type == "int"):
+					obj.setText(str(val))
+					return 
+
+				if (type == "list"):
+					idx=val
+					if isinstance(val, str):
+						for i in range(len(self.parent.vars)):
+							if val == self.parent.vars[i]:
+								idx = i
+								break						
+					obj.setCurrentIndex(idx)
+					return 
+
+				if (type == "float"):
+					obj.setText(str(val))
+					return 
+
+				if (type == "bool"):
+
+					obj.setCheckState(Qt.Checked if val else Qt.Unchecked)
+					return 
+
+				print("strange type", type, val)
+
 
 			def set(self, val):
-				if (self.type == "text" or self.type=="str"):
-					self.obj.setText(val)
-					return 
+				if isinstance(self.type, tuple):
+					for i in range(len(self.type)):
+						self._set(self.type[i], self.obj[i], val[i])
 
-				if (self.type == "int"):
-					self.obj.setText(str(val))
-					return 
-
-				if (self.type == "list"):
-					self.obj.setCurrentIndex(val)
-					return 
-
-				if (self.type == "float"):
-					self.obj.setText(str(val))
-					return 
-
-				if (self.type == "bool"):
-
-					self.obj.setCheckState(Qt.Checked if val else Qt.Unchecked)
-					return 
-
-				print("strange type", self.type, val)
-
+				else:
+					self._set(self.type, self.obj, val)
 
 		return getcls(self.obj, self.type, parent=self)
 
@@ -141,7 +159,10 @@ class TaskConfMenu(QWidget):
 		self.setLayout(self.layout)
 
 	def add(self, label, type, defval=None, variant=None, vars=None,
-			handler=None):
+			handler=None, serlbl=None):
+		if serlbl is None:
+			serlbl = label
+
 		if vars is None:
 			vars = variant
 
@@ -150,7 +171,8 @@ class TaskConfMenu(QWidget):
 			type=type, 
 			defval=defval, 
 			variant=variant,
-			vars=vars)
+			vars=vars,
+			serlbl=serlbl)
 		
 		self.layout.addWidget(el)
 		el.updated.connect(self.updated)
@@ -173,9 +195,23 @@ class TaskConfMenu(QWidget):
 		return wdg
 
 	def serialize(self):
-		return pickle.dumps([ g.get() for g in self.getters ])
+		return pickle.dumps({ g.label().text() : g.get() for g in self.getters })
+		
+		# old style saving:
+		#return pickle.dumps([ g.get() for g in self.getters ])
 
 	def deserialize(self, ppp):
 		ppp = pickle.loads(ppp)
-		for i in range(len(self.getters)):
-			self.getters[i].set(ppp[i])
+		print(ppp)
+
+		if (isinstance(ppp, list)):
+			for i in range(len(self.getters)):
+				self.getters[i].set(ppp[i])
+
+		elif isinstance(ppp, dict):
+			for i in range(len(self.getters)):
+				for k,v in ppp.items():
+					if self.getters[i].parent.serlbl == k:
+						self.getters[i].set(v)
+		else:
+			util.error_msgbox("unresolved deserializated type")

@@ -24,8 +24,12 @@ class ConfWidget_T2(common.ConfWidget):
 	class sect:
 		def __init__(self, 
 			l=1, 
+			label="",
+			label_height = 20
 		):
 			self.l = l
+			self.label = label
+			self.label_height = label_height
 
 	class betsect:
 		def __init__(self, 
@@ -34,6 +38,11 @@ class ConfWidget_T2(common.ConfWidget):
 			lbl="",
 			F = "нет",
 			Ftxt="",
+			sterzn_text1="",
+			sterzn_text2="",
+			sterzn_text_horizontal=True,
+			sterzn_text_alt=False,
+			sterzn_text_off=0,
 			F2 = "нет",
 			F2txt="",
 			zazor = False,
@@ -43,6 +52,13 @@ class ConfWidget_T2(common.ConfWidget):
 			self.l = l
 			self.A = A
 			self.lbl = lbl
+
+			self.sterzn_text1 = sterzn_text1
+			self.sterzn_text2 = sterzn_text2
+			self.sterzn_text_horizontal=sterzn_text_horizontal
+			self.sterzn_text_alt=sterzn_text_alt
+			self.sterzn_text_off=sterzn_text_off
+
 			self.F = F
 			self.Ftxt = Ftxt
 			self.F2 = F2
@@ -72,40 +88,75 @@ class ConfWidget_T2(common.ConfWidget):
 	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("l", "float", "Длина секции")
+		self.table.addColumn("label", "str", "Подпись")
+		self.table.addColumn("label_height", "float", "Расположение подписи")
 		self.table.updateTable()
 
+		self.table3 = tablewidget.TableWidget(self.shemetype, "betsect")
+		self.table3.addColumn("l", "float", "Длина опоры")
+		self.table3.addColumn("A", "float", "Площадь(А)")
+		self.table3.addColumn("sterzn_text1", "str", "Текст1")
+		self.table3.addColumn("sterzn_text2", "str", "Текст2")
+		self.table3.addColumn("sterzn_text_off", "float", "ТСмещ.")
+		self.table3.addColumn("sterzn_text_horizontal", "bool", "Гориз./Верт.")
+		self.table3.addColumn("sterzn_text_alt", "bool", "Слева./Справа.")
+		self.table3.addColumn("sharn", "list", "Шарнир", variant=["нет", "1", "2"])
+		self.table3.updateTable()
+		
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("l", "float", "Длина опоры")
-		self.table2.addColumn("A", "float", "Площадь(А)")
 		self.table2.addColumn("lbl", "str", "Метка")
 		self.table2.addColumn("F", "list", "Сила", variant=["нет", "+", "-"])
 		self.table2.addColumn("Ftxt", "str", "Текст")
 		self.table2.addColumn("F2", "list", "Ст.Сила", variant=["нет", "+", "-"])
 		self.table2.addColumn("F2txt", "str", "Ст.Текст")
 		self.table2.addColumn("zazor", "bool", "Зазор")
-		self.table2.addColumn("zazor_txt", "str", "Текст")
-		self.table2.addColumn("sharn", "list", variant=["нет", "1", "2"])
-		self.table2.updateTable()
+		self.table2.addColumn("zazor_txt", "str", "З.Текст")
+		self.table2.updateTable()		
 		
+
+		self.vlayout.addWidget(QLabel("Геометрия секций:"))
 		self.vlayout.addWidget(self.table)
+		self.vlayout.addWidget(QLabel("Геометрия стержня, шарниры:"))
+		self.vlayout.addWidget(self.table3)
+		self.vlayout.addWidget(QLabel("Силы прилож. к стержню, зазоры, метки:"))
 		self.vlayout.addWidget(self.table2)
 		self.vlayout.addWidget(self.sett)
 
 		self.table.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
+		self.table3.updated.connect(self.redraw)
+
+		self.table2.hover_hint.connect(self.hover_node)
+		self.table3.hover_hint.connect(self.hover_node)
+
+		self.table2.unhover.connect(self.table_unhover)
+		self.table3.unhover.connect(self.table_unhover)
 
 		self.vlayout.addWidget(self.shemetype.texteditor)
+
+	def hover_node(self, row, column, hint):
+		self.shemetype.paintwidget.highlited_node = (hint, row)
+		self.redraw()
+
+		self.save_row = row
+		self.save_hint = hint
+
+	def table_unhover(self):
+		self.shemetype.paintwidget.highlited_node = None
+		self.redraw()
 		
 
 	"""Виджет настроек задачи T0"""
 	def __init__(self, sheme):
 		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.zadelka = self.sett.add("Заделка:", "list", defval=0, variant=["нет", "1", "2"])
+		self.shemetype.zadelka1 = self.sett.add("Шарнир слева:", "list", serlbl="Заделка:", defval=0, variant=["нет", "1", "2"])
+		self.shemetype.zadelka2 = self.sett.add("Шарнир справа:", "list", defval=0, variant=["нет", "1", "2"])
 		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "22")
-		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "70")
-		self.shemetype.dimlines_level2 = self.sett.add("Уровень размерных линий2:", "int", "60")
-		self.shemetype.arrow_size = self.sett.add("Размер стрелок:", "int", "10")
+		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "80")
+		self.shemetype.dimlines_level2 = self.sett.add("Отступ справа:", "int", "60")
+		self.shemetype.sterzn_off = self.sett.add("Вынос стрелок для сил в стержнях:", "int", "28")
+		self.shemetype.arrow_size = self.sett.add("Размер стрелок сил:", "int", "14")
 		self.sett.updated.connect(self.redraw)
 
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
@@ -147,6 +198,7 @@ class ConfWidget_T2(common.ConfWidget):
 class PaintWidget_T2(paintwdg.PaintWidget):
 
 	def __init__(self):
+		self.highlited_node=None
 		super().__init__()
 
 	def paintEventImplementation(self, ev):
@@ -167,6 +219,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		arrow_size = self.shemetype.arrow_size.get()
 		dimlines_level = self.shemetype.dimlines_level.get()
 		dimlines_level2 = self.shemetype.dimlines_level2.get()
+		sterzn_off = self.shemetype.sterzn_off.get()
 
 		font = self.painter.font()
 		font.setItalic(True)
@@ -191,7 +244,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		left_span = 60
 		right_span = 30 if not hasright else 10 + dimlines_level2
 		up_span = 30
-		down_span = 20 if hasnegative else 10 + dimlines_level
+		down_span = 30 if hasnegative else 10 + dimlines_level
 		down_span += self.text_height
 
 		smax = 0
@@ -222,6 +275,9 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 
 		def xnode(n):
+			if n==-1:
+				n = len(sects)
+
 			x = 0
 			for i in range(n): x += sects[i].l * lkoeff
 			return left_span + x
@@ -248,13 +304,25 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 		self.painter.setBrush(Qt.white)
 
-
-
-
 		self.painter.drawLine(lu, ru)
 		self.painter.drawLine(lu, ld)
 		self.painter.drawLine(ld, rd)
 		self.painter.drawLine(rd, ru)
+
+		self.painter.setPen(self.halfpen)
+		for i in range(len(sects)):
+			if sects[i].label != "":
+				elements.draw_text_by_points(
+					self,
+					QPoint(xnode(i), hbase-sects[i].label_height), 
+					QPoint(xnode(i+1), hbase-sects[i].label_height), 
+					txt=paintool.greek(sects[i].label) + ("" if sects[i].label_height > -20 else "  "),
+					alttxt=True,
+					polka=QPointF((xnode(i+1) + xnode(i)) / 2, hbase+base_height/2)
+				)
+
+		self.painter.setPen(self.pen)
+
 
 		#Рисуем стержни
 		for i in range(len(bsects)):
@@ -286,17 +354,30 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				
 				if bsects[i].zazor is False:
 					self.painter.setPen(self.doublepen)
+					if self.highlited_node and self.highlited_node[1] == i:
+						self.painter.setPen(self.widegreen)
+
 					self.painter.drawLine(strt, fini)
 				
 					self.painter.setPen(self.pen)
+					if self.highlited_node and self.highlited_node[1] == i:
+						self.painter.setPen(self.green)
 					self.painter.drawEllipse(paintool.radrect(strt, 4))
 
 				else:
 					self.painter.setPen(self.doublepen)
+				
+					if self.highlited_node and self.highlited_node[1] == i:
+						self.painter.setPen(self.widegreen)
+
 					self.painter.drawLine(strt_z, fini)				
 					self.painter.setPen(self.pen)					
 
 					self.painter.setPen(self.halfpen)
+		
+					if self.highlited_node and self.highlited_node[1] == i:
+						self.painter.setPen(self.green)
+
 					paintool.draw_dimlines(
 						painter=self.painter, 
 						apnt=strt, 
@@ -328,67 +409,89 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 				txt = txt+","+txt2
 				txt_var2 = txt_var2+","+txt2
+				txt_var1 = txt_var2
+
+				if bsects[i].sterzn_text1:
+					txt = bsects[i].sterzn_text1
+					txt_var1 = txt
+
+				if bsects[i].sterzn_text2:
+					txt_var2 = bsects[i].sterzn_text2
 
 				dimlines_level2=0
-				if bsects[i].F2 == "нет":
-				#	paintool.dimlines_vertical(self.painter,
-				#		QPoint(xnode(i), hbase + ap),
-				#		QPoint(xnode(i), hbase + bp),
-				#		xnode(i) + dimlines_level2)
+
+
+				center= QPointF(xnode(i)+dimlines_level2, hbase)
+				alttxt = False
+
+				if bsects[i].l < 0:
+					ap = ap + base_height
+	
+				cp = (ap+bp)/2
 				
-					if bsects[i].l > 0:
-						elements.draw_text_by_points_angled(
-							self,
-							QPoint(xnode(i)+dimlines_level2, hbase + ap),
-							QPoint(xnode(i)+dimlines_level2, hbase + bp),
-							txt=txt,
-							alttxt=False
-						)
+				offset = QPointF(0, -bsects[i].sterzn_text_off)
+				if bsects[i].sterzn_text_horizontal:
+					offfff = 10
+					if bsects[i].sterzn_text_alt:
+						a = center + QPointF(0,(ap+bp)/2) + QPointF(-QFontMetrics(self.font).width(txt)-offfff, QFontMetrics(self.font).height()/2) + offset
+						b = center + QPointF(0,(ap+bp)/2) + QPointF(0, QFontMetrics(self.font).height()/2) + offset
+						a1 = center + QPointF(0,(ap+cp)/2) + QPointF(-QFontMetrics(self.font).width(txt_var1)-offfff, QFontMetrics(self.font).height()/2)
+						b1 = center + QPointF(0,(ap+cp)/2) + QPointF(0, QFontMetrics(self.font).height()/2)
+						a2 = center + QPointF(0,(cp+bp)/2) + QPointF(-QFontMetrics(self.font).width(txt_var2)-offfff, QFontMetrics(self.font).height()/2)
+						b2 = center + QPointF(0,(cp+bp)/2) + QPointF(0, QFontMetrics(self.font).height()/2)
+
 					else:
-						elements.draw_text_by_points_angled(
-							self,
-							QPoint(xnode(i)+dimlines_level2, hbase + ap),
-							QPoint(xnode(i)+dimlines_level2, hbase + (ap+bp)/2),
-							txt=txt,
-							alttxt=False
-						)
-						
+						a = center + QPointF(0,(ap+bp)/2) + QPointF(0, QFontMetrics(self.font).height()/2) + offset
+						b = center + QPointF(0,(ap+bp)/2) + QPointF(QFontMetrics(self.font).width(txt)+offfff, QFontMetrics(self.font).height()/2) + offset
+						a1 = center + QPointF(0,(ap+cp)/2) + QPointF(0, QFontMetrics(self.font).height()/2)
+						b1 = center + QPointF(0,(ap+cp)/2) + QPointF(QFontMetrics(self.font).width(txt_var1)+offfff, QFontMetrics(self.font).height()/2)
+						a2 = center + QPointF(0,(cp+bp)/2) + QPointF(0, QFontMetrics(self.font).height()/2)
+						b2 = center + QPointF(0,(cp+bp)/2) + QPointF(QFontMetrics(self.font).width(txt_var2)+offfff, QFontMetrics(self.font).height()/2)
+
+				else:
+					a = center + QPointF(0,ap) + offset
+					b = center + QPointF(0,bp) + offset
+					a1 = center + QPointF(0,ap)
+					b1 = center + QPointF(0,cp)
+					a2 = center + QPointF(0,cp)
+					b2 = center + QPointF(0,bp)
+					alttxt = not bsects[i].sterzn_text_alt
+
+
+				if bsects[i].F2 == "нет":							
+					elements.draw_text_by_points_angled(
+						self,
+						a,
+						b,
+						txt=txt,
+						alttxt=alttxt,
+						off = 15
+					)
 
 				else:
 					cp = (ap+bp)/2
-					#paintool.dimlines_vertical(self.painter,
-					#	QPoint(xnode(i), hbase + ap),
-					#	QPoint(xnode(i), hbase + cp),
-					#	xnode(i) + dimlines_level2)
-					#paintool.dimlines_vertical(self.painter,
-					#	QPoint(xnode(i), hbase + cp),
-					#	QPoint(xnode(i), hbase + bp),
-					#	xnode(i) + dimlines_level2)
 					elements.draw_text_by_points_angled(
 						self,
-						QPoint(xnode(i)+dimlines_level2, hbase + ap),
-						QPoint(xnode(i)+dimlines_level2, hbase + cp),
-						txt=txt_var2,
-						alttxt=False
+						a1, b1,
+#						QPoint(xnode(i)+dimlines_level2, hbase + ap),
+#						QPoint(xnode(i)+dimlines_level2, hbase + cp),
+						txt=txt_var1,
+						alttxt=alttxt,
+						off = 15
 					)
 					elements.draw_text_by_points_angled(
 						self,
-						QPoint(xnode(i)+dimlines_level2, hbase + cp),
-						QPoint(xnode(i)+dimlines_level2, hbase + bp),
+						a2, b2,
+#						QPoint(xnode(i)+dimlines_level2, hbase + cp),
+#						QPoint(xnode(i)+dimlines_level2, hbase + bp),
 						txt=txt_var2,
-						alttxt=False
+						alttxt=alttxt,
+						off = 15
 					)
-					
+
+				self.painter.setPen(self.halfpen)
 				if bp == 0:
 					cp = ap/2
-				#	elements.draw_text_by_points(
-				#		self,
-				#		QPoint(xnode(i), hbase+cp),
-				#		QPoint(xnode(i), hbase+ap),
-				#		txt=txt2,
-				#		alttxt=False
-				#	)
-
 					# рисуем метку
 					if bsects[i].lbl != "":
 						elements.draw_text_by_points(
@@ -398,27 +501,16 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 							txt=paintool.greek(bsects[i].lbl),
 							alttxt=False,
 							polka=QPointF(xnode(i), hbase+cp/2+5)
-
 						)					
-
-
 				if ap == 0:
 					cp = bp/2
-				#	elements.draw_text_by_points(
-				#		self,
-				#		QPoint(xnode(i), hbase+bp),
-				#		QPoint(xnode(i), hbase+cp),
-				#		txt=txt2,
-				#		alttxt=False
-				#	)
-
 					if bsects[i].lbl != "":
 						elements.draw_text_by_points(
 							self,
 							QPoint(xnode(i), hbase+ap),
 							QPoint(xnode(i), hbase+cp),
 							txt=paintool.greek(bsects[i].lbl),
-							alttxt=True,
+							alttxt=False,
 							polka=QPointF(xnode(i), hbase+cp/2+5)
 
 						)						
@@ -426,61 +518,84 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				self.painter.setPen(self.pen)
 				self.painter.setBrush(Qt.white)
 
+			if bsects[i].l == 0:
+				if bsects[i].lbl != "":
+					self.painter.setPen(self.halfpen)
+					elements.draw_text_by_points(
+						self,
+						QPoint(xnode(i), hbase),
+						QPoint(xnode(i), hbase-60),
+						txt=paintool.greek(bsects[i].lbl),
+						alttxt=False,
+						polka=QPointF(xnode(i), hbase)
+					)						
+	
+				if self.highlited_node and self.highlited_node[1] == i:
+					self.painter.setPen(self.green)
+					self.painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase), 4))
+
+
+		self.painter.setPen(self.pen)
+		self.painter.setBrush(Qt.white)
+
 		# Рисуем силы
 		for i in range(len(bsects)):
 			if bsects[i].F != "нет":
 				if bsects[i].l > 0:
 					type = "снизу к" if bsects[i].F == "+" else "снизу от"
 					pnt = QPointF(xnode(i), hbase+base_height) 
+					arrow_length = (dimlines_level-base_height)*2/3
 				else:
 					type = "сверху от" if bsects[i].F == "+" else "сверху к"
 					pnt = QPointF(xnode(i), hbase)
+					arrow_length = dimlines_level*2/3
 					
 				elements.draw_element_force(self, 
 					pnt, type, 
-					dimlines_level*2/3, arrow_size, bsects[i].Ftxt, 
+					arrow_length, arrow_size, bsects[i].Ftxt, 
 					True, pen=self.pen)
-
 
 			if bsects[i].F2 != "нет":
 				h = bsects[i].l * hkoeff
+				arrow_size_2 = arrow_size
+				arrow_size_3 = 28
 				if bsects[i].l != 0:
 					if bsects[i].F2 == "+":
 						paintool.common_arrow(self.painter, 
-							QPointF(xnode(i)+15, hbase - h/2), 
-							QPointF(xnode(i)+15, hbase - h/2 - dimlines_level/2.5), 
-							arrow_size)
+							QPointF(xnode(i)+sterzn_off, hbase - h/2), 
+							QPointF(xnode(i)+sterzn_off, hbase - h/2 - arrow_size_3), 
+							arrow_size_2)
 	
 						paintool.common_arrow(self.painter, 
-							QPointF(xnode(i)-15, hbase - h/2), 
-							QPointF(xnode(i)-15, hbase - h/2 - dimlines_level/2.5), 
-							arrow_size)
+							QPointF(xnode(i)-sterzn_off, hbase - h/2), 
+							QPointF(xnode(i)-sterzn_off, hbase - h/2 - arrow_size_3), 
+							arrow_size_2)
 	
 						self.painter.setPen(self.halfpen)
 						self.painter.drawLine(
-							QPointF(xnode(i)-15, hbase - h/2),
-							QPointF(xnode(i)+15, hbase - h/2)
+							QPointF(xnode(i)-sterzn_off, hbase - h/2),
+							QPointF(xnode(i)+sterzn_off, hbase - h/2)
 						)
 					else:
 						paintool.common_arrow(self.painter, 
-							QPointF(xnode(i)+15, hbase - h/2), 
-							QPointF(xnode(i)+15, hbase - h/2 + dimlines_level/2.5), 
-							arrow_size)
+							QPointF(xnode(i)+sterzn_off, hbase - h/2), 
+							QPointF(xnode(i)+sterzn_off, hbase - h/2 + arrow_size_3), 
+							arrow_size_2)
 		
 						paintool.common_arrow(self.painter, 
-							QPointF(xnode(i)-15, hbase - h/2), 
-							QPointF(xnode(i)-15, hbase - h/2 + dimlines_level/2.5), 
-							arrow_size)
+							QPointF(xnode(i)-sterzn_off, hbase - h/2), 
+							QPointF(xnode(i)-sterzn_off, hbase - h/2 + arrow_size_3), 
+							arrow_size_2)
 		
 						self.painter.setPen(self.halfpen)
 						self.painter.drawLine(
-							QPointF(xnode(i)-15, hbase - h/2),
-							QPointF(xnode(i)+15, hbase - h/2)
+							QPointF(xnode(i)-sterzn_off, hbase - h/2),
+							QPointF(xnode(i)+sterzn_off, hbase - h/2)
 						)
 					if bsects[i].F2txt != "":
 						elements.draw_text_by_points(self, 
-							QPointF(xnode(i)-15, hbase - h/2 - dimlines_level/5), 
-							QPointF(xnode(i)-15, hbase - h/2 + dimlines_level/5), 
+							QPointF(xnode(i)-sterzn_off, hbase - h/2 - dimlines_level/5), 
+							QPointF(xnode(i)-sterzn_off, hbase - h/2 + dimlines_level/5), 
 							txt = bsects[i].F2txt,
 							alttxt = False,
 							off = 10)
@@ -489,7 +604,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 		# Рисуем заделку на левом крае
 		self.painter.setPen(self.doublepen)
-		if self.shemetype.zadelka.get() == "2":
+		if self.shemetype.zadelka1.get() == "2":
 			#paintool.zadelka_sharnir_type2(self.painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
 			elements.draw_element_sharn(self, 
 				pnt=QPoint(xnode(0), hbase+base_height/2), 
@@ -499,10 +614,29 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				termy=10,
 				rad=4)
 
-		elif self.shemetype.zadelka.get() == "1":
+		elif self.shemetype.zadelka1.get() == "1":
 			elements.draw_element_sharn(self, 
 				pnt=QPoint(xnode(0), hbase+base_height/2), 
 				type="слева врез1", 
+				termrad=25,
+				termx=25,
+				termy=10,
+				rad=4)
+
+		if self.shemetype.zadelka2.get() == "2":
+			#paintool.zadelka_sharnir_type2(self.painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
+			elements.draw_element_sharn(self, 
+				pnt=QPoint(xnode(-1), hbase+base_height/2), 
+				type="справа шарн2", 
+				termrad=25,
+				termx=25,
+				termy=10,
+				rad=4)
+
+		elif self.shemetype.zadelka2.get() == "1":
+			elements.draw_element_sharn(self, 
+				pnt=QPoint(xnode(-1), hbase+base_height/2), 
+				type="справа врез1", 
 				termrad=25,
 				termx=25,
 				termy=10,

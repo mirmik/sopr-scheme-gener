@@ -97,6 +97,7 @@ class TableWidget(QTableWidget):
 					variant = self.columns[i].variant
 
 					obj = QComboBox()
+					obj.installEventFilter(self)
 					#obj.setFixedWidth(0)
 					obj.addItems(variant)
 					obj.sig = sig

@@ -545,15 +545,10 @@ def kr_arrow(painter, pnt, rad, circ, inverse=False):
 	painter.setPen(pen)
 
 import copy
-def greek(text):
-	data = [
-		("\\alpha", "α"),
+greek_data = [
+		("\\alpha", "\U0001d6fc"),
 		("\\beta", "β"),
 		("\\gamma", "γ"),
-		("\\sqr", "\u00B0"),
-		("\\up2", "\u00B2"),
-		("\\up3", "\u00B3"),
-		("\\degree", "\u00B0"),
 		("\\Delta", "\u0394"),
 		("\\delta", "δ"),
 		("\\epsilon", "ε"),
@@ -581,8 +576,6 @@ def greek(text):
 		("\\альфа", "α"),
 		("\\бета", "β"),
 		("\\гамма", "γ"),
-		("\\^2", "\u00B2"),
-		("\\^3", "\u00B3"),
 		("\\градус", "\u00B0"),
 		("\\Дельта", "\u0394"),
 		("\\дельта", "δ"),
@@ -606,16 +599,28 @@ def greek(text):
 		("\\хи", "χ"),
 		("\\пси", "ψ"),
 		("\\омега", "ω"),
+		
 		("\\диаметр", "⌀"),
+
+		("\\sqr", "\u00B2"),
+		("\\up2", "\u00B2"),
+		("\\up3", "\u00B3"),
+		("\\degree", "\u00B0"),
+		
+		("\\^2", "\u00B2"),
+		("\\^3", "\u00B3"),
 	]
 
+
+def greek(text):
+
 	dd = []
-	for d in data:
+	for d in greek_data:
 		dd.append((d[0].replace("\\", "/"), d[1]))
 
-	data = data + dd
+	greek_data2 = greek_data + dd
 
-	for d in data:
+	for d in greek_data2:
 		text=text.replace(d[0], d[1])
 
 	return text

@@ -49,6 +49,7 @@ class SchemeType:
 		slst = self.confwidget.serialize_list()
 		lst = [ (k, do_serialize(v)) for k,v in slst ]
 		lst = [ ("name", self.name) ] + lst
+		lst += [ ("size", PAINT_CONTAINER.size()) ]
 
 		pickle.dump(lst, open(marchpath,"wb"))
 
@@ -60,6 +61,10 @@ class SchemeType:
 				if k == kd:
 					do_deserialize(v, vd)
 					self.confwidget.clean_and_update_interface()
+
+		for kd, vd in dct:
+			if kd == "size":
+				CONFVIEW.load_size(vd)
 	
 	def setwidgets(self,confwidget, paintwidget, tablewidget):
 		self.paintwidget = paintwidget
@@ -201,7 +206,7 @@ class ConfWidget(StyleWidget):
 		return [
 			("task", self.shemetype.task),
 			("sett", self.sett),
-			("texteditor", self.shemetype.texteditor)
+			("texteditor", self.shemetype.texteditor),
 		]
 
 class TableWidget(QWidget):
@@ -238,15 +243,14 @@ class ConfView(QWidget):
 	def size(self):
 		return (self.width_getter.get(), self.height_getter.get())
 
+	def load_size(self,vd):
+		PAINT_CONTAINER.resize(vd.width(), vd.height())
+		self.width_getter.set(vd.width())
+		self.height_getter.set(vd.height())
+		SCHEMETYPE.redraw()
+
 	def set_size(self):
 		sz = self.size()
-		
-		#SCHEMETYPE.datasettings.width = sz[0]
-		#SCHEMETYPE.datasettings.height = sz[1]
-
-		#oldsz = HSPLITTER.sizes()
-		#oldszsumm = oldsz[0] + oldsz[1]
-		#HSPLITTER.setSizes([sz[0], oldszsumm - sz[0]])
 		PAINT_CONTAINER.resize(sz[0], sz[1])
 
 def getLineWidth():

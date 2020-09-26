@@ -41,8 +41,9 @@ class ConfWidget_T0(common.ConfWidget):
 			self.Fr = Fr
 
 	class betsect:
-		def __init__(self, F="нет", Mkr="нет", T=""):
+		def __init__(self, F="нет", Fstyle="от узла", Mkr="нет", T=""):
 			self.F = F 
+			self.Fstyle = Fstyle
 			self.Mkr = Mkr 
 			self.T = T
 
@@ -111,6 +112,7 @@ class ConfWidget_T0(common.ConfWidget):
 
 		if SUBTYPE == SUBTYPE_RASTYAZHENIE_SJATIE:
 			self.table2.addColumn("F", "list", variant=["нет", "+", "-"])
+			self.table2.addColumn("Fstyle", "list", "Рис.", variant=["от узла", "к узлу", "выносн."])
 	
 		if SUBTYPE == SUBTYPE_KRUCHENIE_1 or \
 		   SUBTYPE == SUBTYPE_KRUCHENIE_2:
@@ -194,15 +196,6 @@ class ConfWidget_T0(common.ConfWidget):
 
 		self.update_interface()
 		self.setLayout(self.vlayout)
-
-#	def serialize_list(self.):
-#		return {
-#			"sett" : self.sett,
-#			"presett" : self.presett,
-#			"table0" : self.table0,
-#			"table1" : self.table1,
-#			"table2" : self.table2,
-#		}
 
 	def serialize_list(self):
 		return [
@@ -315,28 +308,32 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				#Отрисовываем сосредоточенные силы.
 
 				if task["betsect"][i].F == "+":
-					if not self.next_raspred(i):
-						paintool.right_arrow(self.painter, QPoint(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
-					else:
+					if task["betsect"][i].Fstyle == "выносн.": #not self.next_raspred(i):
 						paintool.right_arrow_double(self.painter, 
 							QPoint(self.wsect(i), hcenter), 
 							arrow_line_size, 
 							arrow_head_size,
-							h = self.sectrad(i) * 3.2)
+							h = self.msectrad(i) * 3.2)
 						F_text_policy = "up"
-						F_level = - self.sectrad(i) * 3.2/2 + hcenter
-				
-				if task["betsect"][i].F == "-":
-					if not self.prev_raspred(i):
-						paintool.left_arrow(self.painter, QPoint(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
+						F_level = - self.msectrad(i) * 3.2/2 + hcenter
+					elif task["betsect"][i].Fstyle == "от узла": #not self.next_raspred(i):
+						paintool.right_arrow(self.painter, QPoint(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
 					else:
+						paintool.right_arrow(self.painter, QPoint(self.wsect(i) - arrow_line_size, hcenter), arrow_line_size, arrow_head_size)
+					
+				if task["betsect"][i].F == "-":
+					if task["betsect"][i].Fstyle == "выносн.":
 						paintool.left_arrow_double(self.painter, 
 							QPoint(self.wsect(i), hcenter), 
 							arrow_line_size, 
 							arrow_head_size,
-							h = self.sectrad(i-1) * 3.2)
+							h = self.msectrad(i-1) * 3.2)
 						F_text_policy = "up"
-						F_level = - self.sectrad(i-1) * 3.2/2 + hcenter					
+						F_level = - self.msectrad(i-1) * 3.2/2 + hcenter					
+					elif task["betsect"][i].Fstyle == "от узла":
+						paintool.left_arrow(self.painter, QPoint(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
+					else:
+						paintool.left_arrow(self.painter, QPoint(self.wsect(i) + arrow_line_size, hcenter), arrow_line_size, arrow_head_size)
 
 			self.painter.setPen(self.pen)
 			if task["betsect"][i].F != "нет":
@@ -348,6 +345,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					text = task["betsect"][i].T
 	
 					desp = +arrow_line_size/2 if task["betsect"][i].F == "+" else -arrow_line_size/2
+					if task["betsect"][i].Fstyle == "к узлу":
+						desp = - desp
 					
 					if F_text_policy == "simple":
 						paintool.placedtext(self.painter,
@@ -361,7 +360,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 						paintool.draw_text_centered(self.painter,
 							QPoint(
 								self.wsect(i)+desp, 
-								F_level -3), 
+								F_level - 6), 
 							text, font)
 
 		# Отрисовка распределённых нагрузок:
@@ -545,11 +544,22 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		self.strt_width = self.shemetype.left_zone.get()
 		self.fini_width = width-self.shemetype.right_zone.get()
 
-		if self.bsections()[0].F == "-":
-			self.strt_width = self.strt_width + arrow_line_size
+		if subtype == SUBTYPE_RASTYAZHENIE_SJATIE:
+			if self.bsections()[0].Fstyle != "к узлу":
+				if self.bsections()[0].F == "-":
+					self.strt_width = self.strt_width + arrow_line_size
 
-		if self.bsections()[-1].F == "+":
-			self.fini_width = self.fini_width - arrow_line_size
+			if self.bsections()[-1].Fstyle != "к узлу":
+				if self.bsections()[-1].F == "+":
+					self.fini_width = self.fini_width - arrow_line_size
+	
+			if self.bsections()[0].Fstyle == "к узлу":
+				if self.bsections()[0].F == "+":
+					self.strt_width = self.strt_width + arrow_line_size
+	
+			if self.bsections()[-1].Fstyle == "к узлу":
+				if self.bsections()[-1].F == "-":
+					self.fini_width = self.fini_width - arrow_line_size
 
 		br = QPen()
 		br.setWidth(lwidth)
