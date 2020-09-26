@@ -153,17 +153,16 @@ class ConfWidget_T2(common.ConfWidget):
 	def __init__(self, sheme):
 		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
+		self.sett.add_delimiter()
 		self.shemetype.zadelka1 = self.sett.add("Шарнир слева:", "list", serlbl="Заделка:", defval=0, variant=["нет", "1", "2"])
 		self.shemetype.zadelka2 = self.sett.add("Шарнир справа:", "list", defval=0, variant=["нет", "1", "2"])
+		self.sett.add_delimiter()
 		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "22")
 		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "80")
 		self.shemetype.dimlines_level2 = self.sett.add("Отступ справа:", "int", "60")
 		self.shemetype.sterzn_off = self.sett.add("Вынос стрелок для сил в стержнях:", "int", "28")
 		self.shemetype.arrow_size = self.sett.add("Размер стрелок сил:", "int", "14")
 		self.sett.updated.connect(self.redraw)
-
-		self.shemetype.font_size = common.CONFVIEW.font_size_getter
-		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
