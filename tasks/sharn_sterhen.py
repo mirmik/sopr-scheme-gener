@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import *
 
 class ShemeTypeT2(common.SchemeType):
 	def __init__(self):
-		super().__init__("Горизонтальный стержень на шарнирах")
+		super().__init__("Стержневая система (Тип 1)")
 		self.setwidgets(ConfWidget_T2(self), PaintWidget_T2(), common.TableWidget())
 
 class ConfWidget_T2(common.ConfWidget):
@@ -69,21 +69,7 @@ class ConfWidget_T2(common.ConfWidget):
 			],
 		}
 
-
-	"""Виджет настроек задачи T0"""
-	def __init__(self, sheme):
-		super().__init__(sheme)
-		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.zadelka = self.sett.add("Заделка:", "list", defval=0, variant=["нет", "1", "2"])
-		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "22")
-		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "70")
-		self.shemetype.dimlines_level2 = self.sett.add("Уровень размерных линий2:", "int", "60")
-		self.shemetype.arrow_size = self.sett.add("Размер стрелок:", "int", "10")
-		self.sett.updated.connect(self.redraw)
-
-		self.shemetype.font_size = common.CONFVIEW.font_size_getter
-		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
-
+	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("l", "float", "Длина секции")
 		self.table.updateTable()
@@ -108,21 +94,45 @@ class ConfWidget_T2(common.ConfWidget):
 		self.table.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
 
+		self.vlayout.addWidget(self.shemetype.texteditor)
+		
+
+	"""Виджет настроек задачи T0"""
+	def __init__(self, sheme):
+		super().__init__(sheme)
+		self.sett = taskconf_menu.TaskConfMenu()
+		self.shemetype.zadelka = self.sett.add("Заделка:", "list", defval=0, variant=["нет", "1", "2"])
+		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "22")
+		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "70")
+		self.shemetype.dimlines_level2 = self.sett.add("Уровень размерных линий2:", "int", "60")
+		self.shemetype.arrow_size = self.sett.add("Размер стрелок:", "int", "10")
+		self.sett.updated.connect(self.redraw)
+
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
+
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		
+		self.update_interface()
 		self.setLayout(self.vlayout)
 
-	def add_action(self):
+	def add_action_impl(self):
 		self.shemetype.task["sections"].append(self.sect())
 		self.shemetype.task["betsect"].append(self.betsect())
 		self.redraw()
 		self.updateTables()
 
-	def del_action(self):
+	def insert_action_impl(self, idx):
+		self.shemetype.task["sections"].insert(idx, self.sect())
+		self.shemetype.task["betsect"].insert(idx, self.betsect())
+		self.redraw()
+		self.updateTables()
+
+	def del_action_impl(self, idx):
 		if len(self.shemetype.task["sections"]) == 1: return
-		del self.shemetype.task["sections"][-1]
-		del self.shemetype.task["betsect"][-1]
+		del self.shemetype.task["sections"][idx]
+		del self.shemetype.task["betsect"][idx]
 		self.redraw()
 		self.updateTables()
 

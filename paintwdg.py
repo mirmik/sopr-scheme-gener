@@ -128,6 +128,11 @@ class PaintWidget(QWidget):
 		self.axpen = QPen(Qt.DashDotLine)
 		self.axpen.setWidth(lwidth/2)
 		paintool.axpen = self.axpen
+
+		self.widegreen = QPen()
+		self.widegreen.setWidth(lwidth*2)
+		self.widegreen.setColor(Qt.green)
+		paintool.widegreen = self.widegreen
 		
 		self.default_brush = QBrush(Qt.SolidPattern)
 		self.default_brush.setColor(Qt.white)
@@ -163,10 +168,16 @@ class PaintWidget(QWidget):
 				paintool.greek(l))
 			self.painter.end()
 		except Exception as ex:
-			if EXIT_ON_EXCEPT:
-				traceback.print_exc()
-				exit(0)
-			raise
+			txt = traceback.format_exc()
+			msg = QMessageBox()
+			msg.setText("Возникла ошибка при отрисовке задачи:")
+			msg.setInformativeText(txt)
+			msg.setStandardButtons(QMessageBox.Ok)
+
+			print(txt)
+			msg.exec()
+
+			self.painter.end()
 
 	def sections(self):
 		return self.shemetype.task["sections"]

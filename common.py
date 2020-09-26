@@ -3,8 +3,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+import util
 import math
 import taskconf_menu
+import pickle
 
 APP = None
 CONFVIEW = None
@@ -15,6 +17,26 @@ PAINT_CONTAINER = None
 def angle(strt, fini):
 	return math.atan2(fini.y()-strt.y(), fini.x()-strt.x())
 
+def do_serialize(obj):
+	if obj.__class__ == QTextEdit:
+		return obj.toPlainText()
+
+	if hasattr(obj, "serialize"):
+		return obj.serialize()
+	else:
+		return pickle.dumps(obj)
+
+def do_deserialize(obj, info):
+	if obj.__class__ == QTextEdit:
+		return obj.setText(info)
+
+	if hasattr(obj, "deserialize"):
+		return obj.deserialize(info)
+	else:
+		p = pickle.loads(info)
+		for k in obj.keys():
+			obj[k] = p[k]
+
 class StyleWidget(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -22,7 +44,22 @@ class StyleWidget(QWidget):
 class SchemeType:
 	def __init__(self, name):
 		self.name = name
-		#self.datasettings = datasettings
+	
+	def serialize(self, marchpath):
+		slst = self.confwidget.serialize_list()
+		lst = [ (k, do_serialize(v)) for k,v in slst ]
+		lst = [ ("name", self.name) ] + lst
+
+		pickle.dump(lst, open(marchpath,"wb"))
+
+	def deserialize(self, dct):
+		slst = self.confwidget.serialize_list()
+
+		for k, v in slst:
+			for kd, vd in dct:
+				if k == kd:
+					do_deserialize(v, vd)
+					self.confwidget.clean_and_update_interface()
 	
 	def setwidgets(self,confwidget, paintwidget, tablewidget):
 		self.paintwidget = paintwidget
@@ -73,20 +110,57 @@ class ConfWidget(StyleWidget):
 		raise NotImplementedError()
 
 	def init_sections_buttons(self):
-		self.add_button = QPushButton("Добавить секцию")
-		self.del_button = QPushButton("Убрать секцию")
-
-		self.butlayout = QHBoxLayout()
-
-		self.butlayout.addWidget(self.add_button)
-		self.butlayout.addWidget(self.del_button)
+		self.add_button = QPushButton("Добавить последней")
+		self.del_button = QPushButton("Убрать последнюю")
 
 		self.add_button.clicked.connect(self.add_action)
 		self.del_button.clicked.connect(self.del_action)
 
-		self.vlayout.addLayout(self.butlayout)
+		self.add_button2 = QPushButton("Вставить секцию")
+		self.del_button2 = QPushButton("Убрать секцию")
 
-	def __init__(self, sheme=None):
+		self.add_button2.clicked.connect(self.insert_action)
+		self.del_button2.clicked.connect(self.del2_action)
+
+	def add_buttons_to_layout(self, vlayout):
+		butlayout1 = QHBoxLayout()
+		butlayout2 = QHBoxLayout()
+
+		butlayout1.addWidget(self.add_button)
+		butlayout1.addWidget(self.del_button)
+		butlayout2.addWidget(self.add_button2)
+		butlayout2.addWidget(self.del_button2)
+
+		self.vlayout.addLayout(butlayout1)
+		self.vlayout.addLayout(butlayout2)
+
+	def add_action(self):
+		self.add_action_impl()
+
+	def del_action(self):
+		self.del_action_impl(-1)
+
+	def insert_action(self):
+		idx, sts = QInputDialog.getInt(self, 
+			"Укажите номер", 
+			"Укажите номер:")
+		
+		if idx <= 0:
+			return 
+
+		self.insert_action_impl(idx-1)
+	
+	def del2_action(self):
+		idx, sts = QInputDialog.getInt(self, 
+			"Укажите номер", 
+			"Укажите номер:")
+		
+		if idx <= 0:
+			return 
+
+		self.del_action_impl(idx-1)
+	
+	def __init__(self, sheme=None, noinitbuttons=False):
 		super().__init__()
 		self.shemetype = sheme
 
@@ -100,6 +174,9 @@ class ConfWidget(StyleWidget):
 			self.create_task_structure()
 			self.init_sections_buttons()
 
+			if not noinitbuttons:
+				self.add_buttons_to_layout(self.vlayout)
+
 	def sections(self):
 		return self.shemetype.task["sections"]
 
@@ -111,6 +188,21 @@ class ConfWidget(StyleWidget):
 
 	def redraw(self):
 		self.shemetype.paintwidget.repaint()
+
+	def update_interface(self):
+		print("update interface is not reimplemented")
+
+	def clean_and_update_interface(self):
+		util.clear_layout(self.vlayout)
+		self.update_interface() 
+		self.redraw()
+
+	def serialize_list(self):
+		return [
+			("task", self.shemetype.task),
+			("sett", self.sett),
+			("texteditor", self.shemetype.texteditor)
+		]
 
 class TableWidget(QWidget):
 	def __init__(self):

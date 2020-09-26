@@ -93,27 +93,15 @@ class ConfWidget_T4(common.ConfWidget):
 			],
 		}
 
-	def __init__(self, sheme):
-		super().__init__(sheme)
-
-		self.sett = taskconf_menu.TaskConfMenu()
-		self.sett.updated.connect(self.redraw)
-
-		self.shemetype.font_size = common.CONFVIEW.font_size_getter
-		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
-
-		men_arr= elements.men_arr
-		fen_arr= elements.fen_arr
-		sharnir_arr = elements.sharn_arr
-
+	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("xstrt", "str", "X0", hint="N0")
 		self.table.addColumn("ystrt", "str", "Y0", hint="N0")
-		self.table.addColumn("lsharn", "list", "ШарнирЛ", variant=sharnir_arr, hint="N0")
+		self.table.addColumn("lsharn", "list", "ШарнирЛ", variant=self.sharnir_arr, hint="N0")
 
 		self.table.addColumn("xfini", "str", "X1", hint="N1")
 		self.table.addColumn("yfini", "str", "Y1", hint="N1")
-		self.table.addColumn("rsharn", "list", "ШарнирП", variant=sharnir_arr, hint="N1")
+		self.table.addColumn("rsharn", "list", "ШарнирП", variant=self.sharnir_arr, hint="N1")
 
 		self.table.addColumn("txt", "str", "Текст", hint="S")
 		self.table.addColumn("alttxt", "bool", "alt", hint="S")
@@ -126,15 +114,15 @@ class ConfWidget_T4(common.ConfWidget):
 
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("fenl", "list", "0:Сила", variant=fen_arr, hint="N0")
+		self.table2.addColumn("fenl", "list", "0:Сила", variant=self.fen_arr, hint="N0")
 		self.table2.addColumn("fl_txt", "str", "0:Т.F", hint="N0")
-		self.table2.addColumn("menl", "list", "0:Момент", variant=men_arr, hint="N0")
+		self.table2.addColumn("menl", "list", "0:Момент", variant=self.men_arr, hint="N0")
 		self.table2.addColumn("ml_txt", "str", "0:Т.M", hint="N0")
 		self.table2.addColumn("fr_txt_alt", "bool", "0:Alt", hint="N0")
 
-		self.table2.addColumn("fenr", "list", "1:Сила", variant=fen_arr, hint="N1")
+		self.table2.addColumn("fenr", "list", "1:Сила", variant=self.fen_arr, hint="N1")
 		self.table2.addColumn("fr_txt", "str", "1:Т.F", hint="N1")
-		self.table2.addColumn("menr", "list", "1:Момент", variant=men_arr, hint="N1")
+		self.table2.addColumn("menr", "list", "1:Момент", variant=self.men_arr, hint="N1")
 		self.table2.addColumn("mr_txt", "str", "1:Т.M", hint="N1")
 		self.table2.addColumn("fr_txt_alt", "bool", "1:Alt", hint="N1")
 		self.table2.updateTable()
@@ -177,17 +165,32 @@ class ConfWidget_T4(common.ConfWidget):
 		self.table2.updated.connect(self.redraw)
 		self.table3.updated.connect(self.redraw)
 
+		self.vlayout.addWidget(self.shemetype.texteditor)
+
+	def __init__(self, sheme):
+		super().__init__(sheme)
+
+		self.sett = taskconf_menu.TaskConfMenu()
+		self.sett.updated.connect(self.redraw)
+
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
+
+		self.men_arr= elements.men_arr
+		self.fen_arr= elements.fen_arr
+		self.sharnir_arr = elements.sharn_arr
+
 		self.init_taskconf()
 		self.shemetype.section_container.updated.connect(self.redraw)
 
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
-		self.vlayout.addWidget(self.shemetype.texteditor)
 		
 		self.save_row = None
 		self.save_hint = None
 		self.highlited_element = None
 
+		self.update_interface()
 		self.setLayout(self.vlayout)
 
 	def hover_node(self, row, column, hint):
@@ -226,15 +229,26 @@ class ConfWidget_T4(common.ConfWidget):
 		self.redraw()
 		self.updateTables()
 
-	def add_action(self):
+	def _insert_action(self, idx, strt=("",""), fini=(1,1)):
+		self.shemetype.task["sections"].insert(idx, self.sect(strt=strt, fini=fini))
+		self.shemetype.task["betsect"].insert(idx, self.betsect())
+		self.shemetype.task["sectforce"].insert(idx, self.sectforce())
+		self.shemetype.task["label"].insert(idx, self.label())
+		self.redraw()
+		self.updateTables()
+
+	def add_action_impl(self):
 		self._add_action()
+
+	def insert_action_impl(self, idx):
+		self._insert_action(idx)
 		
-	def del_action(self):
+	def del_action_impl(self, idx):
 		if len(self.shemetype.task["sections"]) == 0: return
-		del self.shemetype.task["sections"][-1]
-		del self.shemetype.task["betsect"][-1]
-		del self.shemetype.task["sectforce"][-1]
-		del self.shemetype.task["label"][-1]
+		del self.shemetype.task["sections"][idx]
+		del self.shemetype.task["betsect"][idx]
+		del self.shemetype.task["sectforce"][idx]
+		del self.shemetype.task["label"][idx]
 		self.redraw()
 		self.updateTables()
 

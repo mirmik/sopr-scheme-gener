@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import *
 
 class ShemeTypeT3(common.SchemeType):
 	def __init__(self):
-		super().__init__("Тип3 (Пластина)")
+		super().__init__("Пластина")
 		self.setwidgets(ConfWidget_T3(self), PaintWidget_T3(), common.TableWidget())
 
 class ConfWidget_T3(common.ConfWidget):
@@ -65,23 +65,7 @@ class ConfWidget_T3(common.ConfWidget):
 			],
 		}
 
-	"""Виджет настроек задачи T0"""
-	def __init__(self, sheme):
-		super().__init__(sheme)
-		self.sett = taskconf_menu.TaskConfMenu()
-		#self.shemetype.base_d = self.sett.add("Базовая длина:", "int", "40")
-		self.shemetype.base_h = self.sett.add("Базовая толщина:", "int", "20")
-		self.shemetype.zadelka = self.sett.add("Заделка:", "bool", True)
-		self.shemetype.axis = self.sett.add("Центральная ось:", "bool", True)
-		self.shemetype.zadelka_len = self.sett.add("Длина заделки:", "float", "30")
-		self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "float", "20")
-		self.shemetype.dimlines_step = self.sett.add("Шаг размерных линий:", "float", "40")
-		#self.shemetype.base_height = self.sett.add("Базовая высота стержня:", "int", "10")
-		self.sett.updated.connect(self.redraw)
-
-		self.shemetype.font_size = common.CONFVIEW.font_size_getter
-		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
-
+	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("d", "float", "Длина")
 		self.table.addColumn("dtext", "str", "Текст")
@@ -121,24 +105,50 @@ class ConfWidget_T3(common.ConfWidget):
 		self.table1.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
 
-		self.shemetype.texteditor = QTextEdit()
-		self.shemetype.texteditor.textChanged.connect(self.redraw)
 		self.vlayout.addWidget(self.shemetype.texteditor)
 
+
+	"""Виджет настроек задачи T0"""
+	def __init__(self, sheme):
+		super().__init__(sheme)
+		self.sett = taskconf_menu.TaskConfMenu()
+		#self.shemetype.base_d = self.sett.add("Базовая длина:", "int", "40")
+		self.shemetype.base_h = self.sett.add("Базовая толщина:", "int", "20")
+		self.shemetype.zadelka = self.sett.add("Заделка:", "bool", True)
+		self.shemetype.axis = self.sett.add("Центральная ось:", "bool", True)
+		self.shemetype.zadelka_len = self.sett.add("Длина заделки:", "float", "30")
+		self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "float", "20")
+		self.shemetype.dimlines_step = self.sett.add("Шаг размерных линий:", "float", "40")
+		#self.shemetype.base_height = self.sett.add("Базовая высота стержня:", "int", "10")
+		self.sett.updated.connect(self.redraw)
+
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
+		self.shemetype.texteditor = QTextEdit()
+		self.shemetype.texteditor.textChanged.connect(self.redraw)
+
+		self.update_interface()
 		self.setLayout(self.vlayout)
 
-	def add_action(self):
+	def add_action_impl(self):
 		self.shemetype.task["sections"].append(self.sect())
 		self.shemetype.task["betsect"].append(self.betsect())
 		self.shemetype.task["sectforce"].append(self.sectforce())
 		self.redraw()
 		self.updateTables()
 
-	def del_action(self):
+	def insert_action_impl(self, idx):
+		self.shemetype.task["sections"].insert(idx, self.sect())
+		self.shemetype.task["betsect"].insert(idx, self.betsect())
+		self.shemetype.task["sectforce"].insert(idx, self.sectforce())
+		self.redraw()
+		self.updateTables()
+
+	def del_action_impl(self, idx):
 		if len(self.shemetype.task["sections"]) == 1: return
-		del self.shemetype.task["sections"][-1]
-		del self.shemetype.task["betsect"][-1]
-		del self.shemetype.task["sectforce"][-1]
+		del self.shemetype.task["sections"][idx]
+		del self.shemetype.task["betsect"][idx]
+		del self.shemetype.task["sectforce"][idx]
 		self.redraw()
 		self.updateTables()
 

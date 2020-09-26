@@ -93,19 +93,10 @@ class ConfWidget(common.ConfWidget):
 		#else:
 		#	self.shemetype.section_container.hide()
 		
-
-	def __init__(self, sheme):
-		super().__init__(sheme)
+	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 		
-		self.sett = taskconf_menu.TaskConfMenu()
-		self.init_taskconf()
-		self.sett.updated.connect(self.redraw)
-		self.shemetype.section_container.updated.connect(self.redraw)
-
-		self.shemetype.section_enable.element().updated.connect(self.section_enable_handle)
-
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("l", "float", "Длина")
 		self.table.updateTable()
@@ -132,19 +123,28 @@ class ConfWidget(common.ConfWidget):
 		self.vlayout.addWidget(self.table2)
 		self.vlayout.addWidget(self.sett)
 
-
 		self.table.updated.connect(self.redraw)
 		self.table1.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
 
+		self.vlayout.addWidget(self.shemetype.texteditor)
+
+	def __init__(self, sheme):
+		super().__init__(sheme)
+		self.sett = taskconf_menu.TaskConfMenu()
+		self.init_taskconf()
+		self.sett.updated.connect(self.redraw)
+		self.shemetype.section_container.updated.connect(self.redraw)
+
+		self.shemetype.section_enable.element().updated.connect(self.section_enable_handle)
 
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
-		self.vlayout.addWidget(self.shemetype.texteditor)
 
+		self.update_interface()
 		self.setLayout(self.vlayout)
 
-	def add_action(self):
+	def add_action_impl(self):
 		self.sections().append(self.sect())
 		self.shemetype.task["sectforce"].append(self.sectforce())
 		self.shemetype.task["betsect"].append(self.betsect())
@@ -153,13 +153,22 @@ class ConfWidget(common.ConfWidget):
 		self.table1.updateTable()
 		self.table2.updateTable()
 
-	def del_action(self):
+	def insert_action_impl(self, idx):
+		self.sections().insert(idx, self.sect())
+		self.shemetype.task["sectforce"].insert(idx, self.sectforce())
+		self.shemetype.task["betsect"].insert(idx, self.betsect())
+		self.redraw()
+		self.table.updateTable()
+		self.table1.updateTable()
+		self.table2.updateTable()
+
+	def del_action_impl(self, idx):
 		if len(self.sections()) == 1:
 			return
 
-		del self.sections()[-1]
-		del self.shemetype.task["betsect"][-1]
-		del self.shemetype.task["sectforce"][-1]
+		del self.sections()[idx]
+		del self.shemetype.task["betsect"][idx]
+		del self.shemetype.task["sectforce"][idx]
 		self.redraw()
 		self.table.updateTable()
 		self.table1.updateTable()

@@ -3,8 +3,37 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+import pickle
+
 class Element(QWidget):
 	updated = pyqtSignal()
+
+	def __init__(self, 
+		         label, 
+		         type, 
+		         defval=None, 
+		         variant=None,
+		         vars=None):
+		super().__init__()
+		self.label = QLabel(label)
+		self.type = type
+		self.vars = vars
+		self.variant = variant
+
+		self.label.setFixedWidth(200)
+		self.layout = QHBoxLayout()
+		self.layout.addWidget(self.label)
+		
+		if isinstance(type, tuple):
+			self.obj = []
+			for i in range(len(type)):
+				self.obj.append(self.add_object(type[i], defval[i], variant[i] if variant else None))
+		else:
+			self.obj = self.add_object(type, defval, variant) 
+
+		self.layout.setContentsMargins(0,0,0,0)
+		self.setLayout(self.layout)
+
 
 	def add_object(self, type, defval, variant):
 		if type == "text" or type == "str":
@@ -32,25 +61,6 @@ class Element(QWidget):
 
 		self.layout.addWidget(obj)
 		return obj		
-
-	def __init__(self, label, type, defval=None, variant=None):
-		super().__init__()
-		self.label = QLabel(label)
-		self.type = type
-
-		self.label.setFixedWidth(200)
-		self.layout = QHBoxLayout()
-		self.layout.addWidget(self.label)
-		
-		if isinstance(type, tuple):
-			self.obj = []
-			for i in range(len(type)):
-				self.obj.append(self.add_object(type[i], defval[i], variant[i] if variant else None))
-		else:
-			self.obj = self.add_object(type, defval, variant) 
-
-		self.layout.setContentsMargins(0,0,0,0)
-		self.setLayout(self.layout)
 
 	def getter(self):
 		class getcls:
@@ -80,7 +90,7 @@ class Element(QWidget):
 
 				elif type == "list":
 					idx = obj.currentIndex()
-					return str(obj.itemText(idx))
+					return  self.parent.vars[idx] #str(obj.itemText(idx))
 
 				print("strange type")
 
@@ -103,15 +113,20 @@ class Element(QWidget):
 					self.obj.setText(str(val))
 					return 
 
+				if (self.type == "list"):
+					self.obj.setCurrentIndex(val)
+					return 
+
 				if (self.type == "float"):
 					self.obj.setText(str(val))
 					return 
 
 				if (self.type == "bool"):
-					self.obj.setCheckState(val)
+
+					self.obj.setCheckState(Qt.Checked if val else Qt.Unchecked)
 					return 
 
-				print("strange type")
+				print("strange type", self.type, val)
 
 
 		return getcls(self.obj, self.type, parent=self)
@@ -121,14 +136,31 @@ class TaskConfMenu(QWidget):
 
 	def __init__(self):
 		super().__init__()
+		self.getters = []
 		self.layout = QVBoxLayout()
 		self.setLayout(self.layout)
 
-	def add(self, label, type, defval=None, variant=None):
-		el = Element(label, type, defval, variant)
+	def add(self, label, type, defval=None, variant=None, vars=None,
+			handler=None):
+		if vars is None:
+			vars = variant
+
+		el = Element(
+			label=label, 
+			type=type, 
+			defval=defval, 
+			variant=variant,
+			vars=vars)
+		
 		self.layout.addWidget(el)
 		el.updated.connect(self.updated)
-		return el.getter()
+
+		if handler is not None:
+			el.updated.connect(handler)
+
+		g = el.getter()
+		self.getters.append(g)
+		return g
 
 	def add_delimiter(self):
 		hFrame = QFrame()
@@ -139,3 +171,11 @@ class TaskConfMenu(QWidget):
 	def add_widget(self, wdg):
 		self.layout.addWidget(wdg)
 		return wdg
+
+	def serialize(self):
+		return pickle.dumps([ g.get() for g in self.getters ])
+
+	def deserialize(self, ppp):
+		ppp = pickle.loads(ppp)
+		for i in range(len(self.getters)):
+			self.getters[i].set(ppp[i])

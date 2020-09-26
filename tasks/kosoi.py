@@ -65,12 +65,30 @@ class ConfWidget(common.ConfWidget):
 			#	self.sectforce(Fr="+", FrT="ql")
 			#]
 		}
+
+	def update_interface(self):	
+		self.table = tablewidget.TableWidget(self.shemetype, "sections")
+		self.table.addColumn("Fx", "list", variant=["нет", "слева +", "слева -", "справа +", "справа -"])
+		self.table.addColumn("Fx_txt", "str")
+		self.table.addColumn("Fx_txt_alttxt", "bool")
+		self.table.addColumn("Fy", "list", variant=["нет", "сверху +", "сверху -", "снизу +", "снизу -"])
+		self.table.addColumn("Fy_txt", "str")
+		self.table.addColumn("Fy_txt_alttxt", "bool")
+		self.table.addColumn("Fz", "list", variant=["нет", "+", "-"])
+		self.table.addColumn("Fz_txt", "str")
+		self.table.addColumn("Fz_txt_alttxt", "bool")
+		self.table.updateTable()
+
+		self.vlayout.addWidget(QLabel("Геометрия:"))
+		self.vlayout.addWidget(self.table)
+		self.vlayout.addWidget(self.sett)
+
+		self.table.updated.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
 		
 
 	def __init__(self, sheme):
-		super().__init__(sheme)
-		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		#self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
+		super().__init__(sheme, noinitbuttons=True)
 
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.x = self.sett.add("x:", "int", "200")
@@ -91,120 +109,16 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.L = self.sett.add("Длина:", "int", "600")
 		self.shemetype.offdown = self.sett.add("Вынос разм. линий:", "int", "100")
 		self.shemetype.arrlen = self.sett.add("Длина Стрелок:", "int", "60")
-#		self.shemetype.axis = self.sett.add("Нарисовать ось:", "bool", True)
-#		self.shemetype.zleft = self.sett.add("Разрез слева:", "bool", True)
-#		self.shemetype.zright = self.sett.add("Разрез справа:", "bool", True)
-#		self.shemetype.kamera = self.sett.add("Внешняя камера:", "bool", False)
-#		self.shemetype.inkamera = self.sett.add("Внутренняя камера:", "bool", False)
-#		self.shemetype.inkamera_dist = self.sett.add("Отступ до камеры:", "int", "30")
-		#		self.shemetype.razm = self.sett.add("Размерные линии:", "bool", True)
-
 		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
-		#self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "6")
-		#self.shemetype.leftterm = self.sett.add("Закрепление:", "list", 1, variant=["", "слева", "справа"])
-		#self.shemetype.sharnterm = self.sett.add("Закрепление заделка/шарнир:", "bool", True)
-				
-		#self.shemetype.section_enable = self.sett.add("Отображение сечения:", "bool", True)
-#		self.shemetype.section_txt0 = self.sett.add("Сечение.Текст1:", "str", "D")
-#		self.shemetype.section_txt1 = self.sett.add("Сечение.Текст2:", "str", "d")
-#		self.shemetype.section_txt2 = self.sett.add("Сечение.Текст3:", "str", "d")
-
-#		self.shemetype.section_arg0 = self.sett.add("Сечение.Аргумент1:", "int", "60")
-#		self.shemetype.section_arg1 = self.sett.add("Сечение.Аргумент2:", "int", "50")
-#		self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
-		
-
-		#self.shemetype.arrow_line_size = self.sett.add("Размер линии стрелки:", "int", "20")
-		#self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "int", "40")
-		#self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "15")
-		#self.shemetype.font_size = common.CONFVIEW.font_size_getter
-#		self.shemetype.left_zone = self.sett.add("Отступ слева:", "int", "20")
-#		self.shemetype.right_zone = self.sett.add("Отступ справа:", "int", "20")
-		
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 		self.sett.updated.connect(self.redraw)
 
-
-
-		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table.addColumn("Fx", "list", variant=["нет", "слева +", "слева -", "справа +", "справа -"])
-		self.table.addColumn("Fx_txt", "str")
-		self.table.addColumn("Fx_txt_alttxt", "bool")
-		self.table.addColumn("Fy", "list", variant=["нет", "сверху +", "сверху -", "снизу +", "снизу -"])
-		self.table.addColumn("Fy_txt", "str")
-		self.table.addColumn("Fy_txt_alttxt", "bool")
-		self.table.addColumn("Fz", "list", variant=["нет", "+", "-"])
-		self.table.addColumn("Fz_txt", "str")
-		self.table.addColumn("Fz_txt_alttxt", "bool")
-#		self.table.addColumn("dtext", "str", "Текст")
-		#self.table.addColumn("l", "float", "Длина")
-		#self.table.addColumn("delta", "float", "Зазор")
-		self.table.updateTable()
-
-		#self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		#self.table2.addColumn("sectname", "str", "Имя")
-		#self.table2.addColumn("sharn", "list", "Шарн.", variant=["", "1", "2"])
-		#self.table2.addColumn("xF", "list", variant=["нет", "+", "-"])
-		#self.table2.addColumn("xFtxt", "str", "xF")
-		#self.table2.addColumn("yF", "list", variant=["нет", "+", "-"])
-		#self.table2.addColumn("yFtxt", "str", "yF")
-
-		#self.table2.addColumn("xM", "list", variant=["нет", "+", "-"])
-		#self.table2.addColumn("xMtxt", "str", "xM")
-		#self.table2.addColumn("yM", "list", variant=["нет", "+", "-"])
-		#self.table2.addColumn("yMtxt", "str", "yM")
-		#self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
-#		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
-		#self.table2.addColumn("FT", "str", "Текст")
-		#self.table2.addColumn("MT", "str", "Текст")
-		#self.table2.updateTable()
-
-		#self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
-		#self.table1.addColumn("Fr", "list", variant=["clean", "+", "-"])
-		#self.table1.addColumn("FrT", "str", "Текст")
-		#self.table1.updateTable()
-
-		self.vlayout.addWidget(QLabel("Геометрия:"))
-		self.vlayout.addWidget(self.table)
-		#self.vlayout.addWidget(QLabel("Локальные силы:"))
-		#self.vlayout.addWidget(self.table2)
-		self.vlayout.addWidget(self.sett)
-
-
-		self.table.updated.connect(self.redraw)
-		#self.table1.updated.connect(self.redraw)
-		#self.table2.updated.connect(self.redraw)
-
-
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
-		self.vlayout.addWidget(self.shemetype.texteditor)
 
+		self.update_interface()
 		self.setLayout(self.vlayout)
-
-	def add_action(self):
-		pass
-#		self.sections().append(self.sect())
-#		self.shemetype.task["sectforce"].append(self.sectforce())
-		#self.shemetype.task["betsect"].append(self.betsect())
-#		self.redraw()
-#		self.table.updateTable()
-#		self.table1.updateTable()
-#		self.table2.updateTable()
-
-	def del_action(self):
-		pass
-#		if len(self.sections()) == 1:
-#			return
-
-#		del self.sections()[-1]
-		#del self.shemetype.task["betsect"][-1]
-#		del self.shemetype.task["sectforce"][-1]
-#		self.redraw()
-#		self.table.updateTable()
-#		self.table1.updateTable()
-		#self.table2.updateTable()
 
 	def inittask(self):
 		return {}

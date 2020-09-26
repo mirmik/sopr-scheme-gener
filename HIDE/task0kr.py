@@ -50,52 +50,17 @@ class ConfWidget_T01(common.ConfWidget):
 			]
 		}
 		
-
-	def __init__(self, sheme):
-		super().__init__(sheme)
-		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-
-		self.sett = taskconf_menu.TaskConfMenu()
-#		self.shemetype.axis = self.sett.add("Нарисовать ось:", "bool", True)
-		self.shemetype.zleft = self.sett.add("Разрез слева:", "bool", True)
-		self.shemetype.zright = self.sett.add("Разрез справа:", "bool", True)
-		self.shemetype.kamera = self.sett.add("Внешняя камера:", "bool", False)
-		self.shemetype.inkamera = self.sett.add("Внутренняя камера:", "bool", False)
-		self.shemetype.inkamera_dist = self.sett.add("Отступ до камеры:", "int", "30")
-		#		self.shemetype.razm = self.sett.add("Размерные линии:", "bool", True)
-
-		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
-		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "40")
-		#self.shemetype.arrow_line_size = self.sett.add("Размер линии стрелки:", "int", "20")
-		#self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "int", "40")
-		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "20")
-		#self.shemetype.font_size = common.CONFVIEW.font_size_getter
-#		self.shemetype.left_zone = self.sett.add("Отступ слева:", "int", "20")
-#		self.shemetype.right_zone = self.sett.add("Отступ справа:", "int", "20")
-		
-		self.shemetype.font_size = common.CONFVIEW.font_size_getter
-		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
-		self.sett.updated.connect(self.redraw)
-
-
-
+	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("d", "float", "Диаметр")
 		self.table.addColumn("dtext", "str", "Текст")
 		self.table.addColumn("l", "float", "Длина")
-		#self.table.addColumn("delta", "float", "Зазор")
 		self.table.updateTable()
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		#self.table2.addColumn("F", "list", variant=["clean", "+", "-"])
-		#self.table2.addColumn("M", "list", variant=["clean", "+", "-"])
 		self.table2.addColumn("Mkr", "list", variant=["clean", "+", "-"])
 		self.table2.addColumn("T", "str", "Текст")
 		self.table2.updateTable()
-
-
-
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
@@ -103,15 +68,34 @@ class ConfWidget_T01(common.ConfWidget):
 		self.vlayout.addWidget(self.table2)
 		self.vlayout.addWidget(self.sett)
 
-
 		self.table.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
 
+	def __init__(self, sheme):
+		super().__init__(sheme)
+		self.table = tablewidget.TableWidget(self.shemetype, "sections")
+		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
+
+		self.sett = taskconf_menu.TaskConfMenu()
+		self.shemetype.zleft = self.sett.add("Разрез слева:", "bool", True)
+		self.shemetype.zright = self.sett.add("Разрез справа:", "bool", True)
+		self.shemetype.kamera = self.sett.add("Внешняя камера:", "bool", False)
+		self.shemetype.inkamera = self.sett.add("Внутренняя камера:", "bool", False)
+		self.shemetype.inkamera_dist = self.sett.add("Отступ до камеры:", "int", "30")
+
+		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
+		self.shemetype.base_section_height = self.sett.add("Базовая высота секции:", "int", "40")
+		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "20")
+		
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
+		self.sett.updated.connect(self.redraw)
 
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
-		self.vlayout.addWidget(self.shemetype.texteditor)
-
+		
+		self.update_interface()
 		self.setLayout(self.vlayout)
 
 	def add_action(self):

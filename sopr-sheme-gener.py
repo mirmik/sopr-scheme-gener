@@ -8,9 +8,11 @@ from PyQt5.QtWidgets import *
 import os
 import sys
 import argparse
+import pickle
 
-import task0
-import task0kr
+import util
+
+import tasks.task0
 import tasks.star
 import tasks.sharn_sterhen
 import tasks.star
@@ -55,8 +57,8 @@ class CentralWidget(QWidget):
 		common.CONFVIEW = self.confview
 
 		self.scheme_types = [
-			task0.ShemeTypeT0(),
-			task0kr.ShemeTypeT01(),
+			tasks.task0.ShemeTypeT0(),
+			#task0kr.ShemeTypeT01(),
 			tasks.balki.ShemeType(),
 			tasks.star.ShemeTypeT1(),
 			tasks.sharn_sterhen.ShemeTypeT2(),
@@ -68,6 +70,11 @@ class CentralWidget(QWidget):
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]
+
+		for s in self.scheme_types:
+			if hasattr(s.confwidget, "serialize_list") is False:
+				util.msgbox_error("Confwidget without serialize_list : " + s.name)
+
 
 		self.stub_widget_0 = common.StubWidget("Окно отображения")
 		self.stub_widget_1 = common.StubWidget("Таблица параметров")
@@ -89,8 +96,6 @@ class CentralWidget(QWidget):
 
 		self.layout = QVBoxLayout()
 		self.layout.addWidget(self.hsplitter)
-		#self.hlayout = QHBoxLayout()
-		#self.layout.addLayout(self.hlayout)
 
 		self.container_paint = container.ContainerWidget(border=True, fixedSize=True, filter=True)
 		self.container_settings = container.ContainerWidget(border=False, fixedSize=False, filter=False)
@@ -116,8 +121,6 @@ class CentralWidget(QWidget):
 		self.work_layout_wdg = QWidget()
 		self.work_layout_wdg.setLayout(self.work_layout)
 
-		#self.hlayout.addWidget(self.settings_layout_wdg)
-		#self.hlayout.addWidget(self.work_layout_wdg)
 		self.hsplitter.addWidget(self.settings_layout_wdg)
 		self.hsplitter.addWidget(self.work_layout_wdg)
 		self.hsplitter.setStretchFactor(0, 150)
@@ -126,10 +129,6 @@ class CentralWidget(QWidget):
 		common.PAINT_CONTAINER = self.container_paint
 		self.container_paint.setFixedSize(600,400)
 
-		#self.vlayout = QVBoxLayout()
-		#self.vlayout.addWidget(self.type_list_widget)
-		#self.vlayout.addWidget(self.vsplitter)
-		
 		self.set_scheme_type_no(-1)
 
 		if tp != -1:
@@ -149,24 +148,18 @@ class CentralWidget(QWidget):
 			self.container_paint.replace(self.stub_widget_0)
 			self.container_settings.replace(self.stub_widget_1)
 
-		#	self.hsplitter.addWidget(self.stub_widget_0)
-		#	self.hsplitter.addWidget(self.stub_widget_1)
-		#	self.vsplitter.addWidget(self.hsplitter)
-		#	self.vsplitter.addWidget(self.stub_widget_2)
-		#	self.vsplitter.addWidget(self.confview)
-
 		else:
 			if self.currentno != no:
 				common.SCHEMETYPE = self.scheme_types[no]
-		#		self.hsplitter.replaceWidget(0, self.scheme_types[no].paintwidget)
-		#		self.hsplitter.replaceWidget(1, self.scheme_types[no].tablewidget)
-		#		self.vsplitter.replaceWidget(1, self.scheme_types[no].confwidget)
 				self.container_settings.replace(self.scheme_types[no].confwidget)
 				self.container_paint.replace(self.scheme_types[no].paintwidget)
 			
 			self.currentno = no
 			common.SCHEMETYPE = self.scheme_types[no]
 			common.PAINT_CONTAINER.resize(*getPaintSize())
+
+		self.type_list_widget.setCurrentIndex(no)
+		self.type_list_widget.update()
 			
 	def type_scheme_selected(self, arg):
 		self.type_list_widget.inited = True
@@ -206,12 +199,21 @@ class MainWindow(QMainWindow):
 			),
 		)
 
+	def save_last_dirpath(self, lastdir):
+		settings = QSettings()
+		settings.setValue("lastdir", lastdir)
+
+	def get_last_dirpath(self):
+		settings = QSettings()
+		return settings.value("lastdir", None)
+
 	def make_picture_action(self):
 		filters = "*.png;;*.jpg;;*.*"
 		defaultFilter = "*.jpg"
 
 		path, ext = QFileDialog.getSaveFileName(
-			self, "Сохранить изображение", None, filters, defaultFilter
+			self, "Сохранить изображение", 
+			self.get_last_dirpath(), filters, defaultFilter
 		)
 
 		if not path:
@@ -225,7 +227,66 @@ class MainWindow(QMainWindow):
 		if curext == '':
 			path = path + ext
 
-		self.cw.current_scheme().paintwidget.save_image(path)
+		dir = os.path.dirname(path)
+		self.save_last_dirpath(dir)
+
+		savepath = os.path.join(dir, ".save")
+		if not os.path.exists(savepath):
+			os.mkdir(savepath)
+
+		marchpath = os.path.join(savepath, os.path.basename(path) + ".dat")
+		self.cw.current_scheme().serialize(marchpath)
+
+		try:
+			self.cw.current_scheme().paintwidget.save_image(path)
+		except Exception as ex:
+			util.msgbox_error(str(ex))
+
+
+	def load_action(self):
+		filters = "*.png;;*.jpg;;*.*"
+		defaultFilter = "*.jpg"
+
+		path, ext = QFileDialog.getOpenFileName(
+			self, "Загрузить схему", 
+			self.get_last_dirpath(), filters, defaultFilter
+		)
+
+		if not path:
+			return
+
+		ext = os.path.splitext(ext)[1]
+		if ext == '.*':
+			ext = ".jpg"
+
+		curext = os.path.splitext(path)[1]
+		if curext == '':
+			path = path + ext
+
+		dir = os.path.dirname(path)
+		self.save_last_dirpath(dir)
+
+		savepath = os.path.join(dir, ".save")
+
+		marchpath = os.path.join(savepath, os.path.basename(path) + ".dat")
+		lll = None
+		try:
+			lll = pickle.load(open(marchpath, "rb"))
+		except FileNotFoundError as ex:
+			util.msgbox_error(str(ex))
+
+
+		name = lll[0][1]
+
+		if lll[0][0] != "name":
+			util.msgbox_error("wrong name field")
+			return
+
+		for i in range(len(self.cw.scheme_types)):
+			if self.cw.scheme_types[i].name == name:
+				self.cw.set_scheme_type_no(i)
+
+		self.cw.current_scheme().deserialize(lll)
 
 	def pre_picture_action(self):
 		self.cw.current_scheme().paintwidget.predraw_dialog()
@@ -246,7 +307,8 @@ class MainWindow(QMainWindow):
 		return act
 
 	def createActions(self):
-		self.MakePictureAction = self.create_action("Сохранить изображение...", self.make_picture_action, "Сохранение изображение")
+		self.MakePictureAction = self.create_action("Сохранить изображение/схему...", self.make_picture_action, "Сохранение изображение/схему")
+		self.LoadAction = self.create_action("Загрузить схему...", self.load_action, "Загрузить схему")
 		self.PrePictureAction = self.create_action("Показать изображение...", self.pre_picture_action, "Показать изображение")
 		self.ExitAction = self.create_action("Выход", self.close, "Выход", "Ctrl+Q")
 		self.AboutAction = self.create_action("О программе", self.action_about, "Информация о приложении")
@@ -256,6 +318,7 @@ class MainWindow(QMainWindow):
 		self.HelpMenu = self.menuBar().addMenu(self.tr("&Help"))       
 		
 		self.FileMenu.addAction(self.MakePictureAction)
+		self.FileMenu.addAction(self.LoadAction)
 		self.FileMenu.addAction(self.PrePictureAction)
 		self.FileMenu.addAction(self.ExitAction)
 		self.HelpMenu.addAction(self.AboutAction)

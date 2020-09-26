@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import *
 
 class ShemeTypeT1(common.SchemeType):
 	def __init__(self):
-		super().__init__("Тип соедиения звезда.")
+		super().__init__("Стержневая система (Тип 2)")
 		self.setwidgets(ConfWidget_T1(self), PaintWidget_T1(), common.TableWidget())
 
 class ConfWidget_T1(common.ConfWidget):
@@ -47,18 +47,7 @@ class ConfWidget_T1(common.ConfWidget):
 			],
 		}
 
-		
-	"""Виджет настроек задачи T0"""
-	def __init__(self, sheme):
-		super().__init__(sheme)
-		self.sett = taskconf_menu.TaskConfMenu()
-		#self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
-		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
-		self.sett.updated.connect(self.redraw)
-
-		self.shemetype.font_size = common.CONFVIEW.font_size_getter
-		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
-
+	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("xoff", "float", "Смещ")
 		self.table.addColumn("yoff", "float", "Смещ")
@@ -77,21 +66,38 @@ class ConfWidget_T1(common.ConfWidget):
 		self.vlayout.addWidget(self.sett)
 
 		self.table.updated.connect(self.redraw)
+		self.vlayout.addWidget(self.shemetype.texteditor)
+		
+	"""Виджет настроек задачи T0"""
+	def __init__(self, sheme):
+		super().__init__(sheme)
+		self.sett = taskconf_menu.TaskConfMenu()
+		#self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
+		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
+		self.sett.updated.connect(self.redraw)
+
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
 
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
-		self.vlayout.addWidget(self.shemetype.texteditor)
-
+		
+		self.update_interface()
 		self.setLayout(self.vlayout)
 
-	def add_action(self):
+	def add_action_impl(self):
 		self.shemetype.task["sections"].append(self.sect())
 		self.redraw()
 		self.updateTables()
 
-	def del_action(self):
+	def insert_action_impl(self, idx):
+		self.shemetype.task["sections"].insert(idx, self.sect())
+		self.redraw()
+		self.updateTables()
+
+	def del_action_impl(self, idx):
 		if len(self.shemetype.task["sections"]) == 1: return
-		del self.shemetype.task["sections"][-1]
+		del self.shemetype.task["sections"][idx]
 		self.redraw()
 		self.updateTables()
 
