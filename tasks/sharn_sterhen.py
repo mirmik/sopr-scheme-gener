@@ -25,11 +25,13 @@ class ConfWidget_T2(common.ConfWidget):
 		def __init__(self, 
 			l=1, 
 			label="",
-			label_height = 20
+			label_height = 20,
+			dims = True
 		):
 			self.l = l
 			self.label = label
 			self.label_height = label_height
+			self.dims = dims
 
 	class betsect:
 		def __init__(self, 
@@ -90,6 +92,7 @@ class ConfWidget_T2(common.ConfWidget):
 		self.table.addColumn("l", "float", "Длина секции")
 		self.table.addColumn("label", "str", "Подпись")
 		self.table.addColumn("label_height", "float", "Расположение подписи")
+		self.table.addColumn("dims", "bool", "Отрисовка разм.")
 		self.table.updateTable()
 
 		self.table3 = tablewidget.TableWidget(self.shemetype, "betsect")
@@ -288,19 +291,21 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 			xl = xnode(i)
 			xr = xnode(i+1)
 
-			paintool.dimlines(self.painter, 
-				QPoint(xl, hbase), 
-				QPoint(xr, hbase), 
-				hbase+dimlines_level)
+			if sects[i].dims:
 
-			elements.draw_text_by_points(
-						self,
-						QPoint(xl, hbase+dimlines_level), 
-						QPoint(xr, hbase+dimlines_level), 
-						txt=util.text_prepare_ltext(self.sections()[i].l, "a"),
-						alttxt=True,
-						off = 8
-					)
+				paintool.dimlines(self.painter, 
+					QPoint(xl, hbase), 
+					QPoint(xr, hbase), 
+					hbase+dimlines_level)
+
+				elements.draw_text_by_points(
+							self,
+							QPoint(xl, hbase+dimlines_level), 
+							QPoint(xr, hbase+dimlines_level), 
+							txt=util.text_prepare_ltext(self.sections()[i].l, "a"),
+							alttxt=True,
+							off = 8
+						)
 
 		self.painter.setBrush(Qt.white)
 
