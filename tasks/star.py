@@ -158,34 +158,38 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		self.setMouseTracking(True)
 
 	def make_off_lists(self):
-		self._off_list = []
+		self._strt_list = []
+		self._fini_list = []
 		for i in range(len(self.shemetype.task["sections"])):
 			sect =self.shemetype.task["sections"][i]
 
 			if sect.start_from == -1:
 				strt = QPointF(0,0)
 			else:
-				strt = self._off_list[sect.start_from]
+				strt = self._fini_list[sect.start_from]
 
-			self._off_list.append(strt + QPointF(
-				sect.l * self.base_length * math.cos(sect.angle / 180 * math.pi),
-				sect.l * self.base_length * math.sin(sect.angle / 180 * math.pi)
+			self._fini_list.append(strt + QPointF(
+				sect.l * math.cos(sect.angle / 180 * math.pi),
+				sect.l * math.sin(sect.angle / 180 * math.pi)
 			))
 
+			self._strt_list.append(strt)
+
 	def xoff(self, i):
-		self._off_list[i].x()
+		return self._strt_list[i].x()
 
 	def yoff(self, i):
-		self._off_list[i].y()
+		return self._strt_list[i].y()
+
+	def coordinate_of_start(self, i):
+		xoff = self._strt_list[i].x() * self.base_length	
+		yoff = - self._strt_list[i].y() * self.base_length
+
+		return QPointF(xoff, yoff)
 
 	def coordinate_of_finish(self, i):
-		xoff = self.xoff(i)		
-		yoff = self.yoff(i)
-		ang = self.shemetype.task["sections"][i].angle / 180 * math.pi
-		l = self.shemetype.task["sections"][i].l
-
-		xoff = (xoff + math.cos(ang) * l) * self.base_length
-		yoff = (yoff - math.sin(ang) * l) * self.base_length
+		xoff = self._fini_list[i].x() * self.base_length	
+		yoff = - self._fini_list[i].y() * self.base_length
 
 		return QPointF(xoff, yoff)
 
@@ -226,7 +230,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 			point = (
 				math.cos(angle) * (length)  + self.xoff(i),
-				-math.sin(angle) * (length) + self.yoff(i),
+				math.sin(angle) * (length) + self.yoff(i),
 			)
 
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
@@ -234,6 +238,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 		center = QPoint(width/2, self.hcenter) + \
 			QPoint(-(xmax + xmin)* base_length, -(ymax + ymin)* base_length)/2
+		self.c = center
 
 		def get_coord(i):
 			sect = self.sections()[i]
@@ -318,14 +323,19 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				self.painter.setPen(self.doublepen)
 
 			if sect.body:
-				length = sect.l * base_length			
-				strt = self.get_node_coordinate(i) 
+				length = sect.l * base_length	
+				strt = self.c + self.coordinate_of_start(i) 
+				print("strt",strt)
+				print("c", self.c)
 
 				if hasnode(strt):
 					spnt = strt + QPoint(math.cos(angle) * 7, -math.sin(angle) * 7)
 				else:
 					spnt = strt
-				pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
+
+				pnt = self.c + self.coordinate_of_finish(i)
+				print("pnt",pnt)
+
 				self.painter.drawLine(spnt, pnt)
 				
 				if self.highlited_sect is not None and self.highlited_sect[1] == i:
@@ -353,7 +363,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			rad = 50
 			circrad = 0		
 		
-			strt = self.get_node_coordinate(i)
+			strt = self.c + self.coordinate_of_start(i)
 
 			for j in range(len(sects)):
 				jsect = self.sections()[j]

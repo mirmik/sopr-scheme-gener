@@ -43,13 +43,14 @@ class ConfWidget_T0(common.ConfWidget):
 			self.Fr = Fr
 
 	class betsect:
-		def __init__(self, F="нет", Fstyle="от узла", Mkr="нет", T="", label="", label_up=False):
+		def __init__(self, F="нет", Fstyle="от узла", Mkr="нет", T="", label="", label_up=False, label_off="справа"):
 			self.F = F 
 			self.Fstyle = Fstyle
 			self.Mkr = Mkr 
 			self.T = T
 			self.label = label
 			self.label_up = label_up
+			self.label_off = label_off
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -126,7 +127,7 @@ class ConfWidget_T0(common.ConfWidget):
 
 		self.table2.addColumn("T", "str", "Текст")
 		self.table2.addColumn("label", "str", "Метка")
-		self.table2.addColumn("label_up", "bool", "МеткаПолож.")
+		self.table2.addColumn("label_off", "list", "МеткаПолож.", variant=["справа", "справа-сверху", "слева-снизу"])
 		self.table2.updateTable()
 
 		self.table.updated.connect(self.redraw)
@@ -760,7 +761,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			if task["betsect"][i].label != "":
 				self.painter.setPen(self.halfpen)
 
-				if task["betsect"][i].label_up is True:
+				if task["betsect"][i].label_off == "справа-сверху":
 
 					elements.draw_text_by_points(
 					self, 
@@ -771,7 +772,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					off=14,
 					polka=QPointF(self.wsect(i), hcenter)
 					)
-				else:
+				elif task["betsect"][i].label_off == "справа":
 					txt = task["betsect"][i].label
 					self.painter.setPen(Qt.NoPen)
 					self.painter.drawRect(QRectF(
@@ -788,6 +789,17 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					alttxt = False, 
 					off=6,
 					polka=None
+					)
+
+				elif task["betsect"][i].label_off == "слева-снизу":
+					elements.draw_text_by_points(
+					self, 
+					strt = QPointF(self.wsect(i),hcenter + self.msectrad(i)), 
+					fini= QPointF(self.wsect(i), hcenter + self.msectrad(i)+40), 
+					txt = task["betsect"][i].label, 
+					alttxt = True, 
+					off=-24,
+					polka=QPointF(self.wsect(i), hcenter)
 					)
 
 
