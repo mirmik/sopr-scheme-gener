@@ -107,10 +107,20 @@ def angled_arrow_points_top(x, y, a, s):
 	]
 
 
-def paint_arrow(painter, points):
+def paint_arrow(painter, points, pen=None, brush=None):
 	qpoints = [QPointF(x, y) for (x, y) in points]
 	polygon = QPolygonF(qpoints)
-	painter.setBrush(Qt.black)
+
+	if pen is not None:
+		painter.setPen(pen)
+	else:
+		painter.setPen(halfpen)
+
+	if brush is None:
+		painter.setBrush(Qt.black)
+	else:
+		painter.setBrush(brush)
+	
 	painter.drawConvexPolygon(polygon)
 
 def down_arrow_head(painter, x, y, s): paint_arrow(painter, down_arrow_points(x, y, s))
@@ -159,18 +169,21 @@ def down_arrow(painter, pnt, length, headsize):
 	painter.drawLine(pnt, tgt)
 	down_arrow_head_top(painter, tgt.x(), tgt.y(), headsize)
 
-def angled_arrow_head_top(painter, pnt, angle, headsize):
-	paint_arrow(painter, angled_arrow_points_top(pnt.x(), pnt.y(), angle, headsize))
+def angled_arrow_head_top(painter, pnt, angle, headsize, pen=None, brush=None):
+	paint_arrow(painter, angled_arrow_points_top(pnt.x(), pnt.y(), angle, headsize),
+		pen=pen, brush=brush)
 
-def common_arrow(painter, spnt, fpnt, arrow_size):
+def common_arrow(painter, spnt, fpnt, arrow_size, pen=None, brush=None):
 	diff = QPointF(fpnt) - QPointF(spnt)
 	angle = math.atan2(-diff.y(), diff.x())
 
 	difflen = math.sqrt(diff.x()*diff.x() + diff.y()*diff.y())
 
+	if pen:
+		painter.setPen(pen)
 	painter.drawLine(spnt, spnt+diff/difflen*(difflen-arrow_size))
-	painter.setPen(halfpen)
-	angled_arrow_head_top(painter, fpnt, angle, arrow_size)
+	
+	angled_arrow_head_top(painter, fpnt, angle, arrow_size, pen=pen, brush=brush)
 
 def arrow_head(painter, pnt, angle, headsize):
 	return angled_arrow_head_top(painter, pnt, angle, headsize)
@@ -565,7 +578,7 @@ greek_data = [
 		("\\pi", "π"),
 		("\\rho", "ρ"),
 		("\\sigma", "σ"),
-		("\\tau", "τ"),
+		("\\tau", "\U0001D70F"),
 		("\\upsilon", "υ"),
 		("\\phi", "φ"),
 		("\\chi", "χ"),
@@ -593,7 +606,7 @@ greek_data = [
 		("\\пи", "π"),
 		("\\ро", "ρ"),
 		("\\сигма", "σ"),
-		("\\тау", "τ"),
+		("\\тау", "\U0001D70F"),
 		("\\упсилон", "υ"),
 		("\\фи", "φ"),
 		("\\хи", "χ"),

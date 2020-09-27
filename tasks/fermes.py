@@ -463,6 +463,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 			angle = common.angle(strt, fini) 
 
 			painter.setPen(self.pen)
+			painter.setBrush(Qt.black)
 
 			elements.draw_element_torque(self, strt, bsect.menl, rad, arrow_size, txt=bsect.ml_txt)
 			elements.draw_element_torque(self, fini, bsect.menr, rad, arrow_size, txt=bsect.mr_txt)

@@ -6,6 +6,7 @@ import paintool
 import taskconf_menu
 import tablewidget
 import util
+import elements
 
 from PyQt5 import *
 from PyQt5.QtCore import *
@@ -42,11 +43,12 @@ class ConfWidget_T0(common.ConfWidget):
 			self.Fr = Fr
 
 	class betsect:
-		def __init__(self, F="нет", Fstyle="от узла", Mkr="нет", T=""):
+		def __init__(self, F="нет", Fstyle="от узла", Mkr="нет", T="", label=""):
 			self.F = F 
 			self.Fstyle = Fstyle
 			self.Mkr = Mkr 
 			self.T = T
+			self.label = label
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -96,7 +98,10 @@ class ConfWidget_T0(common.ConfWidget):
 			self.table.addColumn("E", "float", "МодульЮнга")
 		
 		self.table.addColumn("text", "str", "Текст")
-		self.table.addColumn("delta", "bool", "Зазор")
+	
+		if SUBTYPE == SUBTYPE_RASTYAZHENIE_SJATIE:
+			self.table.addColumn("delta", "bool", "Зазор")
+	
 		self.table.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
@@ -121,6 +126,7 @@ class ConfWidget_T0(common.ConfWidget):
 			self.table2.addColumn("Mkr", "list", variant=["нет", "+", "-"])
 
 		self.table2.addColumn("T", "str", "Текст")
+		self.table2.addColumn("label", "str", "Метка")
 		self.table2.updateTable()
 
 		self.table.updated.connect(self.redraw)
@@ -141,7 +147,7 @@ class ConfWidget_T0(common.ConfWidget):
 		self.vlayout.addWidget(self.table)
 		self.vlayout.addWidget(QLabel("Распределенные силы:"))
 		self.vlayout.addWidget(self.table1)
-		self.vlayout.addWidget(QLabel("Локальные силы:"))
+		self.vlayout.addWidget(QLabel("Локальные силы, метки узлов:"))
 		self.vlayout.addWidget(self.table2)
 		self.vlayout.addWidget(self.sett)
 		self.vlayout.addWidget(self.shemetype.texteditor)
@@ -459,8 +465,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		for i in range(len(task["sectforce"])):
 			hkoeff = math.sqrt(task["sections"][i].A)
 
-			strt_height = hcenter - height_zone*hkoeff/2
-			fini_height = hcenter + height_zone*hkoeff/2
+			strt_height = hcenter - self.sectrad(i)
+			fini_height = hcenter + self.sectrad(i)
 
 			step = 18
 			alen = 15
@@ -503,12 +509,18 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					self.painter.drawText(QPointF((xa+xb)/2, strt_height - 3 - alen - rad), 
 						task["sectforce"][i].mkrT)
 
+	def is_delta(self, i):
+		if self.subtype != SUBTYPE_RASTYAZHENIE_SJATIE or not self.task["sections"][i].delta:
+			return False
+		else:
+			return True
+
 	def draw_section(self, i, strt_height, fini_height):
 		if self.highlited_sect is not None and \
 				 self.highlited_sect[1] == i:
 			self.painter.setPen(self.widegreen)
 
-		if not self.task["sections"][i].delta:
+		if not self.is_delta(i):
 			self.painter.drawRect(
 				self.wsect(i), 
 				strt_height, 
@@ -528,7 +540,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			sechtext = "GIk"
 
 		text_E = common.pretty_str(E, "E")
-		if not task["sections"][i].delta:
+		if not self.is_delta(i):
 			if abs(float(A) - int(A)) < 0.0001:
 				text_A = "{}{}".format(int(task["sections"][i].A+0.1), sechtext) if task["sections"][i].A != 1 else sechtext
 			else:
@@ -551,7 +563,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		lW = QFontMetrics(self.font).width(text_l)
 		AW = QFontMetrics(self.font).width(text_A)
 
-		if task["sections"][i].text != "" or task["sections"][i].delta:
+		if task["sections"][i].text != "" or self.is_delta(i):
 			text = paintool.greek(task["sections"][i].text)
 
 		else:
@@ -736,6 +748,20 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			self.force_drawing()
 		else:
 			self.torsion_drawing()
+
+		for i in range(len(task["betsect"])):
+			if task["betsect"][i].label != "":
+				self.painter.setPen(self.halfpen)
+				elements.draw_text_by_points(
+					self, 
+					strt = QPointF(self.wsect(i),hcenter - self.msectrad(i)), 
+					fini= QPointF(self.wsect(i), hcenter - self.msectrad(i)-40), 
+					txt = task["betsect"][i].label, 
+					alttxt = False, 
+					off=14,
+					polka=QPointF(self.wsect(i), hcenter)
+				)
+
 
 		# подсветка узла		
 		if self.highlited_node is not None:

@@ -47,6 +47,18 @@ class ConfWidget_T1(common.ConfWidget):
 			],
 		}
 
+	def hover_sect(self, row, column, hint):
+		self.shemetype.paintwidget.highlited_sect = (hint, row)
+		self.redraw()
+
+		self.save_row = row
+		self.save_hint = hint
+
+	def table_unhover(self):
+		self.shemetype.paintwidget.highlited_sect = None
+		self.shemetype.paintwidget.highlited_node = None
+		self.redraw()
+
 	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("xoff", "float", "Смещ")
@@ -61,6 +73,9 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("sharn", "list", "Шарн.", variant=["нет", "шарн", "шарн+заделка"])
 		#self.table.addColumn("insharn", "list", "ВхШарн.", variant=["нет", "шарн"])
 		self.table.updateTable()
+
+		self.table.hover_hint.connect(self.hover_sect)
+		self.table.unhover.connect(self.table_unhover)
 
 		self.vlayout.addWidget(self.table)
 		self.vlayout.addWidget(self.sett)
@@ -111,8 +126,9 @@ class ConfWidget_T1(common.ConfWidget):
 
 
 class PaintWidget_T1(paintwdg.PaintWidget):
-
 	def __init__(self):
+		self.highlited_node=None
+		self.highlited_sect=None
 		super().__init__()
 
 	def paintEventImplementation(self, ev):
@@ -194,7 +210,12 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				rad2 = 60
 				rad3 = 70
 				tgtangle = sect.angle + sect.addangle
-				pen = QPen(Qt.DashDotLine)
+
+				if self.highlited_sect is not None and self.highlited_sect[1] == i:
+					pen = self.dashgreen
+				else:
+					pen = QPen(Qt.DashDotLine)
+		
 				pen.setWidth(2)
 				self.painter.setPen(pen)
 
@@ -205,7 +226,13 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				self.painter.drawLine(strt, pnt1)
 				self.painter.drawLine(strt, pnt2)
 
-				self.painter.setPen(self.halfpen)
+
+				if self.highlited_sect is not None and self.highlited_sect[1] == i:
+					pen = self.halfgreen
+				else:
+					pen = self.halfpen
+
+				self.painter.setPen(pen)
 				self.painter.drawArc(paintool.radrect(strt, rad), 
 					angle*16, 
 					sect.addangle*16)
@@ -223,6 +250,11 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			angle = deg(sect.angle)
 			self.painter.setPen(self.pen)
 
+			if self.highlited_sect is not None and self.highlited_sect[1] == i:
+				self.painter.setPen(self.widegreen)
+			else:
+				self.painter.setPen(self.doublepen)
+
 			if sect.body:
 				length = sect.l * base_length			
 				strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
@@ -232,9 +264,13 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				else:
 					spnt = strt
 				pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
-				self.painter.setPen(self.doublepen)
 				self.painter.drawLine(spnt, pnt)
-				self.painter.setPen(self.pen)
+				
+				if self.highlited_sect is not None and self.highlited_sect[1] == i:
+					self.painter.setPen(self.green)
+				else:
+					self.painter.setPen(self.pen)
+
 				if sect.sharn=="шарн+заделка":
 					paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, 5)
 				elif sect.sharn=="шарн":
@@ -245,6 +281,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				txt = "{},{},E".format(ltxt,Atxt)
 
 				elements.draw_text_by_points_angled(self, strt, pnt, off=14, txt=txt, alttxt=sect.alttxt)
+
+			self.painter.setPen(self.default_pen)
 
 		# риуем силы
 		for i in range(len(sects)):
@@ -265,8 +303,18 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 					break
 				else:
 					circrad = 0
+
+			if self.highlited_sect is not None and self.highlited_sect[1] == i:
+				self.painter.setPen(self.green)
+				self.painter.setBrush(Qt.green)
+				pen = self.green
+				brush = Qt.green
+			else:
+				self.painter.setPen(self.pen)
+				self.painter.setBrush(Qt.black)
+				pen = None
+				brush = Qt.black
 			
-			self.painter.setBrush(Qt.black)
 			if sect.force != "нет":
 				apnt = strt + QPointF(math.cos(angle) * circrad, - math.sin(angle) * circrad)
 				bpnt = strt + QPointF(math.cos(angle) * rad, - math.sin(angle) * rad)
@@ -277,13 +325,15 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 						self.painter, 
 						bpnt,
 						apnt, 
-						arrow_size=15)	
+						arrow_size=15,
+						pen=pen, brush=brush)	
 				elif sect.force == "от":
 					paintool.common_arrow(
 						self.painter, 
 						apnt, 
 						bpnt,
-						arrow_size=15)	
+						arrow_size=15,
+						pen=pen, brush=brush)	
 				elif sect.force == "вдоль":
 					rad = 20
 					vec = QPointF(math.cos(angle) * rad, - math.sin(angle) * rad)
@@ -305,7 +355,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 						self.painter, 
 						bpnt1, 
 						bpnt2,
-						arrow_size=10)	
+						arrow_size=10,
+						pen=pen, brush=brush)	
 
 					self.painter.drawLine(apnt1, bpnt1)
 
