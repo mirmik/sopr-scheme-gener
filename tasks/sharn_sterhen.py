@@ -155,7 +155,8 @@ class ConfWidget_T2(common.ConfWidget):
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.sett.add_delimiter()
 		self.shemetype.zadelka1 = self.sett.add("Шарнир слева:", "list", serlbl="Заделка:", defval=0, variant=["нет", "1", "2"])
-		self.shemetype.zadelka2 = self.sett.add("Шарнир справа:", "list", defval=0, variant=["нет", "1", "2"])
+		self.shemetype.zadelka2 = self.sett.add("Шарнир справа:", "list", defval=0, variant=["нет", "1", "2"], noaddtog=True)
+		#self.shemetype.zadelka2 = self.shemetype.zadelka1
 		self.sett.add_delimiter()
 		self.shemetype.base_height = self.sett.add("Базовая толщина:", "int", "22")
 		self.shemetype.dimlines_level = self.sett.add("Уровень размерных линий:", "int", "80")

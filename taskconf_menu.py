@@ -155,11 +155,12 @@ class TaskConfMenu(QWidget):
 	def __init__(self):
 		super().__init__()
 		self.getters = []
+		self.getters2 = []
 		self.layout = QVBoxLayout()
 		self.setLayout(self.layout)
 
 	def add(self, label, type, defval=None, variant=None, vars=None,
-			handler=None, serlbl=None):
+			handler=None, serlbl=None, noaddtog=False):
 		if serlbl is None:
 			serlbl = label
 
@@ -182,6 +183,10 @@ class TaskConfMenu(QWidget):
 
 		g = el.getter()
 		self.getters.append(g)
+
+		if not noaddtog:
+			self.getters2.append(g)
+
 		return g
 
 	def add_delimiter(self):
@@ -204,11 +209,11 @@ class TaskConfMenu(QWidget):
 		ppp = pickle.loads(ppp)
 
 		if (isinstance(ppp, list)):
-			for i in range(len(self.getters)):
-				self.getters[i].set(ppp[i])
+			for i in range(min(len(self.getters2), len(ppp))):
+				self.getters2[i].set(ppp[i])
 
 		elif isinstance(ppp, dict):
-			for i in range(len(self.getters)):
+			for i in range(min(len(self.getters), len(ppp))):
 				for k,v in ppp.items():
 					if self.getters[i].parent.serlbl == k:
 						self.getters[i].set(v)
