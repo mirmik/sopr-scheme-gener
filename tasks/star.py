@@ -22,7 +22,7 @@ class ShemeTypeT1(common.SchemeType):
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, l=1, A=1, angle=30, sharn="нет", insharn="шарн", body=True, force="нет", ftxt="", alttxt=False, addangle=0, start_from = -1, wide=False):
+		def __init__(self, l=1, A=1, angle=30, sharn="шарн+заделка", insharn="шарн", body=True, force="нет", ftxt="", alttxt=False, addangle=0, start_from = -1, wide=False):
 			self.start_from = start_from
 			self.l = l
 			self.A = A
@@ -86,6 +86,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.vlayout.addWidget(self.sett)
 
 		self.table.updated.connect(self.redraw)
+		self.table2.updated.connect(self.redraw)
 		self.vlayout.addWidget(self.shemetype.texteditor)
 		
 	"""Виджет настроек задачи T0"""
@@ -509,7 +510,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				i = self.hovered_point_index
 				
 			if i is not None:
-				if i > 0 and sects[i-1].body:
+				if i > 0 and len(sects) > i and sects[i-1].body:
 					self.painter.drawEllipse(QRectF(
 						- QPointF(5, 5) + self.nodes_numered()[i], 
 						+ QPointF(5, 5) + self.nodes_numered()[i]))
