@@ -202,7 +202,6 @@ class TaskConfMenu(QWidget):
 
 	def deserialize(self, ppp):
 		ppp = pickle.loads(ppp)
-		print(ppp)
 
 		if (isinstance(ppp, list)):
 			for i in range(len(self.getters)):

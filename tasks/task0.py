@@ -25,14 +25,15 @@ class ShemeTypeT0(common.SchemeType):
 class ConfWidget_T0(common.ConfWidget):
 	"""Виджет настроек задачи T0"""
 	class sect:
-		def __init__(self, A=1, GIk=1, d=1, l=1, E=1, text="", delta=False):
+		def __init__(self, A=1, GIk=1, d=1, l=1, E=1, text="", dtext="", delta=False):
 			self.A=A
 			self.GIk=GIk
 			self.d=d
 			self.l=l
 			self.E=E
 			self.text = text
-			self.delta=delta
+			self.dtext = dtext
+			self.delta = delta
 
 	class sectforce:
 		def __init__(self, mkr="нет", mkrT="", Fr="нет"):
@@ -87,6 +88,7 @@ class ConfWidget_T0(common.ConfWidget):
 		
 		if SUBTYPE == SUBTYPE_KRUCHENIE_2:
 			self.table.addColumn("d", "float", "Диаметр")
+			self.table.addColumn("dtext", "str", "Д.Текст")
 
 		self.table.addColumn("l", "float", "Длина")
 		
@@ -261,24 +263,34 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		k1 = self.ll[i]
 		return (self.fini_width * k1 + self.strt_width * k0) // self.summary_length
 
+	def sectrad_koeff(self, i):
+		if self.subtype == SUBTYPE_RASTYAZHENIE_SJATIE:
+			return math.sqrt(self.shemetype.task["sections"][i].A)
+		   
+		if self.subtype == SUBTYPE_KRUCHENIE_1:
+			return math.sqrt(self.shemetype.task["sections"][i].GIk)
+
+		if self.subtype == SUBTYPE_KRUCHENIE_2:
+			return self.shemetype.task["sections"][i].d
+
 	def sectrad(self, i):
-		return math.sqrt(self.shemetype.task["sections"][i].A) * self.height_zone / 2
+		return self.sectrad_koeff(i) * self.height_zone / 2
 
 	def msectrad(self, i):
-		leftA = 0 if i == 0 else math.sqrt(self.shemetype.task["sections"][i-1].A)
-		rightA = 0 if i == -1 + len(self.shemetype.task["betsect"]) else math.sqrt(self.shemetype.task["sections"][i].A)
-		return max(leftA, rightA) * self.height_zone / 2
+		leftA = 0 if i == 0 else self.sectrad(i-1)
+		rightA = 0 if i == -1 + len(self.shemetype.task["betsect"]) else self.sectrad(i)
+		return max(leftA, rightA)
 
 	def msectrad2(self, i):
-		leftA = 0 if i == 0 else math.sqrt(self.shemetype.task["sections"][i-1].A)
-		rightA = 0 if i == -1 + len(self.shemetype.task["betsect"]) else math.sqrt(self.shemetype.task["sections"][i].A)
+		leftA = 0 if i == 0 else self.sectrad(i-1)
+		rightA = 0 if i == -1 + len(self.shemetype.task["betsect"]) else self.sectrad(i)
 		rm = False
 		lm = self.shemetype.task["sectforce"][i-1].mkr != "нет"
 		
 		if i != len(self.task["sectforce"]):
 			rm = self.task["sectforce"][i].mkr != "нет"
 		
-		ret = max(leftA, rightA) * self.height_zone / 2
+		ret = max(leftA, rightA)
 
 		if ((max(leftA, rightA) == leftA and lm)
 			or
@@ -491,9 +503,104 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					self.painter.drawText(QPointF((xa+xb)/2, strt_height - 3 - alen - rad), 
 						task["sectforce"][i].mkrT)
 
+	def draw_section(self, i, strt_height, fini_height):
+		if self.highlited_sect is not None and \
+				 self.highlited_sect[1] == i:
+			self.painter.setPen(self.widegreen)
+
+		if not self.task["sections"][i].delta:
+			self.painter.drawRect(
+				self.wsect(i), 
+				strt_height, 
+				self.wsect(i+1)-self.wsect(i), 
+				fini_height-strt_height)
+
+	def draw_dimlines(self, i, strt_height, fini_height):		
+		task = self.task
+
+		A = task["sections"][i].A
+		l = task["sections"][i].l
+		E = task["sections"][i].E
+
+		if self.subtype == SUBTYPE_RASTYAZHENIE_SJATIE:
+			sechtext = "A"
+		else:
+			sechtext = "GIk"
+
+		text_E = common.pretty_str(E, "E")
+		if not task["sections"][i].delta:
+			if abs(float(A) - int(A)) < 0.0001:
+				text_A = "{}{}".format(int(task["sections"][i].A+0.1), sechtext) if task["sections"][i].A != 1 else sechtext
+			else:
+				text_A = str(float(A)) + sechtext
+	
+			if abs(float(l) - int(l)) < 0.0001:
+				text_l = "{}l".format(int(task["sections"][i].l+0.1)) if task["sections"][i].l != 1 else "l"
+			else:
+				text_l = str(float(l)) + "l"
+		else: 
+			text_l = ""
+			text_A = ""
+		
+		text_l = paintool.greek(text_l)
+		text_A = paintool.greek(text_A)
+		text_E = paintool.greek(text_E)
+
+		self.painter.setPen(Qt.black)
+
+		lW = QFontMetrics(self.font).width(text_l)
+		AW = QFontMetrics(self.font).width(text_A)
+
+		if task["sections"][i].text != "" or task["sections"][i].delta:
+			text = paintool.greek(task["sections"][i].text)
+
+		else:
+			if self.subtype == SUBTYPE_KRUCHENIE_1:
+				text = "{}, {}".format(text_l, text_A)
+			
+			elif self.subtype == SUBTYPE_RASTYAZHENIE_SJATIE:
+				text = "{}, {}, {}".format(text_l, text_A, text_E)
+				
+			elif self.subtype == SUBTYPE_KRUCHENIE_2:
+				text = "{}".format(text_l)
+				
+		if self.razm:
+			self.painter.setPen(self.halfpen)
+			splashed = self.wsect(i+1) - self.wsect(i) < 20
+
+			paintool.draw_dimlines(
+				self.painter, 
+				QPoint(self.wsect(i), fini_height), 
+				QPoint(self.wsect(i+1), fini_height), 
+				offset=QPoint(0, self.dimlines_level- fini_height), 
+				textoff=QPoint(0, -3 -QFontMetrics(self.font).height()/2),
+				arrow_size=10,
+				text=text,
+				splashed=splashed)
+
+	def draw_diameters(self, i, strt_height, fini_height):
+		self.painter.setPen(self.default_pen)
+		self.painter.setBrush(self.default_brush)
+
+		d = self.task["sections"][i].d
+		text = common.pretty_str(d, "d")
+
+		if self.task["sections"][i].dtext:
+			text = paintool.greek(self.task["sections"][i].dtext)
+
+		paintool.draw_vertical_dimlines_with_text(
+			painter = self.painter, 
+			upnt = QPointF((self.wsect(i) + self.wsect(i+1))/2, strt_height), 
+			dpnt = QPointF((self.wsect(i) + self.wsect(i+1))/2, fini_height), 
+			arrow_size = 10, 
+			textpnt = QPointF(0, -QFontMetrics(self.font).height()/4), 
+			text = text, 
+			font = self.font)
+
 	def paintEventImplementation(self, ev):
 		"""Рисуем сцену согласно объекта задания"""
 		subtype = self.shemetype.task_subtype.get()
+		self.subtype = subtype
 
 		font_size = self.shemetype.font_size.get()
 		font = self.painter.font()
@@ -573,6 +680,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			if s.A > maxA: maxA = s.A
 
 		dimlines_level = hcenter + base_section_height*math.sqrt(maxA)/2 + self.shemetype.dimlines_start_step.get()
+		self.dimlines_level = dimlines_level
+
 		if razm is True:
 			hcenter -= self.shemetype.dimlines_start_step.get() / 2 
 
@@ -591,80 +700,34 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		
 		# Отрисовка секций
 		for i in range(len(task["sections"])):
-			hkoeff = math.sqrt(task["sections"][i].A)
+			hkoeff = self.sectrad_koeff(i)
 
 			strt_height = hcenter - height_zone*hkoeff/2
 			fini_height = hcenter + height_zone*hkoeff/2
 
-			A = task["sections"][i].A
-			l = task["sections"][i].l
-			E = task["sections"][i].E
+			self.draw_section(i, strt_height, fini_height)
+			self.draw_dimlines(i, strt_height, fini_height)
 
-			sechtext = "GIк" if kruch_flag else "A"
+			self.painter.setBrush(self.default_brush)
+			self.painter.setPen(self.default_pen)
 
-			text_E = common.pretty_str(E, "E")
-			if not task["sections"][i].delta:
-				if abs(float(A) - int(A)) < 0.0001:
-					text_A = "{}{}".format(int(task["sections"][i].A+0.1), sechtext) if task["sections"][i].A != 1 else sechtext
-				else:
-					text_A = str(float(A)) + sechtext
-	
-				if abs(float(l) - int(l)) < 0.0001:
-					text_l = "{}l".format(int(task["sections"][i].l+0.1)) if task["sections"][i].l != 1 else "l"
-				else:
-					text_l = str(float(l)) + "l"
-			else: 
-				text_l = ""
-				text_A = ""
-			
-			text_l = paintool.greek(text_l)
-			text_A = paintool.greek(text_A)
-			text_E = paintool.greek(text_E)
+		if axis:
+			pen = QPen(Qt.CustomDashLine)
+			pen.setDashPattern([10,3,1,3])
+			self.painter.setPen(pen)
+			self.painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
+			pen = QPen()
+			self.painter.setPen(pen)
 
-			if self.highlited_sect is not None and \
-							 self.highlited_sect[1] == i:
-				self.painter.setPen(self.widegreen)
+		for i in range(len(task["sections"])):
+			hkoeff = self.sectrad_koeff(i)
 
-			if not task["sections"][i].delta:
-				self.painter.drawRect(
-					self.wsect(i), 
-					strt_height, 
-					self.wsect(i+1)-self.wsect(i), 
-					fini_height-strt_height)
+			strt_height = hcenter - height_zone*hkoeff/2
+			fini_height = hcenter + height_zone*hkoeff/2
 
-			self.painter.setPen(Qt.black)
+			if self.subtype == SUBTYPE_KRUCHENIE_2:
+				self.draw_diameters(i, strt_height, fini_height)
 
-			lW = QFontMetrics(font).width(text_l)
-			AW = QFontMetrics(font).width(text_A)
-
-			if text_A or text_l:
-				if kruch_flag:
-					if task["sections"][i].text == "":
-						text = "{}, {}".format(text_l, text_A)
-					else:
-						text = paintool.greek(task["sections"][i].text)
-				else:
-					if task["sections"][i].text == "":
-						text = "{}, {}, {}".format(text_l, text_A, text_E)
-					else:
-						text = paintool.greek(task["sections"][i].text)
-			else:
-				text = paintool.greek(task["sections"][i].text)
-
-			if razm:
-				self.painter.setPen(self.halfpen)
-				splashed = self.wsect(i+1) - self.wsect(i) < 20
-
-				paintool.draw_dimlines(
-					self.painter, 
-					QPoint(self.wsect(i), fini_height), 
-					QPoint(self.wsect(i+1), fini_height), 
-					offset=QPoint(0, dimlines_level- fini_height), 
-					textoff=QPoint(0, -3 -QFontMetrics(self.font).height()/2),
-					arrow_size=10,
-					text=text,
-					splashed=splashed)
-				
 			self.painter.setBrush(self.default_brush)
 			self.painter.setPen(self.default_pen)
 
@@ -695,10 +758,3 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			paintool.zadelka(self.painter, self.wsect(-1), self.wsect(-1) + 10, hcenter-y, hcenter+y, left_border=True, right_border=False)
 
 
-		if axis:
-			pen = QPen(Qt.CustomDashLine)
-			pen.setDashPattern([10,3,1,3])
-			self.painter.setPen(pen)
-			self.painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
-			pen = QPen()
-			self.painter.setPen(pen)
