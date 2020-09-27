@@ -22,7 +22,7 @@ class ShemeTypeT1(common.SchemeType):
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, l=1, A=1, angle=30, sharn="нет", insharn="шарн", body=True, force="нет", ftxt="", alttxt=False, addangle=0, start_from = -1):
+		def __init__(self, l=1, A=1, angle=30, sharn="нет", insharn="шарн", body=True, force="нет", ftxt="", alttxt=False, addangle=0, start_from = -1, wide=False):
 			self.start_from = start_from
 			self.l = l
 			self.A = A
@@ -34,6 +34,7 @@ class ConfWidget_T1(common.ConfWidget):
 			self.ftxt = ftxt
 			self.alttxt = alttxt
 			self.addangle = addangle
+			self.wide = wide
 			
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -64,6 +65,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("start_from", "int", "ВыходитИз")
 		self.table.addColumn("l", "float", "Длина")
 		self.table.addColumn("angle", "float", "Угол")
+		self.table.addColumn("wide", "bool", "Жесткий")
 		self.table2.addColumn("body", "bool", "Стержень")
 		self.table2.addColumn("force", "list", "Сила", variant=["нет", "к", "от", "вдоль"])
 		self.table2.addColumn("ftxt", "str", "Сила")
@@ -347,7 +349,12 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 				pnt = self.c + self.coordinate_of_finish(i)
 				
-				self.painter.drawLine(spnt, pnt)
+				if not sect.wide:
+					self.painter.drawLine(spnt, pnt)
+				else:
+					self.painter.drawLine(spnt, pnt)
+					self.painter.drawLine(spnt + QPointF(0,5), pnt + QPointF(0,5))
+					
 				
 				if self.highlited_sect is not None and self.highlited_sect[1] == i:
 					self.painter.setPen(self.green)
