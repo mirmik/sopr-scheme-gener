@@ -773,8 +773,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					txt = task["betsect"][i].label
 					self.painter.setPen(Qt.NoPen)
 					self.painter.drawRect(QRectF(
-						QPointF(self.wsect(i) -3 + 14,                                      hcenter - QFontMetrics(self.font).height()/2 ),
-						QPointF(self.wsect(i) +3 + 14 + QFontMetrics(self.font).width(txt), hcenter + QFontMetrics(self.font).height()/2 )
+						QPointF(self.wsect(i) -3 + 8,                                      hcenter - QFontMetrics(self.font).height()/2 ),
+						QPointF(self.wsect(i) +3 + 8 + QFontMetrics(self.font).width(txt), hcenter + QFontMetrics(self.font).height()/2 )
 					))
 
 					self.painter.setPen(self.default_pen)
@@ -784,7 +784,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					fini= QPointF(self.wsect(i), hcenter - self.msectrad(i)), 
 					txt = task["betsect"][i].label, 
 					alttxt = False, 
-					off=14,
+					off=8,
 					polka=None
 					)
 
