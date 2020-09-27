@@ -581,7 +581,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				text = "{}, {}, {}".format(text_l, text_A, text_E)
 				
 			elif self.subtype == SUBTYPE_KRUCHENIE_2:
-				text = "{}".format(text_l)
+				text = "{}, G".format(text_l)
 				
 		if self.razm:
 			self.painter.setPen(self.halfpen)
