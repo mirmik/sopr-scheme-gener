@@ -43,12 +43,13 @@ class ConfWidget_T0(common.ConfWidget):
 			self.Fr = Fr
 
 	class betsect:
-		def __init__(self, F="нет", Fstyle="от узла", Mkr="нет", T="", label=""):
+		def __init__(self, F="нет", Fstyle="от узла", Mkr="нет", T="", label="", label_up=False):
 			self.F = F 
 			self.Fstyle = Fstyle
 			self.Mkr = Mkr 
 			self.T = T
 			self.label = label
+			self.label_up = label_up
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -127,6 +128,7 @@ class ConfWidget_T0(common.ConfWidget):
 
 		self.table2.addColumn("T", "str", "Текст")
 		self.table2.addColumn("label", "str", "Метка")
+		self.table2.addColumn("label_up", "bool", "МеткаПолож.")
 		self.table2.updateTable()
 
 		self.table.updated.connect(self.redraw)
@@ -752,7 +754,10 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		for i in range(len(task["betsect"])):
 			if task["betsect"][i].label != "":
 				self.painter.setPen(self.halfpen)
-				elements.draw_text_by_points(
+
+				if task["betsect"][i].label_up is True:
+
+					elements.draw_text_by_points(
 					self, 
 					strt = QPointF(self.wsect(i),hcenter - self.msectrad(i)), 
 					fini= QPointF(self.wsect(i), hcenter - self.msectrad(i)-40), 
@@ -760,7 +765,25 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					alttxt = False, 
 					off=14,
 					polka=QPointF(self.wsect(i), hcenter)
-				)
+					)
+				else:
+					txt = task["betsect"][i].label
+					self.painter.setPen(Qt.NoPen)
+					self.painter.drawRect(QRectF(
+						QPointF(self.wsect(i) -3 + 14,                                      hcenter - QFontMetrics(self.font).height()/2 ),
+						QPointF(self.wsect(i) +3 + 14 + QFontMetrics(self.font).width(txt), hcenter + QFontMetrics(self.font).height()/2 )
+					))
+
+					self.painter.setPen(self.default_pen)
+					elements.draw_text_by_points(
+					self, 
+					strt = QPointF(self.wsect(i),hcenter + self.msectrad(i)), 
+					fini= QPointF(self.wsect(i), hcenter - self.msectrad(i)), 
+					txt = task["betsect"][i].label, 
+					alttxt = False, 
+					off=14,
+					polka=None
+					)
 
 
 		# подсветка узла		
