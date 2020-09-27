@@ -94,6 +94,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.sett = taskconf_menu.TaskConfMenu()
 		#self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
 		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
+		self.shemetype.sharnrad = self.sett.add("Радиус шарнира:", "int", "4")
 		self.sett.updated.connect(self.redraw)
 
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
@@ -145,6 +146,11 @@ class ConfWidget_T1(common.ConfWidget):
 	def del_action_impl(self, idx):
 		if len(self.shemetype.task["sections"]) == 0: return
 		del self.shemetype.task["sections"][idx]
+
+#		for s in self.shemetype.task["sections"]:
+#			if s.start_from >= idx:
+#				s.start_from -= 1
+
 		self.redraw()
 		self.updateTables()
 
@@ -154,6 +160,7 @@ class ConfWidget_T1(common.ConfWidget):
 
 	def updateTables(self):
 		self.table.updateTable()
+		self.table2.updateTable()
 
 
 
@@ -213,6 +220,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 		#firstdir = self.shemetype.first_dir.get()
 		#angle = deg(180) if firstdir else deg(90)
+		sharnrad = self.shemetype.sharnrad.get()
 
 		width = self.width()
 		height = self.height()
@@ -251,8 +259,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
 			ymin, ymax = min(ymin, point[1]) , max(ymax, point[1])
 
-		center = QPoint(width/2, self.hcenter) + \
-			QPoint(-(xmax + xmin)* base_length, -(ymax + ymin)* base_length)/2
+		center = QPointF(width/2, self.hcenter) + \
+			QPointF(-(xmax + xmin)* base_length, (ymax + ymin)* base_length)/2
 		self.c = center
 
 		def get_coord(i):
@@ -350,10 +358,12 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				pnt = self.c + self.coordinate_of_finish(i)
 				
 				if not sect.wide:
-					self.painter.drawLine(spnt, pnt)
+					self.painter.drawLine(strt, pnt)
 				else:
-					self.painter.drawLine(spnt, pnt)
-					self.painter.drawLine(spnt + QPointF(0,5), pnt + QPointF(0,5))
+					self.painter.drawLine(strt, pnt)
+					self.painter.drawLine(strt + QPointF(0,8), pnt + QPointF(0,8))
+					self.painter.drawLine(strt, strt + QPointF(0,8))
+					self.painter.drawLine(pnt, pnt + QPointF(0,8))
 					
 				
 				if self.highlited_sect is not None and self.highlited_sect[1] == i:
@@ -361,11 +371,16 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				else:
 					self.painter.setPen(self.pen)
 
+				self.painter.setBrush(Qt.white)
 				if sect.sharn=="шарн+заделка":
-					paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, 5)
+					paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, sharnrad)
 				elif sect.sharn=="шарн":
 					self.painter.setBrush(Qt.white)
-					self.painter.drawEllipse(paintool.radrect(pnt,5))
+					self.painter.drawEllipse(paintool.radrect(pnt,sharnrad))
+
+				if sect.start_from != -1:
+					if  self.sections()[sect.start_from].sharn != "нет":
+						self.painter.drawEllipse(paintool.radrect(strt,sharnrad))						
 
 				ltxt = util.text_prepare_ltext(sect.l, suffix="l")
 				Atxt = util.text_prepare_ltext(sect.A, suffix="A")
@@ -476,7 +491,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 		self.painter.setPen(self.pen)
 		self.painter.setBrush(Qt.white)
-		self.painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))
+		self.painter.drawEllipse(QRectF(center - QPointF(sharnrad, sharnrad), center + QPointF(sharnrad, sharnrad)))
 
 		if self.grid_enabled:
 			self.painter.setPen(self.pen)
