@@ -347,9 +347,9 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 							QPoint(self.wsect(i), hcenter), 
 							arrow_line_size, 
 							arrow_head_size,
-							h = self.msectrad(i-1) * 3.2)
+							h = self.msectrad(i) * 3.2)
 						F_text_policy = "up"
-						F_level = - self.msectrad(i-1) * 3.2/2 + hcenter					
+						F_level = - self.msectrad(i) * 3.2/2 + hcenter					
 					elif task["betsect"][i].Fstyle == "от узла":
 						paintool.left_arrow(self.painter, QPoint(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
 					else:
@@ -414,6 +414,14 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				
 				step = 20
 
+				self.painter.setPen(Qt.NoPen)
+				self.painter.setBrush(Qt.white)
+				
+				self.painter.drawRect(QRectF(
+					QPointF(fxa+2, hcenter-5),
+					QPointF(fxb-2, hcenter+5)
+				))
+
 				self.painter.setPen(self.pen)
 				paintool.raspred_force(painter=self.painter,
 					apnt=QPointF(fxa, hcenter),
@@ -421,10 +429,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					step=step,
 					tp = tp)
 
-				#if task["sectforce"][i].mkrT:
-				#	self.painter.drawText(QPointF((xa+xb)/2, strt_height - 3 - alen - rad), 
-				#		task["sectforce"][i].mkrT)
-
+				self.painter.setPen(self.pen)
 				if task["sectforce"][i].mkrT:
 					leftA = 0 if i == 0 else math.sqrt(task["sections"][i-1].A)
 					rightA = 0 if i == -1 + len(task["betsect"]) else math.sqrt(task["sections"][i].A)
@@ -432,7 +437,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					size = QFontMetrics(font).width(task["sectforce"][i].mkrT)
 					paintool.placedtext(self.painter,
 						QPoint((fxa + fxb)/2, hcenter), 
-						max(leftA, rightA) * height_zone / 2 + 10, 
+						self.sectrad(i) + 10, 
 						size, 
 						task["sectforce"][i].mkrT,
 						right = True)
@@ -452,14 +457,14 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			arrow_head_size = 15
 
 			if task["betsect"][i].Mkr == "+":
-				paintool.kr_arrow(self.painter, QPoint(self.wsect(i), hcenter), self.msectrad2(i)+10, 11, False)
+				paintool.kr_arrow(self.painter, QPointF(self.wsect(i), hcenter), self.msectrad2(i)+10, 11, False)
 
 			if task["betsect"][i].Mkr == "-":
-				paintool.kr_arrow(self.painter, QPoint(self.wsect(i), hcenter), self.msectrad2(i)+10, 11, True)
+				paintool.kr_arrow(self.painter, QPointF(self.wsect(i), hcenter), self.msectrad2(i)+10, 11, True)
 
 			if task["betsect"][i].Mkr != "нет":
 				if task["betsect"][i].T != "":
-					self.painter.drawText(QPoint(
+					self.painter.drawText(QPointF(
 						self.wsect(i) + 14, 
 						hcenter - self.msectrad2(i)-14), task["betsect"][i].T)
 
@@ -729,9 +734,15 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			pen = QPen(Qt.CustomDashLine)
 			pen.setDashPattern([10,3,1,3])
 			self.painter.setPen(pen)
-			self.painter.drawLine(QPoint(5, hcenter), QPoint(width - 5, hcenter))
+			self.painter.drawLine(QPointF(5, hcenter), QPointF(width - 5, hcenter))
 			pen = QPen()
 			self.painter.setPen(pen)
+
+		# отрисовка сил		
+		if subtype == SUBTYPE_RASTYAZHENIE_SJATIE:
+			self.force_drawing()
+		else:
+			self.torsion_drawing()
 
 		for i in range(len(task["sections"])):
 			hkoeff = self.sectrad_koeff(i)
@@ -744,12 +755,6 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 			self.painter.setBrush(self.default_brush)
 			self.painter.setPen(self.default_pen)
-
-		# отрисовка сил		
-		if subtype == SUBTYPE_RASTYAZHENIE_SJATIE:
-			self.force_drawing()
-		else:
-			self.torsion_drawing()
 
 		for i in range(len(task["betsect"])):
 			if task["betsect"][i].label != "":

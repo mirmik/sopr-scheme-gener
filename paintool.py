@@ -135,6 +135,7 @@ def left_arrow_head_top(painter, x, y, s): paint_arrow(painter, left_arrow_point
 
 def left_arrow(painter, pnt, length, headsize):
 	painter.drawLine(pnt, QPointF(pnt.x()-length, pnt.y()))
+	painter.setPen(halfpen)
 	left_arrow_head_top(painter, pnt.x()-length, pnt.y(), headsize)
 
 def left_arrow_double(painter, pnt, length, headsize, h):
@@ -142,12 +143,14 @@ def left_arrow_double(painter, pnt, length, headsize, h):
 	bpnt = pnt + QPointF(0, -h/2)
 	painter.setPen(pen)
 	left_arrow(painter, apnt, length, headsize)
+	painter.setPen(pen)
 	left_arrow(painter, bpnt, length, headsize)
 	painter.setPen(halfpen)
 	painter.drawLine(apnt, bpnt)
 
 def right_arrow(painter, pnt, length, headsize):
 	painter.drawLine(pnt, QPointF(pnt.x()+length, pnt.y()))
+	painter.setPen(halfpen)
 	right_arrow_head_top(painter, pnt.x()+length, pnt.y(), headsize)
 
 def right_arrow_double(painter, pnt, length, headsize, h):
@@ -155,6 +158,7 @@ def right_arrow_double(painter, pnt, length, headsize, h):
 	bpnt = pnt + QPointF(0, -h/2)
 	painter.setPen(pen)
 	right_arrow(painter, apnt, length, headsize)
+	painter.setPen(pen)
 	right_arrow(painter, bpnt, length, headsize)
 	painter.setPen(halfpen)
 	painter.drawLine(apnt, bpnt)
@@ -534,10 +538,10 @@ def crest_ellipse(painter, el):
 	#painter.drawEllipse(QRect(x+w/2-s/2, y+h/2-s/2, s, s))
 
 def point_circ(painter, pnt, rad):
-	point_ellipse(painter, QRect(pnt-QPoint(rad/2,rad/2), pnt+QPoint(rad/2,rad/2)))
+	point_ellipse(painter, QRectF(pnt-QPointF(rad/2,rad/2), pnt+QPointF(rad/2,rad/2)))
 
 def crest_circ(painter, pnt, rad):
-	crest_ellipse(painter, QRect(pnt-QPoint(rad/2,rad/2), pnt+QPoint(rad/2,rad/2)))
+	crest_ellipse(painter, QRectF(pnt-QPointF(rad/2,rad/2), pnt+QPointF(rad/2,rad/2)))
 
 def kr_arrow(painter, pnt, rad, circ, inverse=False):
 	"""Обозначение кручения для задачи о стержне"""
@@ -545,12 +549,12 @@ def kr_arrow(painter, pnt, rad, circ, inverse=False):
 	painter.setBrush(brush)
 
 	if inverse:
-		point_ellipse(painter, QRect(-circ + pnt.x(), pnt.y() + rad, circ*2, circ*2))
-		crest_ellipse(painter, QRect(-circ + pnt.x(), pnt.y() - rad - 2*circ, circ*2, circ*2))
+		point_ellipse(painter, QRectF(-circ + pnt.x(), pnt.y() + rad, circ*2, circ*2))
+		crest_ellipse(painter, QRectF(-circ + pnt.x(), pnt.y() - rad - 2*circ, circ*2, circ*2))
 
 	else:
-		crest_ellipse(painter, QRect(-circ + pnt.x(), pnt.y() + rad, circ*2, circ*2))
-		point_ellipse(painter, QRect(-circ + pnt.x(), pnt.y() - rad - 2*circ, circ*2, circ*2))
+		crest_ellipse(painter, QRectF(-circ + pnt.x(), pnt.y() + rad, circ*2, circ*2))
+		point_ellipse(painter, QRectF(-circ + pnt.x(), pnt.y() - rad - 2*circ, circ*2, circ*2))
 
 	painter.setPen(halfpen)
 	painter.drawLine(pnt + QPointF(0,rad), pnt + QPointF(0,-rad))
@@ -1007,8 +1011,8 @@ def raspred_torsion(painter, apnt, bpnt, alen, step, rad, tp):
 		spnt = koeff * bpnt + (1-koeff) * apnt
 		fpnt = spnt + norm
 
-		spnt = QPoint(spnt.x(), spnt.y())
-		fpnt = QPoint(fpnt.x(), fpnt.y())
+		spnt = QPointF(spnt.x(), spnt.y())
+		fpnt = QPointF(fpnt.x(), fpnt.y())
 		
 		painter.setPen(halfpen)
 		painter.drawLine(spnt, fpnt)
