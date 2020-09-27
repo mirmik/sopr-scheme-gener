@@ -65,7 +65,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table.addColumn("start_from", "int", "ВыходитИз")
 		self.table.addColumn("l", "float", "Длина")
 		self.table.addColumn("angle", "float", "Угол")
-		self.table.addColumn("wide", "bool", "Жесткий")
+		#self.table.addColumn("wide", "bool", "Жесткий")
 		self.table2.addColumn("body", "bool", "Стержень")
 		self.table2.addColumn("force", "list", "Сила", variant=["нет", "к", "от", "вдоль"])
 		self.table2.addColumn("ftxt", "str", "Сила")
