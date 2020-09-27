@@ -34,6 +34,10 @@ def do_deserialize(obj, info):
 		return obj.deserialize(info)
 	else:
 		p = pickle.loads(info)
+		if isinstance(p, dict):
+			for k, v in p.items():
+				for i in range(len(v)):
+					v[i] = v[i].__class__(** v[i].__dict__)
 		for k in obj.keys():
 			obj[k] = p[k]
 

@@ -285,9 +285,21 @@ class MainWindow(QMainWindow):
 			util.msgbox_error("wrong name field")
 			return
 
+		translate_dict = {
+
+		}
+
 		for i in range(len(self.cw.scheme_types)):
 			if self.cw.scheme_types[i].name == name:
 				self.cw.set_scheme_type_no(i)
+				print ("set task type", i)
+				break
+			elif self.cw.scheme_types[i].name in translate_dict:
+				self.cw.set_scheme_type_no(translate_dict[self.cw.scheme_types[i].name])
+				break	
+		else:
+			util.msgbox_error("Unresolved task type: {}".format(self.cw.scheme_types[i].name))
+			return
 
 		self.cw.current_scheme().deserialize(lll)
 
