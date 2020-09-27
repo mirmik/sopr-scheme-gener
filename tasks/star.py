@@ -40,10 +40,6 @@ class ConfWidget_T1(common.ConfWidget):
 		self.shemetype.task = {
 			"sections": 
 			[
-				self.sect(l=1.5, angle=135),
-				self.sect(l=1, angle=90),
-				self.sect(l=1, angle=0, addangle=45),
-				self.sect(l=1, angle=-90, body=False, force="к", ftxt="F")
 			],
 		}
 
@@ -147,10 +143,6 @@ class ConfWidget_T1(common.ConfWidget):
 	def del_action_impl(self, idx):
 		if len(self.shemetype.task["sections"]) == 0: return
 		del self.shemetype.task["sections"][idx]
-
-#		for s in self.shemetype.task["sections"]:
-#			if s.start_from >= idx:
-#				s.start_from -= 1
 
 		self.redraw()
 		self.updateTables()
@@ -497,11 +489,6 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		if self.grid_enabled:
 			self.painter.setPen(self.pen)
 			self.painter.setBrush(Qt.green)
-			#self.painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))
-				
-			#for i in range(len(self.shemetype.task["sections"])):
-			
-			print("grid_enabled")
 
 			if self.mouse_pressed:
 				i = self.pressed_point_index
