@@ -38,6 +38,7 @@ class ConfWidget_T2(common.ConfWidget):
 			l=0, 
 			A=1,
 			lbl="",
+			sectlbl="",
 			F = "нет",
 			Ftxt="",
 			sterzn_text1="",
@@ -54,6 +55,7 @@ class ConfWidget_T2(common.ConfWidget):
 			self.l = l
 			self.A = A
 			self.lbl = lbl
+			self.sectlbl = sectlbl
 
 			self.sterzn_text1 = sterzn_text1
 			self.sterzn_text2 = sterzn_text2
@@ -107,7 +109,8 @@ class ConfWidget_T2(common.ConfWidget):
 		self.table3.updateTable()
 		
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("lbl", "str", "Метка")
+		self.table2.addColumn("lbl", "str", "М.Стержень")
+		#self.table2.addColumn("sectlbl", "str", "М.Сечение")
 		self.table2.addColumn("F", "list", "Сила", variant=["нет", "+", "-"])
 		self.table2.addColumn("Ftxt", "str", "Текст")
 		self.table2.addColumn("F2", "list", "Ст.Сила", variant=["нет", "+", "-"])
