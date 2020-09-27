@@ -60,22 +60,27 @@ class ConfWidget_T1(common.ConfWidget):
 
 	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
+		self.table2 = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("start_from", "int", "ВыходитИз")
 		self.table.addColumn("l", "float", "Длина")
 		self.table.addColumn("angle", "float", "Угол")
-		self.table.addColumn("body", "bool", "Стержень")
-		self.table.addColumn("force", "list", "Сила", variant=["нет", "к", "от", "вдоль"])
-		self.table.addColumn("ftxt", "str", "Сила")
-		self.table.addColumn("alttxt", "bool", "Пол.Ткст.")
-		self.table.addColumn("addangle", "float", "Доб.Угол")
-		self.table.addColumn("sharn", "list", "Шарн.", variant=["нет", "шарн", "шарн+заделка"])
+		self.table2.addColumn("body", "bool", "Стержень")
+		self.table2.addColumn("force", "list", "Сила", variant=["нет", "к", "от", "вдоль"])
+		self.table2.addColumn("ftxt", "str", "Сила")
+		self.table2.addColumn("alttxt", "bool", "Пол.Ткст.")
+		self.table2.addColumn("addangle", "float", "Доб.Угол")
+		self.table2.addColumn("sharn", "list", "Шарн.", variant=["нет", "шарн", "шарн+заделка"])
 		#self.table.addColumn("insharn", "list", "ВхШарн.", variant=["нет", "шарн"])
 		self.table.updateTable()
+		self.table2.updateTable()
 
 		self.table.hover_hint.connect(self.hover_sect)
+		self.table2.hover_hint.connect(self.hover_sect)
 		self.table.unhover.connect(self.table_unhover)
+		self.table2.unhover.connect(self.table_unhover)
 
 		self.vlayout.addWidget(self.table)
+		self.vlayout.addWidget(self.table2)
 		self.vlayout.addWidget(self.sett)
 
 		self.table.updated.connect(self.redraw)
@@ -244,7 +249,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			sect = self.sections()[i]
 			angle=sect.angle
 			length = sect.l * base_length			
-			strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
+			strt = center + QPointF(base_length * self.xoff(i), base_length * self.yoff(i))
 			pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
 			return pnt
 
@@ -346,6 +351,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				if sect.sharn=="шарн+заделка":
 					paintool.zadelka_sharnir(self.painter, pnt, -angle, 30, 10, 5)
 				elif sect.sharn=="шарн":
+					self.painter.setBrush(Qt.white)
 					self.painter.drawEllipse(paintool.radrect(pnt,5))
 
 				ltxt = util.text_prepare_ltext(sect.l, suffix="l")
@@ -462,16 +468,28 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		if self.grid_enabled:
 			self.painter.setPen(self.pen)
 			self.painter.setBrush(Qt.green)
-			self.painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))
+			#self.painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))
 				
-			for i in range(len(self.shemetype.task["sections"])):
+			#for i in range(len(self.shemetype.task["sections"])):
+			
+			if self.mouse_pressed:
+				i = self.pressed_point_index
+
+			else: 
+				i = self.hovered_point_index
+
+			if i is not None:
 				if sects[i].body:
 					self.painter.drawEllipse(QRectF(
-						center - QPointF(5, 5) + self.coordinate_of_finish(i), 
-						center + QPointF(5, 5) + self.coordinate_of_finish(i)))
+						- QPointF(5, 5) + self.nodes_numered()[i], 
+						+ QPointF(5, 5) + self.nodes_numered()[i]))
+
+			self.painter.setPen(self.pen)
+			self.painter.setBrush(Qt.white)
 
 		if self.mouse_pressed:
-			self.painter.drawLine(self.nodes_numered()[self.pressed_point_index], self.target_point)
+			if self.pressed_point_index < len(self.shemetype.task["sections"]): 
+				self.painter.drawLine(self.nodes_numered()[self.pressed_point_index], self.target_point)
 
 	def nodes_numered(self):
 		lst = [self.c]

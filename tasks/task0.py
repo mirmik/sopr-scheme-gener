@@ -26,12 +26,20 @@ class ShemeTypeT0(common.SchemeType):
 class ConfWidget_T0(common.ConfWidget):
 	"""Виджет настроек задачи T0"""
 	class sect:
-		def __init__(self, A=1, GIk=1, d=1, l=1, E=1, text="", dtext="", delta=False):
+		def __init__(self, A=1, GIk=1, d=1, l=1, E=1, text="", dtext="", delta=False,
+			label="",
+			label_height = 20,
+		):
+		
+			self.label = label
+			self.label_height = label_height
+		
 			self.A=A
 			self.GIk=GIk
 			self.d=d
 			self.l=l
 			self.E=E
+
 			self.text = text
 			self.dtext = dtext
 			self.delta = delta
@@ -98,6 +106,7 @@ class ConfWidget_T0(common.ConfWidget):
 			self.table.addColumn("E", "float", "МодульЮнга")
 		
 		self.table.addColumn("text", "str", "Текст")
+		self.table.addColumn("label", "str", "Метка")
 	
 		if SUBTYPE == SUBTYPE_RASTYAZHENIE_SJATIE:
 			self.table.addColumn("delta", "bool", "Зазор")
@@ -823,4 +832,16 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			y = self.sectrad(-1) +20
 			paintool.zadelka(self.painter, self.wsect(-1), self.wsect(-1) + 10, hcenter-y, hcenter+y, left_border=True, right_border=False)
 
+		sects = task["sections"]
+		for i in range(len(sects)):
+			self.painter.setPen(self.halfpen)
+			if sects[i].label != "":
+				elements.draw_text_by_points(
+					self,
+					QPoint(self.wsect(i), hcenter-self.sectrad(i)), 
+					QPoint(self.wsect(i+1), hcenter-self.sectrad(i)), 
+					txt=paintool.greek(sects[i].label) + ("" if sects[i].label_height > -20 else "  "),
+					alttxt=True,
+					polka=QPointF((self.wsect(i+1) + self.wsect(i)) / 2, hcenter)
+				)
 
