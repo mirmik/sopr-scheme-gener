@@ -117,11 +117,19 @@ class ConfWidget_T1(common.ConfWidget):
 		yf = tgt.y()
 		ang = math.atan2(ys-yf, xf-xs)
 
+		ang = ang * 180 / math.pi
+		l = math.sqrt((xf-xs)**2 + (yf-ys)**2)
+
+		ang = round((ang + 7.5) / 15) * 15
+		l = round((l + 0.25) / 0.5) * 0.5
+
+		print(ang, l)
+
 		self.shemetype.task["sections"].append(
 			self.sect(
 				start_from=idx - 1,
-				angle = ang * 180 / math.pi,
-				l = math.sqrt((xf-xs)**2 + (yf-ys)**2)
+				angle = ang,
+				l = l
 			)
 		)
 		self.redraw()
@@ -270,6 +278,10 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			return False
 
 
+		rad = 50
+		rad2 = 60
+		rad3 = 70
+			
 		# Рисуем доб угол
 		for i in range(len(sects)):
 			sect = self.sections()[i]
@@ -278,9 +290,6 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			strt = self.get_node_coordinate(sect.start_from)
 
 			if sect.addangle != 0:
-				rad = 50
-				rad2 = 60
-				rad3 = 70
 				tgtangle = sect.angle + sect.addangle
 
 				if self.highlited_sect is not None and self.highlited_sect[1] == i:
@@ -330,17 +339,14 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			if sect.body:
 				length = sect.l * base_length	
 				strt = self.c + self.coordinate_of_start(i) 
-				print("strt",strt)
-				print("c", self.c)
-
+				
 				if hasnode(strt):
 					spnt = strt + QPoint(math.cos(angle) * 7, -math.sin(angle) * 7)
 				else:
 					spnt = strt
 
 				pnt = self.c + self.coordinate_of_finish(i)
-				print("pnt",pnt)
-
+				
 				self.painter.drawLine(spnt, pnt)
 				
 				if self.highlited_sect is not None and self.highlited_sect[1] == i:
@@ -472,24 +478,79 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				
 			#for i in range(len(self.shemetype.task["sections"])):
 			
+			print("grid_enabled")
+
 			if self.mouse_pressed:
 				i = self.pressed_point_index
 
 			else: 
 				i = self.hovered_point_index
-
+				
 			if i is not None:
-				if sects[i].body:
+				if i > 0 and sects[i-1].body:
 					self.painter.drawEllipse(QRectF(
 						- QPointF(5, 5) + self.nodes_numered()[i], 
 						+ QPointF(5, 5) + self.nodes_numered()[i]))
+				if i == 0:
+					self.painter.drawEllipse(QRectF(
+						- QPointF(5, 5) + self.nodes_numered()[0], 
+						+ QPointF(5, 5) + self.nodes_numered()[0]))
+					
 
 			self.painter.setPen(self.pen)
 			self.painter.setBrush(Qt.white)
 
 		if self.mouse_pressed:
-			if self.pressed_point_index < len(self.shemetype.task["sections"]): 
-				self.painter.drawLine(self.nodes_numered()[self.pressed_point_index], self.target_point)
+			strt = self.nodes_numered()[self.pressed_point_index]
+			tgt = self.target_point
+
+			xs = strt.x()
+			ys = strt.y()
+			xf = tgt.x()
+			yf = tgt.y()
+			ang = math.atan2(ys-yf, xf-xs)
+
+			ang = ang * 180 / math.pi
+			l = math.sqrt((xf-xs)**2 + (yf-ys)**2) / self.base_length
+
+			ang = round((ang + 7.5) / 15) * 15
+			l = round((l + 0.25) / 0.5) * 0.5
+
+			angtxt=ang
+			ang = ang * math.pi / 180
+			ltxt = str(l)
+			l = l * self.base_length
+
+			if self.pressed_point_index <= len(self.shemetype.task["sections"]): 
+				fini = strt + QPointF(
+						math.cos(ang) * l,
+						-math.sin(ang) * l
+					) 
+				self.painter.drawLine(
+					strt,
+					fini					
+				)
+				elements.draw_text_by_points_angled(self, 
+					strt, 
+					fini, 
+					off=14, 
+					txt=ltxt + "l", 
+					alttxt=False)
+
+				self.painter.drawArc(paintool.radrect(strt, rad), 
+					0*16, 
+					angtxt*16)
+
+				pnt1 = strt + rad2 * QPointF(math.cos(deg(0)), -math.sin(deg(0)))
+				pnt2 = strt + rad2 * QPointF(math.cos(deg(angtxt)), -math.sin(deg(angtxt)))
+				cpnt = strt + rad3 * QPointF(math.cos(deg(angtxt)/2), -math.sin(deg(angtxt)/2))
+
+				paintool.draw_text_centered(
+					painter=self.painter, 
+					pnt=cpnt + QPointF(0,QFontMetrics(self.font).height()/4), 
+					text=paintool.greek(str(abs(angtxt))+"\\degree"), 
+					font=self.font)
+
 
 	def nodes_numered(self):
 		lst = [self.c]
@@ -512,11 +573,11 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		pos = ev.pos()
 		old_hovered_point = self.hovered_point
 
-		if pos.x() < 30 or self.width() - pos.x() < 30: 
+		if pos.x() < 10 or self.width() - pos.x() < 10: 
 			self.inramka = True
 			return
 		
-		if pos.y() < 30 or self.height() - pos.y() < 30: 
+		if pos.y() < 10 or self.height() - pos.y() < 10: 
 			self.inramka = True
 			return
 
