@@ -129,7 +129,25 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 	def __init__(self):
 		self.highlited_node=None
 		self.highlited_sect=None
+		self.grid_enabled = False
+
+		self.hovered_point = None
+		self.hovered_point_index = None
+		self.mouse_pressed=False
+
 		super().__init__()
+		self.setMouseTracking(True)
+
+	def coordinate_of_finish(self, i):
+		xoff = self.shemetype.task["sections"][i].xoff		
+		yoff = self.shemetype.task["sections"][i].yoff
+		ang = self.shemetype.task["sections"][i].angle / 180 * math.pi
+		l = self.shemetype.task["sections"][i].l
+
+		xoff = (xoff + math.cos(ang) * l) * self.base_length
+		yoff = (yoff - math.sin(ang) * l) * self.base_length
+
+		return QPointF(xoff, yoff)
 
 	def paintEventImplementation(self, ev):
 		sects = self.shemetype.task["sections"]
@@ -144,6 +162,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		lwidth = self.shemetype.line_width.get()
 
 		base_length = self.shemetype.base_length.get()
+		self.base_length = base_length
 		
 		# Расчитываем центр.
 		xmin, ymin = 0, 0
@@ -381,7 +400,75 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 						off=12 + 15, 
 						polka=None)
 
+		self.c = center
+
 		self.painter.setPen(self.pen)
 		self.painter.setBrush(Qt.white)
 		self.painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))
 
+		if self.grid_enabled:
+			self.painter.setPen(self.pen)
+			self.painter.setBrush(Qt.green)
+			self.painter.drawEllipse(QRect(center - QPoint(5, 5), center + QPoint(5, 5)))
+				
+			for i in range(len(self.shemetype.task["sections"])):
+				if sects[i].body:
+					self.painter.drawEllipse(QRectF(
+						center - QPointF(5, 5) + self.coordinate_of_finish(i), 
+						center + QPointF(5, 5) + self.coordinate_of_finish(i)))
+
+		if self.mouse_pressed:
+			self.painter.drawLine(self.pressed_point, self.hovered_point)
+
+				
+	def nodes(self):
+		return [ self.c + self.coordinate_of_finish(i) for i in range(len(self.shemetype.task["sections"])) ]
+
+	def enterEvent(self, ev):
+		self.grid_enabled = True
+		self.update()
+
+	def leaveEvent(self, ev):
+		self.grid_enabled = False
+		self.update()
+
+	def mouseMoveEvent(self, ev):
+		pos = ev.pos()
+		old_hovered_point = self.hovered_point
+
+		if pos.x() < 20 or self.width() - pos.x() < 20: return
+		if pos.y() < 20 or self.height() - pos.y() < 20: return
+
+		t = None
+		mindist = 10000000  
+		for s in self.nodes():
+			xdiff = s.x() - pos.x()
+			ydiff = s.y() - pos.y()
+			dist = math.sqrt(xdiff**2 + ydiff**2)
+			if dist < mindist:
+				mindist = dist
+				t = s
+		self.hovered_point = t
+
+		if self.hovered_point != old_hovered_point:
+			self.update()
+
+	def mousePressEvent(self, ev):
+		self.mouse_pressed=True
+		self.pressed_point = self.hovered_point
+		self.pressed_point_index = self.hovered_point_index
+
+	def mouseReleaseEvent(self, ev):
+		self.mouse_pressed=False
+		self.release_point = self.hovered_point
+
+		if self.pressed_point != self.release_point:
+			if len(self.shemetype.confwidget.sections()) == 0:
+				self.hovered_point_index = (self.hovered_point_index[0] - self.pressed_point_index[0], self.hovered_point_index[1]-self.pressed_point_index[1]) 
+				self.pressed_point_index = (0,0)
+
+			self.pressed_point_index = (round(self.pressed_point_index[0]), round(self.pressed_point_index[1]))
+			self.hovered_point_index = (round(self.hovered_point_index[0]), round(self.hovered_point_index[1]))
+			
+			self.shemetype.confwidget._add_action(self.pressed_point_index,self.hovered_point_index)
+			self.update()

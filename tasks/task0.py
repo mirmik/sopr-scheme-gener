@@ -541,15 +541,17 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 		if self.subtype == SUBTYPE_RASTYAZHENIE_SJATIE:
 			sechtext = "A"
+			AA = task["sections"][i].A
 		else:
 			sechtext = "GIk"
+			AA = task["sections"][i].GIk
 
 		text_E = common.pretty_str(E, "E")
 		if not self.is_delta(i):
-			if abs(float(A) - int(A)) < 0.0001:
-				text_A = "{}{}".format(int(task["sections"][i].A+0.1), sechtext) if task["sections"][i].A != 1 else sechtext
+			if abs(float(AA) - int(AA)) < 0.0001:
+				text_A = "{}{}".format(int(AA+0.1), sechtext) if AA != 1 else sechtext
 			else:
-				text_A = str(float(A)) + sechtext
+				text_A = str(float(AA)) + sechtext
 	
 			if abs(float(l) - int(l)) < 0.0001:
 				text_l = "{}l".format(int(task["sections"][i].l+0.1)) if task["sections"][i].l != 1 else "l"
