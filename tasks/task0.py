@@ -77,10 +77,8 @@ class ConfWidget_T0(common.ConfWidget):
 	def update_interface(self):
 		SUBTYPE = self.shemetype.task_subtype.get()
 
-		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		
 		if SUBTYPE == SUBTYPE_RASTYAZHENIE_SJATIE:
@@ -804,11 +802,11 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			self.painter.setBrush(Qt.black)
 
 		if zleft:
-			y = math.sqrt(task["sections"][0].A) * height_zone
+			y = self.sectrad(0) +20
 			paintool.zadelka(self.painter, self.wsect(0) - 10, self.wsect(0), hcenter-y, hcenter+y, left_border=False, right_border=True)
 
 		if zright:
-			y = math.sqrt(task["sections"][-1].A) * height_zone
+			y = self.sectrad(-1) +20
 			paintool.zadelka(self.painter, self.wsect(-1), self.wsect(-1) + 10, hcenter-y, hcenter+y, left_border=True, right_border=False)
 
 
