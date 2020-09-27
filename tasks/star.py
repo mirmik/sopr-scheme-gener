@@ -22,9 +22,8 @@ class ShemeTypeT1(common.SchemeType):
 
 class ConfWidget_T1(common.ConfWidget):
 	class sect:
-		def __init__(self, xoff=0, yoff=0, l=1, A=1, angle=30, sharn="шарн+заделка", insharn="шарн", body=True, force="нет", ftxt="", alttxt=False, addangle=0):
-			self.yoff = xoff
-			self.xoff = yoff
+		def __init__(self, l=1, A=1, angle=30, sharn="нет", insharn="шарн", body=True, force="нет", ftxt="", alttxt=False, addangle=0, start_from = -1):
+			self.start_from = start_from
 			self.l = l
 			self.A = A
 			self.body = body
@@ -61,8 +60,7 @@ class ConfWidget_T1(common.ConfWidget):
 
 	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
-		self.table.addColumn("xoff", "float", "Смещ")
-		self.table.addColumn("yoff", "float", "Смещ")
+		self.table.addColumn("start_from", "int", "ВыходитИз")
 		self.table.addColumn("l", "float", "Длина")
 		self.table.addColumn("angle", "float", "Угол")
 		self.table.addColumn("body", "bool", "Стержень")
@@ -105,13 +103,32 @@ class ConfWidget_T1(common.ConfWidget):
 		self.redraw()
 		self.updateTables()
 
+	def _add_action(self, strt, tgt, idx):
+		#ssect = self.shemetype.task["sections"][hidx]
+		
+		xs = strt.x()
+		ys = strt.y()
+		xf = tgt.x()
+		yf = tgt.y()
+		ang = math.atan2(ys-yf, xf-xs)
+
+		self.shemetype.task["sections"].append(
+			self.sect(
+				start_from=idx - 1,
+				angle = ang * 180 / math.pi,
+				l = math.sqrt((xf-xs)**2 + (yf-ys)**2)
+			)
+		)
+		self.redraw()
+		self.updateTables()
+
 	def insert_action_impl(self, idx):
 		self.shemetype.task["sections"].insert(idx, self.sect())
 		self.redraw()
 		self.updateTables()
 
 	def del_action_impl(self, idx):
-		if len(self.shemetype.task["sections"]) == 1: return
+		if len(self.shemetype.task["sections"]) == 0: return
 		del self.shemetype.task["sections"][idx]
 		self.redraw()
 		self.updateTables()
@@ -133,14 +150,37 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 		self.hovered_point = None
 		self.hovered_point_index = None
+		self.target_point = QPointF(0,0)
+		self.c = QPointF(0,0)
 		self.mouse_pressed=False
 
 		super().__init__()
 		self.setMouseTracking(True)
 
+	def make_off_lists(self):
+		self._off_list = []
+		for i in range(len(self.shemetype.task["sections"])):
+			sect =self.shemetype.task["sections"][i]
+
+			if sect.start_from == -1:
+				strt = QPointF(0,0)
+			else:
+				strt = self._off_list[sect.start_from]
+
+			self._off_list.append(strt + QPointF(
+				sect.l * self.base_length * math.cos(sect.angle / 180 * math.pi),
+				sect.l * self.base_length * math.sin(sect.angle / 180 * math.pi)
+			))
+
+	def xoff(self, i):
+		self._off_list[i].x()
+
+	def yoff(self, i):
+		self._off_list[i].y()
+
 	def coordinate_of_finish(self, i):
-		xoff = self.shemetype.task["sections"][i].xoff		
-		yoff = self.shemetype.task["sections"][i].yoff
+		xoff = self.xoff(i)		
+		yoff = self.yoff(i)
 		ang = self.shemetype.task["sections"][i].angle / 180 * math.pi
 		l = self.shemetype.task["sections"][i].l
 
@@ -168,6 +208,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		xmin, ymin = 0, 0
 		xmax, ymax = 0, 0
 
+		self.make_off_lists()
+
 		for i in range(len(sects)):
 			length=0
 			sect = self.sections()[i]
@@ -183,8 +225,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			angle = deg(sect.angle)
 
 			point = (
-				math.cos(angle) * (length)  + sect.xoff,
-				-math.sin(angle) * (length) + sect.yoff,
+				math.cos(angle) * (length)  + self.xoff(i),
+				-math.sin(angle) * (length) + self.yoff(i),
 			)
 
 			xmin, xmax = min(xmin, point[0]) , max(xmax, point[0])
@@ -222,7 +264,8 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		for i in range(len(sects)):
 			sect = self.sections()[i]
 			angle = sects[i].angle
-			strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
+			#strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
+			strt = self.get_node_coordinate(sect.start_from)
 
 			if sect.addangle != 0:
 				rad = 50
@@ -276,7 +319,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 			if sect.body:
 				length = sect.l * base_length			
-				strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
+				strt = self.get_node_coordinate(i) 
 
 				if hasnode(strt):
 					spnt = strt + QPoint(math.cos(angle) * 7, -math.sin(angle) * 7)
@@ -310,7 +353,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			rad = 50
 			circrad = 0		
 		
-			strt = center + QPointF(base_length * sect.xoff, base_length * sect.yoff)
+			strt = self.get_node_coordinate(i)
 
 			for j in range(len(sects)):
 				jsect = self.sections()[j]
@@ -418,11 +461,16 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 						center + QPointF(5, 5) + self.coordinate_of_finish(i)))
 
 		if self.mouse_pressed:
-			self.painter.drawLine(self.pressed_point, self.hovered_point)
+			self.painter.drawLine(self.nodes_numered()[self.pressed_point_index], self.target_point)
 
-				
-	def nodes(self):
-		return [ self.c + self.coordinate_of_finish(i) for i in range(len(self.shemetype.task["sections"])) ]
+	def nodes_numered(self):
+		lst = [self.c]
+		for i in range(len(self.shemetype.task["sections"])):
+			lst.append(self.c + self.coordinate_of_finish(i))
+		return lst
+
+	def get_node_coordinate(self, i):
+		return self.nodes_numered()[i+1]
 
 	def enterEvent(self, ev):
 		self.grid_enabled = True
@@ -436,22 +484,40 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		pos = ev.pos()
 		old_hovered_point = self.hovered_point
 
-		if pos.x() < 20 or self.width() - pos.x() < 20: return
-		if pos.y() < 20 or self.height() - pos.y() < 20: return
+		if pos.x() < 30 or self.width() - pos.x() < 30: 
+			self.inramka = True
+			return
+		
+		if pos.y() < 30 or self.height() - pos.y() < 30: 
+			self.inramka = True
+			return
+
+		self.inramka = False
 
 		t = None
+		idx = -1
 		mindist = 10000000  
-		for s in self.nodes():
+		for i in range(len(self.nodes_numered())):
+			s = self.nodes_numered()[i]
+
+
+			if i != 0:
+				if not self.shemetype.task["sections"][i-1].body:
+					continue
+
 			xdiff = s.x() - pos.x()
 			ydiff = s.y() - pos.y()
 			dist = math.sqrt(xdiff**2 + ydiff**2)
 			if dist < mindist:
 				mindist = dist
 				t = s
+				idx = i
 		self.hovered_point = t
+		self.hovered_point_index = idx
 
-		if self.hovered_point != old_hovered_point:
-			self.update()
+		self.target_point = QPointF(pos.x(), pos.y())
+
+		self.update()
 
 	def mousePressEvent(self, ev):
 		self.mouse_pressed=True
@@ -460,15 +526,27 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 
 	def mouseReleaseEvent(self, ev):
 		self.mouse_pressed=False
-		self.release_point = self.hovered_point
 
-		if self.pressed_point != self.release_point:
-			if len(self.shemetype.confwidget.sections()) == 0:
-				self.hovered_point_index = (self.hovered_point_index[0] - self.pressed_point_index[0], self.hovered_point_index[1]-self.pressed_point_index[1]) 
-				self.pressed_point_index = (0,0)
+		if self.inramka:
+			return
 
-			self.pressed_point_index = (round(self.pressed_point_index[0]), round(self.pressed_point_index[1]))
-			self.hovered_point_index = (round(self.hovered_point_index[0]), round(self.hovered_point_index[1]))
+		if self.pressed_point is not None:
+			self.shemetype.confwidget._add_action(
+				(self.nodes_numered()[self.pressed_point_index] - self.c)/ self.base_length, 
+				(self.target_point - self.c) / self.base_length,
+				self.pressed_point_index)
+
+
+#		self.release_point = self.hovered_point
+
+#		if self.pressed_point != self.release_point:
+#			if len(self.shemetype.confwidget.sections()) == 0:
+#				self.hovered_point_index = (self.hovered_point_index[0] - self.pressed_point_index[0], self.hovered_point_index[1]-self.pressed_point_index[1]) 
+#				self.pressed_point_index = (0,0)
+
+#			self.pressed_point_index = (round(self.pressed_point_index[0]), round(self.pressed_point_index[1]))
+#			self.hovered_point_index = (round(self.hovered_point_index[0]), round(self.hovered_point_index[1]))
 			
-			self.shemetype.confwidget._add_action(self.pressed_point_index,self.hovered_point_index)
-			self.update()
+#			self.shemetype.confwidget._add_action(self.pressed_point_index,self.hovered_point_index)
+
+		self.update()
