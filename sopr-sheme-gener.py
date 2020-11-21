@@ -28,6 +28,7 @@ import common
 import container
 import paintwdg
 import paintool
+import hashlib
 
 QAPP = None
 
@@ -210,6 +211,12 @@ class MainWindow(QMainWindow):
 		settings = QSettings("sopr-scheme-gener", "sopr-scheme-gener")
 		return settings.value("lastdir", None)
 
+	def file_hash(self, path):
+		with open(path,"rb") as f:
+			h = hashlib.new('sha256')
+			h.update(f.read())
+			return h.hexdigest()
+
 	def make_picture_action(self):
 		filters = "*.png;;*.jpg;;*.*"
 		defaultFilter = "*.png"
@@ -224,7 +231,7 @@ class MainWindow(QMainWindow):
 
 		ext = os.path.splitext(ext)[1]
 		if ext == '.*':
-			ext = ".jpg"
+			ext = ".png"
 
 		curext = os.path.splitext(path)[1]
 		if curext == '':
@@ -237,14 +244,14 @@ class MainWindow(QMainWindow):
 		if not os.path.exists(savepath):
 			os.mkdir(savepath)
 
-		marchpath = os.path.join(savepath, os.path.basename(path) + ".dat")
-		self.cw.current_scheme().serialize(marchpath)
-
 		try:
 			self.cw.current_scheme().paintwidget.save_image(path)
 		except Exception as ex:
 			util.msgbox_error(str(ex))
 
+		h = self.file_hash(path)
+		marchpath = os.path.join(savepath, os.path.basename(str(h)) + ".dat")
+		self.cw.current_scheme().serialize(marchpath)
 
 	def load_action(self):
 		filters = "*.png;;*.jpg;;*.*"
@@ -260,7 +267,7 @@ class MainWindow(QMainWindow):
 
 		ext = os.path.splitext(ext)[1]
 		if ext == '.*':
-			ext = ".jpg"
+			ext = ".png"
 
 		curext = os.path.splitext(path)[1]
 		if curext == '':
@@ -271,7 +278,20 @@ class MainWindow(QMainWindow):
 
 		savepath = os.path.join(dir, ".save")
 
-		marchpath = os.path.join(savepath, os.path.basename(path) + ".dat")
+		h = self.file_hash(path)
+
+		marchpath = os.path.join(savepath, os.path.basename(h) + ".dat")
+		print(marchpath)
+		if os.path.exists(marchpath):
+			pass
+		else:
+			marchpath = os.path.join(savepath, os.path.basename(path) + ".dat")
+	
+		if not os.path.exists(marchpath):
+			util.msgbox_error("Не найден файл для загрузки")
+	
+		#print(marchpath)
+
 		lll = None
 		try:
 			lll = pickle.load(open(marchpath, "rb"))
