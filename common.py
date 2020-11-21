@@ -211,7 +211,7 @@ class ConfWidget(StyleWidget):
 			("task", self.shemetype.task),
 			("sett", self.sett),
 			("texteditor", self.shemetype.texteditor),
-			("section", self.shemetype.section_container),
+			#("section", self.shemetype.section_container),
 		]
 
 		if hasattr(self.shemetype, "section_container"):

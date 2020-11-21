@@ -498,7 +498,6 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 			self.container.replace(self.rect_minus_rect)		 
 
 		elif self.section_type.get() == "Сечение общего типа":
-			print("HERe")
 			self.container.replace(self.main_section_0)		 
 
 def draw_section(wdg, section_type, right, hcenter,
