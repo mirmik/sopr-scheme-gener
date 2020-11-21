@@ -25,7 +25,7 @@ class ShemeType(common.SchemeType):
 class ConfWidget(common.ConfWidget):
 	"""Виджет настроек задачи T0"""
 	class sect:
-		def __init__(self, Fx="нет", Fy="нет", Fz="нет", Fx_txt="", Fy_txt="", Fz_txt="", Fx_txt_alttxt=False, Fy_txt_alttxt=False, Fz_txt_alttxt=False):
+		def __init__(self, Fx="нет", Fy="нет", Fz="нет", Fx_txt="", Fy_txt="", Fz_txt="", Fx_txt_alttxt="1", Fy_txt_alttxt="1", Fz_txt_alttxt="1"):
 			self.Fx = Fx
 			self.Fy = Fy
 			self.Fz = Fz
@@ -70,13 +70,13 @@ class ConfWidget(common.ConfWidget):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("Fx", "list", variant=["нет", "слева +", "слева -", "справа +", "справа -"])
 		self.table.addColumn("Fx_txt", "str")
-		self.table.addColumn("Fx_txt_alttxt", "bool")
+		self.table.addColumn("Fx_txt_alttxt", "list", variant=["1","2","3","4","5","6"])
 		self.table.addColumn("Fy", "list", variant=["нет", "сверху +", "сверху -", "снизу +", "снизу -"])
 		self.table.addColumn("Fy_txt", "str")
-		self.table.addColumn("Fy_txt_alttxt", "bool")
+		self.table.addColumn("Fy_txt_alttxt", "list", variant=["1","2","3","4","5","6"])
 		self.table.addColumn("Fz", "list", variant=["нет", "+", "-"])
 		self.table.addColumn("Fz_txt", "str")
-		self.table.addColumn("Fz_txt_alttxt", "bool")
+		self.table.addColumn("Fz_txt_alttxt", "list", variant=["1","2","3","4","5","6"])
 		self.table.updateTable()
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
@@ -159,13 +159,13 @@ class PaintWidget(paintwdg.PaintWidget):
 	def trans(self,x,y,z):
 		if self.axonom:
 			p = self.trans_matrix * numpy.array([[x],[y],[-z],[1]])
-			return QPoint(p[0], p[2])
+			return QPoint(float(p[0]), float(p[2]))
 		else:
 			if self.axonom_deg:
 				return QPoint(self.base_x-y*math.cos(deg(60))+x, self.base_y+y*math.sin(deg(60))-z)
 
 			p = self.trans_matrix * numpy.array([[0],[y],[0],[1]])
-			return QPoint(p[0]+x, p[2]-z)
+			return QPoint(float(p[0])+x, float(p[2])-z)
 
 	def paintEventImplementation(self, ev):
 		greek = paintool.greek
@@ -683,7 +683,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				trans(a/2/math.sqrt(2), 0, -a/2/math.sqrt(2)),
 			]
 
-		def force(apnt, bpnt, txt, alttxt):
+		def force(apnt, bpnt, txt, txtpnt_type):
 			diff = bpnt - apnt
 			x = abs(diff.x())
 			y = abs(diff.y())
@@ -691,6 +691,81 @@ class PaintWidget(paintwdg.PaintWidget):
 				offset = 10
 			else:
 				offset= 14
+			
+			#elements.draw_text_by_points(
+			#	self,
+			#	apnt,
+			#	bpnt,
+			#	txt=txt,
+			#	off = offset,
+			#	alttxt=alttxt
+			#)
+
+			print(repr(txtpnt_type))
+			print(txtpnt_type.__class__)
+			#txtpnt = apnt if apnt.x() < bpnt.x() else bpnt
+
+			if txtpnt_type == "5":
+				elements.draw_text_by_points(
+					self,
+					apnt,
+					bpnt,
+					txt=txt,
+					off = offset,
+					alttxt=False
+				)
+				self.painter.setPen(self.doublepen)
+				paintool.common_arrow(
+					self.painter,
+					apnt,
+					bpnt,
+					arrow_size=arrow_size,
+				)
+				self.painter.setPen(self.pen)
+
+				return
+			elif txtpnt_type == "6":
+				elements.draw_text_by_points(
+					self,
+					apnt,
+					bpnt,
+					txt=txt,
+					off = offset,
+					alttxt=True
+				)
+				self.painter.setPen(self.doublepen)
+				paintool.common_arrow(
+					self.painter,
+					apnt,
+					bpnt,
+					arrow_size=arrow_size,
+				)
+				self.painter.setPen(self.pen)
+				return
+
+			txtpnt = None
+			if txtpnt_type == "1":
+				txtpnt = bpnt + QPointF(7,QFontMetrics(self.font).height()/4)
+			elif txtpnt_type == "2":
+				txtpnt = bpnt + QPointF(-8-QFontMetrics(self.font).width(txt),QFontMetrics(self.font).height()/4)
+			elif txtpnt_type == "3":
+				txtpnt = apnt + QPointF(7,QFontMetrics(self.font).height()/4)
+			elif txtpnt_type == "4":
+				txtpnt = apnt + QPointF(-8-QFontMetrics(self.font).width(txt),QFontMetrics(self.font).height()/4)
+
+			self.painter.setPen(Qt.NoPen)
+			self.painter.setBrush(Qt.white)
+			self.painter.drawRect(QRectF(
+				txtpnt - QPointF(+2,-QFontMetrics(self.font).height()/7), 
+				txtpnt + QPointF(+2+QFontMetrics(self.font).width(txt),-QFontMetrics(self.font).height()/3*2)))
+
+			self.painter.setPen(self.pen)
+
+			self.painter.setBrush(Qt.black)
+			self.painter.drawText(
+				txtpnt,
+				txt
+			)
 
 			self.painter.setPen(self.doublepen)
 			paintool.common_arrow(
@@ -699,15 +774,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				bpnt,
 				arrow_size=arrow_size,
 			)
-			
-			elements.draw_text_by_points(
-				self,
-				apnt,
-				bpnt,
-				txt=txt,
-				off = offset,
-				alttxt=alttxt
-			)
+			self.painter.setPen(self.pen)
 
 		arrlen = self.shemetype.arrlen.get()
 		for i in range(len(refpoints)):

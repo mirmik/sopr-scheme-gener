@@ -88,10 +88,6 @@ class ConfWidget(common.ConfWidget):
 		
 	def section_enable_handle(self):
 		pass
-		#if self.shemetype.section_enable.get():
-		#	self.shemetype.section_container.show()
-		#else:
-		#	self.shemetype.section_container.hide()
 		
 	def update_interface(self):
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
@@ -406,43 +402,10 @@ class PaintWidget(paintwdg.PaintWidget):
 		arrow_line_size = 50
 		hcenter = self.hcenter
 
-
 		section_width = sections.draw_section_routine(self, hcenter=hcenter, right=fini_width)
-		# if section_enable and self.shemetype.section_container.section_type.get() in sections.section_variant_base:
-		# 	section_width = sections.draw_section(
-		# 		wdg = self,
-		# 		section_type = self.shemetype.section_container.section_type.get(),
-		# 		arg0 = int(self.shemetype.section_container.base_section_widget.arg0.get()),
-		# 		arg1 = int(self.shemetype.section_container.base_section_widget.arg1.get()),
-		# 		arg2 = int(self.shemetype.section_container.base_section_widget.arg2.get()),
-		# 		txt0 = paintool.greek(self.shemetype.section_container.base_section_widget.txt0.get()),
-		# 		txt1 = paintool.greek(self.shemetype.section_container.base_section_widget.txt1.get()),
-		# 		txt2 = paintool.greek(self.shemetype.section_container.base_section_widget.txt2.get()),
-		# 		arrow_size = self.shemetype.arrow_size.get(),
-		# 		right = fini_width,
-		# 		hcenter=hcenter
-		# 	)
-
-		
-		# elif section_enable: # небазовый список
-		# 	section_width = self.shemetype.section_container.draw(
-		# 		wdg=self,
-		# 		shemetype=self.shemetype, 
-		# 		right=fini_width, 
-		# 		hcenter=hcenter, 
-		# 		arrow_size=self.shemetype.arrow_size.get())
 
 		actual_width -= section_width
 		fini_width -= section_width
 
 		self.draw_body(
 			hcenter=hcenter, left=strt_width, right=fini_width)
-
-
-
-
-
-
-
-
-

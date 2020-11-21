@@ -8,7 +8,10 @@ import paintool
 
 import taskconf_menu
 
+MAIN_SECTION_TYPE = "Сечение общего типа"
+
 section_variant=[
+	MAIN_SECTION_TYPE,  
 	"Круг",  
 	"Толстая труба",
 	"Тонкая труба",
@@ -39,6 +42,123 @@ class BaseSectionType(taskconf_menu.TaskConfMenu):
 		self.arg1 = self.add("Сечение.Аргумент2:", "int", "50")
 		self.arg2 = self.add("Сечение.Аргумент3:", "int", "10")
 
+class MainSection0(taskconf_menu.TaskConfMenu):
+	def __init__(self):
+		super().__init__()
+		self.outer_type = self.add("Тип сечения:", "list", defval=0, 
+			variant=[
+				"Прямоугольник",
+				"Квадрат",
+				"Квадрат повёрнутый 45 град",
+				"Круг"])
+
+		if self.outer_type.get() == "Прямоугольник":
+			self.h = self.add("Высота:", ("str", "int"), ("b", "70"))
+			self.w = self.add("Ширина:", ("str", "int"), ("a", "50"))
+
+		if self.outer_type.get() == "Квадрат"  \
+			or self.outer_type.get() == "Квадрат повёрнутый 45 град":
+			self.w = self.add("Ширина:", ("str", "int"), ("a", "50"))
+
+		elif self.outer_type.get() == "Круг":
+			self.w = self.add("Диаметр:", ("str", "int"), ("d", "50"))
+
+	def draw(self,
+			wdg,
+			shemetype, 
+			right, 
+			hcenter, 
+			arrow_size):
+
+		painter = wdg.painter
+		
+		w = self.w.get()[1]
+		w_text = self.w.get()[0]
+		wlen = hlen = w 
+
+		section_width = w + 120
+		center = QPoint(right - 20 - 10 - w, hcenter)
+		painter.setPen(wdg.pen)
+		painter.setBrush(QBrush(Qt.BDiagPattern))
+		
+		if self.outer_type.get() == "Прямоугольник":
+			h = self.h.get()[1]
+			h_text = self.h.get()[0]
+			
+			painter.drawRect(
+				QRect(center - QPoint(w,h), center + QPoint(w,h)))
+
+			paintool.draw_dimlines( # вертикальная
+				painter = painter,
+				apnt = center+QPoint(-w,h),
+				bpnt = center+QPoint(-w,-h),
+				offset = QPoint(-18,0),
+				textoff = QPoint(-10, 0),
+				text = h_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+			paintool.draw_dimlines( # горизонтальная
+				painter = painter,
+				apnt = center+QPoint(w,h),
+				bpnt = center+QPoint(-w,h),
+				offset = QPoint(0,23),
+				textoff = QPoint(0, -7),
+				text = w_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+			hlen = h
+
+		elif self.outer_type.get() == "Квадрат":
+			painter.drawRect(
+				QRect(center - QPoint(w,w), center + QPoint(w,w)))
+
+			paintool.draw_dimlines( # горизонтальная
+				painter = painter,
+				apnt = center+QPoint(w,w),
+				bpnt = center+QPoint(-w,w),
+				offset = QPoint(0,23),
+				textoff = QPoint(0, -7),
+				text = w_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+		elif self.outer_type.get() == "Квадрат повёрнутый 45 град":
+			painter.drawPolygon(
+				QPolygon([
+					center+QPoint(-w, 0),
+					center+QPoint(0, w),
+					center+QPoint(w, 0),
+					center+QPoint(0, -w),
+				])
+			)
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(0,w),
+				bpnt = center+QPoint(w,0),
+				offset = QPoint(10, 10),
+				textoff = QPoint(10, 10),
+				text = w_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(0,-w),
+				bpnt = center+QPoint(w,0),
+				offset = QPoint(10, -10),
+				textoff = QPoint(10, -10),
+				text = w_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+		painter.setPen(wdg.axpen)
+		wlen = wlen + 10
+		hlen = hlen + 10
+		painter.drawLine(center + QPoint(wlen,0), center + QPoint(wlen,0))
+		painter.drawLine(center + QPoint(0,-hlen), center + QPoint(0,hlen))
+
+		return section_width
+	
 class RectMinusRect(taskconf_menu.TaskConfMenu):
 	def __init__(self):
 		super().__init__()
@@ -48,7 +168,7 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		self.hw = self.add("Ширина отверстия:", ("str", "int"), ("c", "30"))
 		self.s = self.add("Свободное смещение:", ("bool", "str", "int"), (False, "s", "20"))
 		self.edge = self.add("Смещение к краю:", "list", defval=0, variant=["Нет", "Верх", "Низ"])
-		
+
 	def draw(self,
 			wdg,
 			shemetype, 
@@ -238,7 +358,9 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 		self.base_section_widget.updated.connect(self.updated)
 
 		self.rect_minus_rect = RectMinusRect() 
+		self.main_section_0 = MainSection0() 
 		self.rect_minus_rect.updated.connect(self.updated)
+		self.main_section_0.updated.connect(self.updated)
 
 		self.updated.connect(self.updated_selfhandle)
 		self.container = self._SectionContainerWidget()
@@ -260,6 +382,10 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 
 		elif self.section_type.get() == "Прямоугольник с прямоугольным отверстием":
 			self.container.replace(self.rect_minus_rect)		 
+
+		elif self.section_type.get() == "Сечение общего типа":
+			print("HERe")
+			self.container.replace(self.main_section_0)		 
 
 def draw_section(wdg, section_type, right, hcenter,
 	arg0, arg1, arg2, txt0, txt1, txt2, arrow_size
@@ -473,15 +599,6 @@ def draw_section(wdg, section_type, right, hcenter,
 			text = txt1,
 			arrow_size = arrow_size / 3 * 2
 		)
-		#paintool.draw_dimlines(
-		#	painter = painter,
-		#	apnt = center+QPoint(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
-		#	bpnt = center+QPoint(- math.cos(math.pi/4) * arg1, - math.sin(math.pi/4) * arg1),
-		#	offset = QPoint(0,0),
-		#	textoff = QPoint(8,-8),
-		#	text = txt2,
-		#	arrow_size = arrow_size / 3 * 2
-		#)
 		painter.setPen(self.axpen)
 		llen = arg0 + 10
 		painter.drawLine(center + QPoint(-llen,-arg0+4/3*arg0), center + QPoint(llen,-arg0+4/3*arg0))
@@ -549,7 +666,6 @@ def draw_section_routine(self, hcenter, right):
 			right = right,
 			hcenter=hcenter
 		)
-
 		
 	elif section_enable: # небазовый список
 		section_width = self.shemetype.section_container.draw(
