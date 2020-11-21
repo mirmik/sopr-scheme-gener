@@ -31,7 +31,8 @@ section_variant2=[
 	#"Квадрат повёрнутый",
 	"Треугольник",
 	#"Квадрат - окружность",
-	"Прямоугольник с прямоугольным отверстием"
+	"Прямоугольник с прямоугольным отверстием",
+	"H - профиль",
 ]
 
 section_variant_base=[
@@ -42,6 +43,7 @@ section_variant_base=[
 	#"Квадрат повёрнутый",
 	"Треугольник",
 	#"Квадрат - окружность",
+	"H - профиль",
 ]
 
 class BaseSectionType(taskconf_menu.TaskConfMenu):
@@ -268,6 +270,53 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 		painter.drawLine(center + QPointF(0,-hlen), center + QPointF(0,hlen))
 
 		return section_width
+
+class HRect(taskconf_menu.TaskConfMenu):
+	def __init__(self):
+		super().__init__()
+		self.h = self.add("Габарит1:", ("str", "int"), ("b", "70"))
+		self.w = self.add("Габарит2:", ("str", "int"), ("a", "50"))
+		self.w1 = self.add("Ширина перекладины:", ("str", "int"), ("d", "20"))
+		self.h1 = self.add("Ширина II:", ("str", "int"), ("d", "20"))
+		self.orient = self.add("Ориентация:", "bool", False)
+
+	def draw(self,
+			wdg,
+			shemetype, 
+			right, 
+			hcenter, 
+			arrow_size):
+		painter = wdg.painter
+
+		h = self.h.get()[1]
+		w = self.w.get()[1]
+		h_text = self.h.get()[0]
+		w_text = self.w.get()[0]
+		
+		h1 = self.h1.get()[1]
+		w1 = self.w1.get()[1]
+		h1_text = self.h1.get()[0]
+		w1_text = self.w1.get()[0]
+
+		painter.setPen(self.pen)
+		painter.setBrush(QBrush(Qt.BDiagPattern))
+		
+		if self.orient.get():
+			painter.drawPolygon(
+				QPolygon([
+					center+QPoint(-w, h),
+					center+QPoint(-w+w1, h),
+
+					center+QPoint(w-w1, h),
+					center+QPoint(w, h),
+
+					center+QPoint(w, -h),
+					center+QPoint(w-w1, -h),
+					
+					center+QPoint(-w+w1, -h),
+					center+QPoint(-w, -h),
+				])
+			)
 	
 class RectMinusRect(taskconf_menu.TaskConfMenu):
 	def __init__(self):
@@ -485,8 +534,10 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 
 		self.rect_minus_rect = RectMinusRect() 
 		self.main_section_0 = MainSection0() 
+		self.hrect = HRect() 
 		self.rect_minus_rect.updated.connect(self.updated)
 		self.main_section_0.updated.connect(self.updated)
+		self.hrect.updated.connect(self.updated)
 
 		self.updated.connect(self.updated_selfhandle)
 		self.container = self._SectionContainerWidget()
