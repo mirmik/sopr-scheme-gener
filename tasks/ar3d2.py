@@ -141,17 +141,22 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.offdown = self.sett.add("Вынос разм. линий:", "int", "100")
 		self.shemetype.arrlen = self.sett.add("Длина Стрелок:", "int", "60")
 		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
-		self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
-			defval=4,
-			variant=sections.section_variant)
+		#self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
+		#	defval=0,
+		#	variant=sections.section_variant)
 
-		self.shemetype.section_txt0 = self.sett.add("Сечение.Текст1:", "str", "D")
-		self.shemetype.section_txt1 = self.sett.add("Сечение.Текст2:", "str", "d")
-		self.shemetype.section_txt2 = self.sett.add("Сечение.Текст3:", "str", "d")
+		#self.shemetype.section_txt0 = self.sett.add("Сечение.Текст1:", "str", "D")
+		#self.shemetype.section_txt1 = self.sett.add("Сечение.Текст2:", "str", "d")
+		#self.shemetype.section_txt2 = self.sett.add("Сечение.Текст3:", "str", "d")
 
-		self.shemetype.section_arg0 = self.sett.add("Сечение.Аргумент1:", "int", "60")
-		self.shemetype.section_arg1 = self.sett.add("Сечение.Аргумент2:", "int", "50")
-		self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
+		#self.shemetype.section_arg0 = self.sett.add("Сечение.Аргумент1:", "int", "60")
+		#self.shemetype.section_arg1 = self.sett.add("Сечение.Аргумент2:", "int", "50")
+		#self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
+
+		self.shemetype.section_container = self.sett.add_widget(sections.SectionContainer(None))
+		self.shemetype.section_container.updated.connect(self.redraw)
+
+
 		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "15")
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
 		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
@@ -338,20 +343,26 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		lwidth = self.shemetype.lwidth.get()
 
-		section_width = sections.draw_section(
-			wdg = self,
-			section_type = self.shemetype.section_type.get(),
-			arg0 = int(self.shemetype.section_arg0.get()),
-			arg1 = int(self.shemetype.section_arg1.get()),
-			arg2 = int(self.shemetype.section_arg2.get()),
-	
-			txt0 = paintool.greek(self.shemetype.section_txt0.get()),
-			txt1 = paintool.greek(self.shemetype.section_txt1.get()),
-			txt2 = paintool.greek(self.shemetype.section_txt2.get()),
-			arrow_size = self.shemetype.arrow_size.get(),
-			right = fini_width,
-			hcenter=self.hcenter
-		)
+		section_width = sections.draw_section_routine(
+			self, 
+			hcenter=hcenter, 
+			right=fini_width)
+
+
+		#section_width = sections.draw_section(
+		#	wdg = self,
+		#	section_type = self.shemetype.section_type.get(),
+		#	arg0 = int(self.shemetype.section_arg0.get()),
+		#	arg1 = int(self.shemetype.section_arg1.get()),
+		#	arg2 = int(self.shemetype.section_arg2.get()),
+	#
+		#	txt0 = paintool.greek(self.shemetype.section_txt0.get()),
+		#	txt1 = paintool.greek(self.shemetype.section_txt1.get()),
+		#	txt2 = paintool.greek(self.shemetype.section_txt2.get()),
+		#	arrow_size = self.shemetype.arrow_size.get(),
+		#	right = fini_width,
+		#	hcenter=self.hcenter
+		#)
 
 		right_zone  = fini_width - section_width + self.shemetype.xoffset.get()
 

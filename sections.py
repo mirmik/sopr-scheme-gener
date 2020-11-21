@@ -12,6 +12,17 @@ import taskconf_menu
 MAIN_SECTION_TYPE = "Сечение общего типа"
 
 section_variant=[
+	"Круг",  
+	"Толстая труба",
+	"Тонкая труба",
+	"Прямоугольник",
+	"Квадрат повёрнутый",
+	"Треугольник",
+	"Квадрат - окружность",
+	"Прямоугольник с прямоугольным отверстием"
+]
+
+section_variant2=[
 	MAIN_SECTION_TYPE,  
 	#"Круг",  
 	#"Толстая труба",
@@ -466,8 +477,9 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 	def __init__(self, checker):
 		super().__init__()
 
-		self.checker = checker
-		self.checker.element().updated.connect(self.section_enable_handle)
+		if checker is not None:
+			self.checker = checker
+			self.checker.element().updated.connect(self.section_enable_handle)
 		self.base_section_widget = BaseSectionType() 
 		self.base_section_widget.updated.connect(self.updated)
 
@@ -478,7 +490,7 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 
 		self.updated.connect(self.updated_selfhandle)
 		self.container = self._SectionContainerWidget()
-		self.section_type = self.add("Тип сечения:", "list", defval=0, variant=section_variant)
+		self.section_type = self.add("Тип сечения:", "list", defval=0, variant=section_variant2)
 		self.add_widget(self.container)
 		self.container.replace(self.main_section_0)
 		self.oldtype = ""
@@ -763,7 +775,10 @@ def draw_section(wdg, section_type, right, hcenter,
 
 
 def draw_section_routine(self, hcenter, right):
-	section_enable = self.shemetype.section_enable.get()
+	if hasattr(self.shemetype, "section_enable"):
+		section_enable = self.shemetype.section_enable.get()
+	else:
+		section_enable = True
 
 	if section_enable and self.shemetype.section_container.section_type.get() in section_variant_base:
 		section_width = draw_section(
