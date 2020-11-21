@@ -43,7 +43,6 @@ section_variant_base=[
 	#"Квадрат повёрнутый",
 	"Треугольник",
 	#"Квадрат - окружность",
-	"H - профиль",
 ]
 
 class BaseSectionType(taskconf_menu.TaskConfMenu):
@@ -274,10 +273,10 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 class HRect(taskconf_menu.TaskConfMenu):
 	def __init__(self):
 		super().__init__()
-		self.h = self.add("Габарит1:", ("str", "int"), ("b", "70"))
-		self.w = self.add("Габарит2:", ("str", "int"), ("a", "50"))
-		self.w1 = self.add("Ширина перекладины:", ("str", "int"), ("d", "20"))
-		self.h1 = self.add("Ширина II:", ("str", "int"), ("d", "20"))
+		self.h = self.add("Габарит1:", ("str", "int"), ("a", "70"))
+		self.w = self.add("Габарит2:", ("str", "int"), ("b", "50"))
+		self.h1 = self.add("Ширина перекладины:", ("str", "int"), ("c", "10"))
+		self.w1 = self.add("Ширина II:", ("str", "int"), ("d", "10"))
 		self.orient = self.add("Ориентация:", "bool", False)
 
 	def draw(self,
@@ -292,31 +291,181 @@ class HRect(taskconf_menu.TaskConfMenu):
 		w = self.w.get()[1]
 		h_text = self.h.get()[0]
 		w_text = self.w.get()[0]
-		
+
+		wlen = w + 10
+		hlen = h + 10
+
 		h1 = self.h1.get()[1]
 		w1 = self.w1.get()[1]
 		h1_text = self.h1.get()[0]
 		w1_text = self.w1.get()[0]
-
-		painter.setPen(self.pen)
+		section_width = w + 120
+		center = QPoint(right - 20 - 10 - w, hcenter)
+		painter.setPen(wdg.pen)
 		painter.setBrush(QBrush(Qt.BDiagPattern))
 		
-		if self.orient.get():
+		if self.orient.get() is False:
 			painter.drawPolygon(
 				QPolygon([
 					center+QPoint(-w, h),
-					center+QPoint(-w+w1, h),
+					center+QPoint(-w+w1*2, h),
 
-					center+QPoint(w-w1, h),
+					center+QPoint(-w+w1*2, h1),
+					center+QPoint( w-w1*2, h1),
+
+					center+QPoint(w-w1*2, h),
 					center+QPoint(w, h),
 
 					center+QPoint(w, -h),
-					center+QPoint(w-w1, -h),
+					center+QPoint(w-w1*2, -h),
+
+					center+QPoint( w-w1*2, -h1),
+					center+QPoint(-w+w1*2, -h1),
 					
-					center+QPoint(-w+w1, -h),
+					center+QPoint(-w+w1*2, -h),
 					center+QPoint(-w, -h),
 				])
 			)
+
+			painter.setPen(wdg.axpen)
+			painter.drawLine(center + QPointF(wlen,0), center + QPointF(-wlen,0))
+			painter.drawLine(center + QPointF(w-w1,hlen), center + QPointF(w-w1,-hlen))
+			painter.drawLine(center + QPointF(-w+w1,hlen), center + QPointF(-w+w1,-hlen))
+		
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(-w,-h),
+					bpnt = center+QPoint(-w, h),
+					offset = QPoint(-20, 0),
+					textoff = QPoint(-10, 0),
+					text = h_text,
+					arrow_size = arrow_size / 3 * 2
+				)
+				
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint( w,h),
+					bpnt = center+QPoint(-w,h),
+					offset = QPoint(0, 25),
+					textoff = QPoint(0, -10),
+					text = w_text,
+					arrow_size = arrow_size / 3 * 2
+				)
+
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(-w,-h),
+					bpnt = center+QPoint(-w+w1*2,-h),
+					offset = QPoint(0, -20),
+					textoff = QPoint(0, -10),
+					text = w1_text,
+					arrow_size = arrow_size / 3 * 2,
+					splashed=True
+				)
+
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(w-w1*2,-h),
+					bpnt = center+QPoint(w,-h),
+					offset = QPoint(0, -20),
+					textoff = QPoint(0, -10),
+					text = w1_text,
+					arrow_size = arrow_size / 3 * 2,
+					splashed=True
+				)
+
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(0,-h1),
+					bpnt = center+QPoint(0, h1),
+					offset = QPoint(w+20, 0),
+					textoff = QPoint(10, 0),
+					text = h1_text,
+					arrow_size = arrow_size / 3 * 2,
+					splashed=True
+				)
+			
+		else:
+			painter.drawPolygon(
+				QPolygon([
+					center+QPoint(w, -h),
+					center+QPoint(w, -h+w1*2),
+
+					center+QPoint(h1, -h+w1*2),
+					center+QPoint(h1, h-w1*2),
+
+					center+QPoint(w, h-w1*2),
+					center+QPoint(w, h),
+
+					center+QPoint(-w, h),
+					center+QPoint(-w, h-w1*2),
+
+					center+QPoint(-h1, h-w1*2),
+					center+QPoint(-h1, -h+w1*2),
+					
+					center+QPoint(-w, -h+w1*2),
+					center+QPoint(-w, -h),
+				])
+			)
+	
+			painter.setPen(wdg.axpen)
+			painter.drawLine(center + QPointF(0,hlen-2), center + QPointF(0,-hlen))
+			painter.drawLine(center + QPointF(wlen,h-w1), center + QPointF(-wlen,h-w1))
+			painter.drawLine(center + QPointF(wlen,-h+w1), center + QPointF(-wlen,-h+w1))
+
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(-w,-h),
+					bpnt = center+QPoint(-w, h),
+					offset = QPoint(-20, 0),
+					textoff = QPoint(-10, 0),
+					text = h_text,
+					arrow_size = arrow_size / 3 * 2
+				)
+				
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint( w,h),
+					bpnt = center+QPoint(-w,h),
+					offset = QPoint(0, 25),
+					textoff = QPoint(0, -10),
+					text = w_text,
+					arrow_size = arrow_size / 3 * 2
+				)
+
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(w,h),
+					bpnt = center+QPoint(w,h-w1*2),
+					offset = QPoint(20,0),
+					textoff = QPoint(10,0),
+					text = w1_text,
+					arrow_size = arrow_size / 3 * 2,
+					splashed=True
+				)
+
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(w,-h+w1*2),
+					bpnt = center+QPoint(w,-h),
+					offset = QPoint(20,0),
+					textoff = QPoint(10,0),
+					text = w1_text,
+					arrow_size = arrow_size / 3 * 2,
+					splashed=True
+				)
+
+			paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(-h1,0),
+					bpnt = center+QPoint(h1, 0),
+					offset = QPoint(0, -20-h),
+					textoff = QPoint(0, -10),
+					text = h1_text,
+					arrow_size = arrow_size / 3 * 2,
+					splashed=True
+				)	
+		return section_width
 	
 class RectMinusRect(taskconf_menu.TaskConfMenu):
 	def __init__(self):
@@ -562,6 +711,9 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 
 		elif self.section_type.get() == "Сечение общего типа":
 			self.container.replace(self.main_section_0)		 
+
+		elif self.section_type.get() == "H - профиль":
+			self.container.replace(self.hrect)		 
 
 def draw_section(wdg, section_type, right, hcenter,
 	arg0, arg1, arg2, txt0, txt1, txt2, arrow_size
