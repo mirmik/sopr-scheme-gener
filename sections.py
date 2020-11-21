@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 
 import math
 import paintool
+import common
 
 import taskconf_menu
 
@@ -12,24 +13,24 @@ MAIN_SECTION_TYPE = "Сечение общего типа"
 
 section_variant=[
 	MAIN_SECTION_TYPE,  
-	"Круг",  
-	"Толстая труба",
+	#"Круг",  
+	#"Толстая труба",
 	"Тонкая труба",
-	"Прямоугольник",
-	"Квадрат повёрнутый",
+	#"Прямоугольник",
+	#"Квадрат повёрнутый",
 	"Треугольник",
-	"Квадрат - окружность",
+	#"Квадрат - окружность",
 	"Прямоугольник с прямоугольным отверстием"
 ]
 
 section_variant_base=[
-	"Круг",  
-	"Толстая труба",
+	#"Круг",  
+	#"Толстая труба",
 	"Тонкая труба",
-	"Прямоугольник",
-	"Квадрат повёрнутый",
+	#"Прямоугольник",
+	#"Квадрат повёрнутый",
 	"Треугольник",
-	"Квадрат - окружность",
+	#"Квадрат - окружность",
 ]
 
 class BaseSectionType(taskconf_menu.TaskConfMenu):
@@ -52,16 +53,17 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 				"Квадрат повёрнутый 45 град",
 				"Круг"])
 
-		if self.outer_type.get() == "Прямоугольник":
-			self.h = self.add("Высота:", ("str", "int"), ("b", "70"))
-			self.w = self.add("Ширина:", ("str", "int"), ("a", "50"))
+		self.w = self.add("Ширина:", ("str", "int"), ("a", "50"))
+		self.h = self.add("Высота:", ("str", "int"), ("b", "70"))
 
-		if self.outer_type.get() == "Квадрат"  \
-			or self.outer_type.get() == "Квадрат повёрнутый 45 град":
-			self.w = self.add("Ширина:", ("str", "int"), ("a", "50"))
+		self.inner_type = self.add("Тип внутр. сечения:", "list", defval=0, 
+			variant=[
+				"Нет",
+				"Квадрат",
+				"Квадрат повёрнутый 45 град",
+				"Круг"])
 
-		elif self.outer_type.get() == "Круг":
-			self.w = self.add("Диаметр:", ("str", "int"), ("d", "50"))
+		self.iw = self.add("Ширина внутр.:", ("str", "int"), ("c", "30"))
 
 	def draw(self,
 			wdg,
@@ -72,8 +74,10 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 
 		painter = wdg.painter
 		
-		w = self.w.get()[1]
+		w=h=self.w.get()[1]
 		w_text = self.w.get()[0]
+		iw = self.iw.get()[1]
+		iw_text = self.iw.get()[0]
 		wlen = hlen = w 
 
 		section_width = w + 120
@@ -134,28 +138,123 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 			)
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center+QPoint(0,w),
-				bpnt = center+QPoint(w,0),
-				offset = QPoint(10, 10),
-				textoff = QPoint(10, 10),
+				apnt = center+QPoint(0,-w),
+				bpnt = center+QPoint(-w,0),
+				offset = QPoint(-15, -15),
+				textoff = QPoint(-10, -10),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center+QPoint(0,-w),
-				bpnt = center+QPoint(w,0),
-				offset = QPoint(10, -10),
-				textoff = QPoint(10, -10),
+				apnt = center+QPoint(0,w),
+				bpnt = center+QPoint(-w,0),
+				offset = QPoint(-15, 15),
+				textoff = QPoint(-10, 10),
 				text = w_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+		elif self.outer_type.get() == "Круг":
+			painter.drawEllipse(
+				QRect(center - QPoint(w,w), center + QPoint(w,w)))
+
+			paintool.draw_dimlines( # горизонтальная
+				painter = painter,
+				apnt = center+QPoint(w,0),
+				bpnt = center+QPoint(-w,0),
+				offset = QPoint(0,23+w),
+				textoff = QPoint(0, -7),
+				text = w_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+		painter.setPen(wdg.pen)
+		painter.setBrush(Qt.white)
+		if self.inner_type.get() == "Квадрат":
+			painter.drawRect(
+				QRect(center - QPoint(iw,iw), center + QPoint(iw,iw)))
+
+			paintool.draw_dimlines( # горизонтальная
+				painter = painter,
+				apnt = center+QPoint(iw,iw),
+				bpnt = center+QPoint(iw,-iw),
+				offset = QPoint(w-iw+15, 0),
+				textoff = QPoint(8, 0),
+				text = iw_text,
+				arrow_size = arrow_size / 3 * 2
+			)
+
+		elif self.inner_type.get() == "Квадрат повёрнутый 45 град":
+			painter.drawPolygon(
+				QPolygon([
+					center+QPoint(-iw, 0),
+					center+QPoint(0, iw),
+					center+QPoint(iw, 0),
+					center+QPoint(0, -iw),
+				])
+			)
+			if self.outer_type.get() != "Квадрат повёрнутый 45 град": 
+				paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(0,iw),
+					bpnt = center+QPoint(iw,0),
+					offset = QPoint(10, 10),
+					textoff = QPoint(10, 10),
+					text = iw_text,
+					arrow_size = arrow_size / 3 * 2
+				)
+				paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(0,-iw),
+					bpnt = center+QPoint(iw,0),
+					offset = QPoint(10, -10),
+					textoff = QPoint(10, -10),
+					text = iw_text,
+					arrow_size = arrow_size / 3 * 2
+				)
+			else:
+				c1=(QPoint(0,w)+QPoint(w,0))/2 - (QPoint(0,iw)+QPoint(iw,0))/2
+				c2=(QPoint(0,-w)+QPoint(w,0))/2 - (QPoint(0,-iw)+QPoint(iw,0))/2
+				paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(0,iw),
+					bpnt = center+QPoint(iw,0),
+					offset = c1 + QPoint(15, 15),
+					textoff = QPoint(10, 10),
+					text = iw_text,
+					arrow_size = arrow_size / 3 * 2
+				)
+				paintool.draw_dimlines(
+					painter = painter,
+					apnt = center+QPoint(0,-iw),
+					bpnt = center+QPoint(iw,0),
+					offset = c2 + QPoint(15, -15),
+					textoff = QPoint(10, -10),
+					text = iw_text,
+					arrow_size = arrow_size / 3 * 2
+				)
+	
+		elif self.inner_type.get() == "Круг":
+			painter.drawEllipse(
+				QRect(center - QPoint(iw,iw), center + QPoint(iw,iw)))
+
+			paintool.draw_dimlines(
+				painter = painter,
+				apnt = center+QPoint(+ math.cos(math.pi/4) * iw, + math.sin(math.pi/4) * iw),
+				bpnt = center+QPoint(- math.cos(math.pi/4) * iw, - math.sin(math.pi/4) * iw),
+				offset = QPoint(0,0),
+				textoff = QPoint(8,-8),
+				text = iw_text,
 				arrow_size = arrow_size / 3 * 2
 			)
 
 		painter.setPen(wdg.axpen)
 		wlen = wlen + 10
 		hlen = hlen + 10
-		painter.drawLine(center + QPoint(wlen,0), center + QPoint(wlen,0))
-		painter.drawLine(center + QPoint(0,-hlen), center + QPoint(0,hlen))
+
+		painter.drawLine(center + QPointF(wlen,0), center + QPointF(-wlen,0))
+		painter.drawLine(center + QPointF(0,-hlen), center + QPointF(0,hlen))
 
 		return section_width
 	
@@ -348,6 +447,21 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 			self.show()
 		else:
 			self.hide()
+
+	def serialize(self):
+		return {
+			"section_type": self.section_type.get(),
+			"base_section_widget": self.base_section_widget.serialize(), 
+			"rect_minus_rect": self.rect_minus_rect.serialize(),
+			"main_section_0": self.main_section_0.serialize()
+		}
+
+
+	def deserialize(self, dct):
+		self.section_type.set(dct["section_type"])
+		self.base_section_widget.deserialize(dct["base_section_widget"]) 
+		self.rect_minus_rect.deserialize(dct["rect_minus_rect"])
+		self.main_section_0.deserialize(dct["main_section_0"])
 	
 	def __init__(self, checker):
 		super().__init__()
@@ -364,9 +478,9 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 
 		self.updated.connect(self.updated_selfhandle)
 		self.container = self._SectionContainerWidget()
-		self.section_type = self.add("Тип сечения:", "list", defval=4, variant=section_variant)
+		self.section_type = self.add("Тип сечения:", "list", defval=0, variant=section_variant)
 		self.add_widget(self.container)
-		self.container.replace(self.base_section_widget)
+		self.container.replace(self.main_section_0)
 		self.oldtype = ""
 
 	def draw(self, *args, **kwargs):

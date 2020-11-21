@@ -207,11 +207,17 @@ class ConfWidget(StyleWidget):
 		self.redraw()
 
 	def serialize_list(self):
-		return [
+		lst = [
 			("task", self.shemetype.task),
 			("sett", self.sett),
 			("texteditor", self.shemetype.texteditor),
+			("section", self.shemetype.section_container),
 		]
+
+		if hasattr(self.shemetype, "section_container"):
+			lst.append(("section", self.shemetype.section_container))
+
+		return lst
 
 class TableWidget(QWidget):
 	def __init__(self):
