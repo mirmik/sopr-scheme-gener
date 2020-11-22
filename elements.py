@@ -19,6 +19,7 @@ sharn_arr = ["нет",
 "слева шарн1", "справа шарн1", "сверху шарн1", "снизу шарн1",
 "слева шарн2", "справа шарн2", "сверху шарн2", "снизу шарн2",
 "слева врез1", "справа врез1", "сверху врез1", "снизу врез1",
+"врезанный",
 "заделка"]
 
 
@@ -220,6 +221,12 @@ def draw_element_sharn(self,
 			pen=self.pen, 
 			halfpen=self.halfpen, 
 			doublepen=self.doublepen)
+
+	if "врезанный" in type:
+		painter.drawEllipse(QRectF(
+			pnt-QPointF(termrad/2,termrad/2), 
+			pnt+QPointF(termrad/2,termrad/2))
+		)
 
 	return
 
