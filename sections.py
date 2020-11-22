@@ -662,7 +662,8 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 			"section_type": self.section_type.get(),
 			"base_section_widget": self.base_section_widget.serialize(), 
 			"rect_minus_rect": self.rect_minus_rect.serialize(),
-			"main_section_0": self.main_section_0.serialize()
+			"main_section_0": self.main_section_0.serialize(),
+			"hrect": self.hrect.serialize()
 		}
 
 
@@ -671,6 +672,7 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 		self.base_section_widget.deserialize(dct["base_section_widget"]) 
 		self.rect_minus_rect.deserialize(dct["rect_minus_rect"])
 		self.main_section_0.deserialize(dct["main_section_0"])
+		self.hrect.deserialize(dct["hrect"])
 	
 	def __init__(self, checker):
 		super().__init__()
