@@ -82,9 +82,9 @@ class ConfWidget(common.ConfWidget):
 		self.table.updateTable()
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("xF", "list", note="Fx", variant=["нет", "+", "-"])
+		self.table2.addColumn("xF", "list", note="Fx", variant=["нет", "+1", "+2", "-1", "-2"])
 		self.table2.addColumn("xFtxt", "str", "Fx")
-		self.table2.addColumn("yF", "list", "Fy", variant=["нет", "+", "-"])
+		self.table2.addColumn("yF", "list", "Fy", variant=["нет", "+1", "+2", "-1", "-2"])
 		self.table2.addColumn("yFtxt", "str", "Fy", "yF")
 
 		self.table2.addColumn("xM", "list", "Mx", variant=["нет", "+", "-"])
@@ -451,7 +451,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		for i in range(len(self.sections())+1):
 			self.painter.setPen(self.doublepen)
 			if bsects[i].xF != "нет":
-				if bsects[i].xF == "+":
+				if bsects[i].xF == "+1":
 					paintool.common_arrow(
 						self.painter,
 						trans(-w2-arrlen,coord(i),0),
@@ -462,15 +462,66 @@ class PaintWidget(paintwdg.PaintWidget):
 					self.painter.setPen(self.pen)
 					elements.draw_text_by_points(
 						self,
-						trans(-w2-arrlen,coord(i),0),
 						trans(-w2-arrlen/2,coord(i),0),
+						trans(-w2-arrlen,coord(i),0),
 						txt=bsects[i].xFtxt, 
 						alttxt=False, off=14, polka=None
 					)
+				
+				if bsects[i].xF == "+2":
+					paintool.common_arrow(
+						self.painter,
+						trans(-w2,coord(i),0),
+						trans(-w2+arrlen,coord(i),0),
+						arrow_size=arrow_size
+					)
+
+					self.painter.setPen(self.pen)
+					elements.draw_text_by_points(
+						self,
+						trans(-w2+arrlen,coord(i),0),
+						trans(-w2+arrlen/2,coord(i),0),
+						txt=bsects[i].xFtxt, 
+						alttxt=False, off=14, polka=None
+					)
+
+				if bsects[i].xF == "-1":
+					paintool.common_arrow(
+						self.painter,
+						trans(w2+arrlen,coord(i),0),
+						trans(w2,coord(i),0),
+						arrow_size=arrow_size,
+					)
+
+					self.painter.setPen(self.pen)
+					elements.draw_text_by_points(self,
+						trans(w2+arrlen,coord(i),0),
+						trans(w2+arrlen/2,coord(i),0),
+						txt=paintool.greek(bsects[i].xFtxt), 
+						alttxt=False, off=14, polka=None
+					)
+
+				if bsects[i].xF == "-2":
+					paintool.common_arrow(
+						self.painter,
+						trans(w2,coord(i),0),
+						trans(w2-arrlen,coord(i),0),
+						arrow_size=arrow_size,
+					)
+
+					self.painter.setPen(self.pen)
+					elements.draw_text_by_points(self,
+						trans(w2-arrlen/2,coord(i),0),
+						trans(w2-arrlen,coord(i),0),
+						txt=paintool.greek(bsects[i].xFtxt), 
+						alttxt=False, off=14, polka=None
+					)
+
+
 	
 			self.painter.setPen(self.doublepen)
 			if bsects[i].yF != "нет":
-				if bsects[i].yF == "+":
+				if bsects[i].yF == "+1":
 					paintool.common_arrow(
 						self.painter,
 						trans(0,coord(i),-w2-arrlen),
@@ -487,9 +538,60 @@ class PaintWidget(paintwdg.PaintWidget):
 						alttxt=False, off=10, polka=None
 					)
 
+				if bsects[i].yF == "+2":
+					paintool.common_arrow(
+						self.painter,
+						trans(0,coord(i),-w2),
+						trans(0,coord(i),-w2+arrlen),
+						arrow_size=arrow_size
+					)
+					
+					self.painter.setPen(self.pen)
+					elements.draw_text_by_points(
+						self,
+						trans(0,coord(i),-w2+arrlen/2),
+						trans(0,coord(i),-w2+arrlen),
+						txt=bsects[i].yFtxt, 
+						alttxt=False, off=10, polka=None
+					)
+
+				if bsects[i].yF == "-1":
+					paintool.common_arrow(
+						self.painter,
+						trans(0,coord(i),w2+arrlen),
+						trans(0,coord(i),w2),
+						arrow_size=arrow_size
+					)
+
+					self.painter.setPen(self.pen)
+					elements.draw_text_by_points(
+						self,
+						trans(0,coord(i),w2+arrlen/2),
+						trans(0,coord(i),w2+arrlen),
+						txt=paintool.greek(bsects[i].yFtxt), 
+						alttxt=False, off=10, polka=None
+					)
+
+				if bsects[i].yF == "-2":
+					paintool.common_arrow(
+						self.painter,
+						trans(0,coord(i),w2),
+						trans(0,coord(i),w2-arrlen),
+						arrow_size=arrow_size
+					)
+
+					self.painter.setPen(self.pen)
+					elements.draw_text_by_points(
+						self,
+						trans(0,coord(i),w2-arrlen),
+						trans(0,coord(i),w2-arrlen/2),
+						txt=paintool.greek(bsects[i].yFtxt), 
+						alttxt=False, off=10, polka=None
+					)
+
 			self.painter.setPen(self.pen)
 			if bsects[i].yM != "нет":
-				if bsects[i].yM == "-":
+				if bsects[i].yM == "-1":
 					off = -moff
 					alttxt = True
 				else:
@@ -522,7 +624,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			self.painter.setPen(self.pen)
 			if bsects[i].xM != "нет":
-				if bsects[i].xM == "-":
+				if bsects[i].xM == "-1":
 					off = moff
 					alttxt = True
 				else:
@@ -560,43 +662,11 @@ class PaintWidget(paintwdg.PaintWidget):
 		)
 
 		for i in range(len(self.sections())+1):
-			self.painter.setPen(self.doublepen)
-			if bsects[i].xF != "нет":
-				if bsects[i].xF == "-":
-					paintool.common_arrow(
-						self.painter,
-						trans(w2+arrlen,coord(i),0),
-						trans(w2,coord(i),0),
-						arrow_size=arrow_size,
-					)
-
-					self.painter.setPen(self.pen)
-					elements.draw_text_by_points(
-						self,
-							trans(w2+arrlen,coord(i),0),
-						trans(w2+arrlen/2,coord(i),0),
-						txt=paintool.greek(bsects[i].xFtxt), 
-						alttxt=False, off=14, polka=None
-					)
-
-			self.painter.setPen(self.doublepen)
-			if bsects[i].yF != "нет":
-				if bsects[i].yF == "-":
-					paintool.common_arrow(
-						self.painter,
-						trans(0,coord(i),w2+arrlen),
-						trans(0,coord(i),w2),
-						arrow_size=arrow_size
-					)
-
-					self.painter.setPen(self.pen)
-					elements.draw_text_by_points(
-						self,
-						trans(0,coord(i),w2+arrlen),
-						trans(0,coord(i),w2+arrlen/2),
-						txt=paintool.greek(bsects[i].yFtxt), 
-						alttxt=False, off=14, polka=None
-					)
+#			self.painter.setPen(self.doublepen)
+			#if bsects[i].xF != "нет":
+				
+#			self.painter.setPen(self.doublepen)
+#			if bsects[i].yF != "нет":
 	
 
 
