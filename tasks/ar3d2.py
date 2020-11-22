@@ -479,8 +479,8 @@ class PaintWidget(paintwdg.PaintWidget):
 					self.painter.setPen(self.pen)
 					elements.draw_text_by_points(
 						self,
-						trans(-w2+arrlen,coord(i),0),
 						trans(-w2+arrlen/2,coord(i),0),
+						trans(-w2+arrlen,coord(i),0),
 						txt=bsects[i].xFtxt, 
 						alttxt=False, off=14, polka=None
 					)
@@ -495,8 +495,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 					self.painter.setPen(self.pen)
 					elements.draw_text_by_points(self,
-						trans(w2+arrlen,coord(i),0),
 						trans(w2+arrlen/2,coord(i),0),
+						trans(w2+arrlen,coord(i),0),
 						txt=paintool.greek(bsects[i].xFtxt), 
 						alttxt=False, off=14, polka=None
 					)
