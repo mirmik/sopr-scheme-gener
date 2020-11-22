@@ -207,15 +207,6 @@ class PaintWidget(paintwdg.PaintWidget):
 		bsects = self.bsections()
 		moff = 40
 		"""Рисуем сцену согласно объекта задания"""
-
-		#if self.shemetype.width_getter != "600":
-		#	self.shemetype.width_getter.set("600")
-			#common.CONFVIEW.update_after.emit()
-		#	e = QResizeEvent(QSize(20,20), common.PAINT_CONTAINER.size());
-		#	QApplication.postEvent(common.PAINT_CONTAINER, e);
-		#	self.painter.end()
-
-		#	return
 		self.axonom = deg(self.shemetype.axonom.get())
 		self.axonom_deg = deg(self.shemetype.axonom_deg.get())
 		self.zrot = deg(self.shemetype.zrot.get())
@@ -226,27 +217,10 @@ class PaintWidget(paintwdg.PaintWidget):
 		marrlen = arrlen /2 
 		arrow_size = 18
 
-		#stlen = 600
-
 		fini_width = self.width() - 20
 		hcenter = self.height() / 2
 
 		lwidth = self.shemetype.lwidth.get()
-
-		#section_width = sections.draw_section(
-		#	wdg = self,
-		#	section_type = self.shemetype.section_type.get(),
-		#	arg0 = int(self.shemetype.section_arg0.get()),
-		#	arg1 = int(self.shemetype.section_arg1.get()),
-		#	arg2 = int(self.shemetype.section_arg2.get()),
-	
-		#	txt0 = paintool.greek(self.shemetype.section_txt0.get()),
-		#	txt1 = paintool.greek(self.shemetype.section_txt1.get()),
-		#	txt2 = paintool.greek(self.shemetype.section_txt2.get()),
-		#	arrow_size = self.shemetype.arrow_size.get(),
-		#	right = fini_width,
-		#	hcenter=self.hcenter
-		#)
 
 
 		section_width = sections.draw_section_routine(

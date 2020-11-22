@@ -132,9 +132,10 @@ class ConfWidget(common.ConfWidget):
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 
 		self.sett = taskconf_menu.TaskConfMenu()
+		self.shemetype.console = self.sett.add("Консоль:", ("bool", "int"), (True, "30"))
 		self.shemetype.axonom = self.sett.add("Аксонометрия:", "bool", True)
-		self.shemetype.axonom_deg = self.sett.add("45 градусов:", "bool", True)
-		self.shemetype.xoffset = self.sett.add("Смещение:", "int", "100")
+		self.shemetype.axonom_deg = self.sett.add("45 градусов:", "bool", False)
+		self.shemetype.xoffset = self.sett.add("Смещение:", "int", "30")
 		self.shemetype.zrot = self.sett.add("Направление:", "int", "30")
 		self.shemetype.xrot = self.sett.add("Подъём:", "int", "20")
 		self.shemetype.L = self.sett.add("Длина:", "int", "600")
@@ -312,6 +313,70 @@ class PaintWidget(paintwdg.PaintWidget):
 			p = self.trans_matrix * numpy.array([[0],[y],[0],[1]])
 			return QPoint(p[0]+x, p[2]-z)
 
+	def drawConsole(self):
+		L = self.L
+		L2 = self.L2
+		w = self.shemetype.console.get()[1]
+		w2 = 0
+		S=20
+		
+		if not self.shemetype.console.get()[0]:
+			return
+
+		self.painter.setPen(self.pen)
+
+		self.painter.setBrush(QColor(220,220,220))		
+		self.painter.drawPolygon(QPolygon([
+			self.trans(w,L,-w), self.trans(w,L,w), self.trans(w,0,w), self.trans(w,0,-w), 
+		]))
+		self.painter.setBrush(Qt.white)
+
+		self.painter.setPen(self.axpen)
+		self.painter.drawLine(self.trans(-w-S,L,0), self.trans(w+S,L,0))
+		self.painter.drawLine(self.trans(0,L,-w-S), self.trans(0,L,w+S))
+
+		self.painter.setPen(self.pen)
+		#self.painter.drawLine(self.trans(-w,0,-w), self.trans(-w,0,w))
+		self.painter.drawLine(self.trans(-w,0,w), self.trans(w,0,w))
+		self.painter.drawLine(self.trans(w,0,w), self.trans(w,0,-w))
+		#self.painter.drawLine(self.trans(w,0,-w), self.trans(-w,0,-w))
+
+		self.painter.drawLine(self.trans(-w,L,-w), self.trans(-w,L,w))
+		self.painter.drawLine(self.trans(-w,L,w), self.trans(w,L,w))
+		self.painter.drawLine(self.trans(w,L,w), self.trans(w,L,-w))
+		self.painter.drawLine(self.trans(w,L,-w), self.trans(-w,L,-w))
+
+		#self.painter.drawLine(self.trans(-w,L,-w), self.trans(-w,0,-w))
+		self.painter.drawLine(self.trans(-w,L,w), self.trans(-w,0,w))
+		self.painter.drawLine(self.trans(w,L,w), self.trans(w,0,w))
+		self.painter.drawLine(self.trans(w,L,-w), self.trans(w,0,-w))
+
+		#self.painter.drawLine(self.trans(-w2,L,-w2), self.trans(-w2,L,w2))
+		self.painter.drawLine(self.trans(-w2,L,w2), self.trans(w2,L,w2))
+		self.painter.drawLine(self.trans(w2,L,w2), self.trans(w2,L,-w2))
+		#self.painter.drawLine(self.trans(w2,L,-w2), self.trans(-w2,L,-w2))
+
+		self.painter.drawLine(self.trans(-w2,L2,-w2), self.trans(-w2,L2,w2))
+		self.painter.drawLine(self.trans(-w2,L2,w2), self.trans(w2,L2,w2))
+		self.painter.drawLine(self.trans(w2,L2,w2), self.trans(w2,L2,-w2))
+		self.painter.drawLine(self.trans(w2,L2,-w2), self.trans(-w2,L2,-w2))
+
+		#self.painter.drawLine(self.trans(-w2,L2,-w2), self.trans(-w2,L,-w2))
+		self.painter.drawLine(self.trans(-w2,L2,w2), self.trans(-w2,L,w2))
+		self.painter.drawLine(self.trans(w2,L2,w2), self.trans(w2,L,w2))
+		self.painter.drawLine(self.trans(w2,L2,-w2), self.trans(w2,L,-w2))
+
+		self.painter.setBrush(Qt.white)
+		self.painter.drawPolygon(QPolygon([
+			self.trans(-w2,L2,w2), self.trans(w2,L2,w2), self.trans(w2,L,w2), self.trans(-w2,L,w2), 
+		]))
+
+		self.painter.setBrush(QColor(220,220,220))
+		self.painter.drawPolygon(QPolygon([
+			self.trans(w2,L2,-w2), self.trans(w2,L2,w2), self.trans(w2,L,w2), self.trans(w2,L,-w2), 
+		]))
+
+
 	def paintEventImplementation(self, ev):
 		bsects = self.bsections()
 		sforces = self.sectforces()
@@ -348,22 +413,6 @@ class PaintWidget(paintwdg.PaintWidget):
 			hcenter=hcenter, 
 			right=fini_width)
 
-
-		#section_width = sections.draw_section(
-		#	wdg = self,
-		#	section_type = self.shemetype.section_type.get(),
-		#	arg0 = int(self.shemetype.section_arg0.get()),
-		#	arg1 = int(self.shemetype.section_arg1.get()),
-		#	arg2 = int(self.shemetype.section_arg2.get()),
-	#
-		#	txt0 = paintool.greek(self.shemetype.section_txt0.get()),
-		#	txt1 = paintool.greek(self.shemetype.section_txt1.get()),
-		#	txt2 = paintool.greek(self.shemetype.section_txt2.get()),
-		#	arrow_size = self.shemetype.arrow_size.get(),
-		#	right = fini_width,
-		#	hcenter=self.hcenter
-		#)
-
 		right_zone  = fini_width - section_width + self.shemetype.xoffset.get()
 
 		if not self.axonom or not self.axonom_deg:
@@ -378,10 +427,10 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.painter.setPen(self.pen)
 		trans = self.trans
 
-		w = 50
-		L = 0
-		w2 = 0
+		L = 20
 		L2 = L + stlen
+		self.L = L
+		self.L2 = L2
 
 		lsum = 0
 		for s in self.sections():
@@ -395,6 +444,13 @@ class PaintWidget(paintwdg.PaintWidget):
 				l += self.sections()[i].l
 
 			return L + lkoeff * l
+
+
+
+		# Draw console root
+		self.drawConsole()
+		
+
 
 		off = QPoint(0,offdown)
 		self.painter.setPen(self.halfpen)
@@ -525,7 +581,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		self.painter.setPen(self.doublepen)
 		self.painter.drawLine(
-			trans(0,0,0),
+			trans(0,L,0),
 			trans(0,L2,0),
 		)
 
