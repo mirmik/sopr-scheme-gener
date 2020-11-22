@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import *
 
 class ShemeType(common.SchemeType):
 	def __init__(self):
-		super().__init__("Косой изгиб (Тип 2)")
+		super().__init__("Косой изгиб")
 		self.setwidgets(ConfWidget(self), PaintWidget(), common.TableWidget())
 
 
@@ -56,12 +56,6 @@ class ConfWidget(common.ConfWidget):
 			self.xFtxt = xFtxt
 			self.yFtxt = yFtxt
 			
-			#self.mkr = mkr
-			#self.mkrT = mkrT
-	#		self.Fr = Fr
-	#		self.FrT = FrT
-
-
 	def create_task_structure(self):
 		self.shemetype.task = {
 			"sections": 
@@ -74,8 +68,6 @@ class ConfWidget(common.ConfWidget):
 				self.betsect(),
 				self.betsect(),
 				self.betsect(),
-			#	self.betsect(sharn="2"),
-			#	self.betsect()
 			],
 			"sectforce":
 			[
@@ -142,21 +134,9 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.offdown = self.sett.add("Вынос разм. линий:", "int", "100")
 		self.shemetype.arrlen = self.sett.add("Длина Стрелок:", "int", "60")
 		self.shemetype.lwidth = common.CONFVIEW.lwidth_getter
-		#self.shemetype.section_type = self.sett.add("Тип сечения:", "list", 
-		#	defval=0,
-		#	variant=sections.section_variant)
-
-		#self.shemetype.section_txt0 = self.sett.add("Сечение.Текст1:", "str", "D")
-		#self.shemetype.section_txt1 = self.sett.add("Сечение.Текст2:", "str", "d")
-		#self.shemetype.section_txt2 = self.sett.add("Сечение.Текст3:", "str", "d")
-
-		#self.shemetype.section_arg0 = self.sett.add("Сечение.Аргумент1:", "int", "60")
-		#self.shemetype.section_arg1 = self.sett.add("Сечение.Аргумент2:", "int", "50")
-		#self.shemetype.section_arg2 = self.sett.add("Сечение.Аргумент3:", "int", "10")
 
 		self.shemetype.section_container = self.sett.add_widget(sections.SectionContainer(None))
 		self.shemetype.section_container.updated.connect(self.redraw)
-
 
 		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "15")
 		self.shemetype.font_size = common.CONFVIEW.font_size_getter
@@ -336,32 +316,26 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.painter.drawLine(self.trans(0,L,-w-S), self.trans(0,L,w+S))
 
 		self.painter.setPen(self.pen)
-		#self.painter.drawLine(self.trans(-w,0,-w), self.trans(-w,0,w))
 		self.painter.drawLine(self.trans(-w,0,w), self.trans(w,0,w))
 		self.painter.drawLine(self.trans(w,0,w), self.trans(w,0,-w))
-		#self.painter.drawLine(self.trans(w,0,-w), self.trans(-w,0,-w))
-
+		
 		self.painter.drawLine(self.trans(-w,L,-w), self.trans(-w,L,w))
 		self.painter.drawLine(self.trans(-w,L,w), self.trans(w,L,w))
 		self.painter.drawLine(self.trans(w,L,w), self.trans(w,L,-w))
 		self.painter.drawLine(self.trans(w,L,-w), self.trans(-w,L,-w))
 
-		#self.painter.drawLine(self.trans(-w,L,-w), self.trans(-w,0,-w))
 		self.painter.drawLine(self.trans(-w,L,w), self.trans(-w,0,w))
 		self.painter.drawLine(self.trans(w,L,w), self.trans(w,0,w))
 		self.painter.drawLine(self.trans(w,L,-w), self.trans(w,0,-w))
 
-		#self.painter.drawLine(self.trans(-w2,L,-w2), self.trans(-w2,L,w2))
 		self.painter.drawLine(self.trans(-w2,L,w2), self.trans(w2,L,w2))
 		self.painter.drawLine(self.trans(w2,L,w2), self.trans(w2,L,-w2))
-		#self.painter.drawLine(self.trans(w2,L,-w2), self.trans(-w2,L,-w2))
-
+		
 		self.painter.drawLine(self.trans(-w2,L2,-w2), self.trans(-w2,L2,w2))
 		self.painter.drawLine(self.trans(-w2,L2,w2), self.trans(w2,L2,w2))
 		self.painter.drawLine(self.trans(w2,L2,w2), self.trans(w2,L2,-w2))
 		self.painter.drawLine(self.trans(w2,L2,-w2), self.trans(-w2,L2,-w2))
 
-		#self.painter.drawLine(self.trans(-w2,L2,-w2), self.trans(-w2,L,-w2))
 		self.painter.drawLine(self.trans(-w2,L2,w2), self.trans(-w2,L,w2))
 		self.painter.drawLine(self.trans(w2,L2,w2), self.trans(w2,L,w2))
 		self.painter.drawLine(self.trans(w2,L2,-w2), self.trans(w2,L,-w2))
@@ -584,12 +558,6 @@ class PaintWidget(paintwdg.PaintWidget):
 			trans(0,L,0),
 			trans(0,L2,0),
 		)
-
-#		for i in range(len(self.sections())):
-#			c = coord(i)
-#			self.painter.drawLine(self.trans(w2,c,-w2), self.trans(w2,c,w2))
-#			self.painter.drawLine(self.trans(-w2,c,w2), self.trans(w2,c,w2))
-
 
 		for i in range(len(self.sections())+1):
 			self.painter.setPen(self.doublepen)

@@ -68,7 +68,7 @@ class CentralWidget(QWidget):
 			tasks.star.ShemeTypeT1(),
 			tasks.plastina.ShemeTypeT3(),
 			tasks.fermes.ShemeTypeT4(),
-			tasks.ar3d.ShemeType(),
+			#tasks.ar3d.ShemeType(),
 			tasks.ar3d2.ShemeType(),
 			tasks.kosoi.ShemeType(),
 
