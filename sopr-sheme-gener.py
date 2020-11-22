@@ -21,7 +21,6 @@ import tasks.star
 import tasks.plastina
 import tasks.fermes
 import tasks.balki
-import tasks.ar3d
 import tasks.ar3d2
 import tasks.kosoi
 import common
