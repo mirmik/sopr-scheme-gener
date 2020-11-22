@@ -224,8 +224,8 @@ def draw_element_sharn(self,
 
 	if "врезанный" in type:
 		painter.drawEllipse(QRectF(
-			pnt-QPointF(termrad/4,termrad/4), 
-			pnt+QPointF(termrad/4,termrad/4))
+			pnt-QPointF(termrad/3,termrad/3), 
+			pnt+QPointF(termrad/3,termrad/3))
 		)
 
 	return
