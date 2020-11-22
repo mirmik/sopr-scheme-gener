@@ -93,8 +93,8 @@ class ConfWidget(common.ConfWidget):
 		self.table2.addColumn("yMtxt", "str", "My")
 		
 		self.table2.addColumn("xS", "list", "Sx", variant=["нет", "+1", "-1", "+2", "-2"])
-		self.table2.addColumn("yS", "list", "Sx", variant=["нет", "+1", "-1", "+2", "-2"])
-		self.table2.addColumn("zS", "list", "Sx", variant=["нет", "+1", "-1", "+2", "-2"])
+		self.table2.addColumn("yS", "list", "Sy", variant=["нет", "+1", "-1", "+2", "-2"])
+		self.table2.addColumn("zS", "list", "Sz", variant=["нет", "+1", "-1", "+2", "-2"])
 		self.table2.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")

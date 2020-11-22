@@ -118,8 +118,8 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 				painter = painter,
 				apnt = center+QPoint(w,h),
 				bpnt = center+QPoint(-w,h),
-				offset = QPoint(0,23),
-				textoff = QPoint(0, -7),
+				offset = QPoint(0,30),
+				textoff = QPoint(0, -11),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -133,8 +133,8 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 				painter = painter,
 				apnt = center+QPoint(w,w),
 				bpnt = center+QPoint(-w,w),
-				offset = QPoint(0,23),
-				textoff = QPoint(0, -7),
+				offset = QPoint(0,30),
+				textoff = QPoint(0, -11),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
