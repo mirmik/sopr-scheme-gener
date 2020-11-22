@@ -591,7 +591,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			self.painter.setPen(self.pen)
 			if bsects[i].yM != "нет":
-				if bsects[i].yM == "-1":
+				if bsects[i].yM == "-":
 					off = -moff
 					alttxt = True
 				else:
@@ -624,7 +624,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			self.painter.setPen(self.pen)
 			if bsects[i].xM != "нет":
-				if bsects[i].xM == "-1":
+				if bsects[i].xM == "-":
 					off = moff
 					alttxt = True
 				else:
