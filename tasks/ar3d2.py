@@ -90,26 +90,26 @@ class ConfWidget(common.ConfWidget):
 		self.table.updateTable()
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("xF", "list", variant=["нет", "+", "-"])
-		self.table2.addColumn("xFtxt", "str", "xF")
-		self.table2.addColumn("yF", "list", variant=["нет", "+", "-"])
-		self.table2.addColumn("yFtxt", "str", "yF")
+		self.table2.addColumn("xF", "list", note="Fx", variant=["нет", "+", "-"])
+		self.table2.addColumn("xFtxt", "str", "Fx")
+		self.table2.addColumn("yF", "list", "Fy", variant=["нет", "+", "-"])
+		self.table2.addColumn("yFtxt", "str", "Fy", "yF")
 
-		self.table2.addColumn("xM", "list", variant=["нет", "+", "-"])
-		self.table2.addColumn("xMtxt", "str", "xM")
-		self.table2.addColumn("yM", "list", variant=["нет", "+", "-"])
-		self.table2.addColumn("yMtxt", "str", "yM")
+		self.table2.addColumn("xM", "list", "Mx", variant=["нет", "+", "-"])
+		self.table2.addColumn("xMtxt", "str", "Mx")
+		self.table2.addColumn("yM", "list", "My", variant=["нет", "+", "-"])
+		self.table2.addColumn("yMtxt", "str", "My")
 		
-		self.table2.addColumn("xS", "list", variant=["нет", "+1", "-1", "+2", "-2"])
-		self.table2.addColumn("yS", "list", variant=["нет", "+1", "-1", "+2", "-2"])
-		self.table2.addColumn("zS", "list", variant=["нет", "+1", "-1", "+2", "-2"])
+		self.table2.addColumn("xS", "list", "Sx", variant=["нет", "+1", "-1", "+2", "-2"])
+		self.table2.addColumn("yS", "list", "Sx", variant=["нет", "+1", "-1", "+2", "-2"])
+		self.table2.addColumn("zS", "list", "Sx", variant=["нет", "+1", "-1", "+2", "-2"])
 		self.table2.updateTable()
 
 		self.table1 = tablewidget.TableWidget(self.shemetype, "sectforce")
-		self.table1.addColumn("xF", "list", variant=["нет", "+", "-"])
-		self.table1.addColumn("xFtxt", "str", "xF")
-		self.table1.addColumn("yF", "list", variant=["нет", "+", "-"])
-		self.table1.addColumn("yFtxt", "str", "yF")
+		self.table1.addColumn("xF", "list", "Fx", variant=["нет", "+", "-"])
+		self.table1.addColumn("xFtxt", "str", "Fx")
+		self.table1.addColumn("yF", "list", "Fy", variant=["нет", "+", "-"])
+		self.table1.addColumn("yFtxt", "str", "Fy")
 		self.table1.updateTable()
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
@@ -133,7 +133,7 @@ class ConfWidget(common.ConfWidget):
 
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.console = self.sett.add("Консоль:", ("bool", "int"), (True, "30"))
-		self.shemetype.axonom = self.sett.add("Аксонометрия:", "bool", True)
+		self.shemetype.axonom = self.sett.add("Аксонометрия:", "bool", False)
 		self.shemetype.axonom_deg = self.sett.add("45 градусов:", "bool", False)
 		self.shemetype.xoffset = self.sett.add("Смещение:", "int", "30")
 		self.shemetype.zrot = self.sett.add("Направление:", "int", "30")
@@ -445,7 +445,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			return L + lkoeff * l
 
-
+		w2 = 0
 
 		# Draw console root
 		self.drawConsole()
