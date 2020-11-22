@@ -305,13 +305,13 @@ class PaintWidget(paintwdg.PaintWidget):
 			x,y,z = x[0], x[1], x[2]
 		if self.axonom:
 			p = self.trans_matrix * numpy.array([[x],[y],[-z],[1]])
-			return QPoint(p[0], p[2])
+			return QPoint(float(p[0]), float(p[2]))
 		else:
 			if self.axonom_deg:
 				return QPoint(self.base_x-y*self.AXDEG+x, self.base_y+y*self.AXDEG-z)
 
 			p = self.trans_matrix * numpy.array([[0],[y],[0],[1]])
-			return QPoint(p[0]+x, p[2]-z)
+			return QPoint(float(p[0])+x, float(p[2])-z)
 
 	def drawConsole(self):
 		L = self.L
