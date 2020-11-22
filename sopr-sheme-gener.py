@@ -306,7 +306,7 @@ class MainWindow(QMainWindow):
 			return
 
 		translate_dict = {
-
+			"Косой изгиб (Тип 2)" : "Косой изгиб"
 		}
 
 		for i in range(len(self.cw.scheme_types)):
