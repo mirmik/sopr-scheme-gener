@@ -25,11 +25,11 @@ class ShemeTypeT4(common.SchemeType):
 
 class ConfWidget_T4(common.ConfWidget):
 	class sect:
-		def __init__(self, direct=1, strt=("",""), fini=(1,1), lsharn="нет", rsharn="нет", txt="", alttxt=False):
-			self.xstrt=str(strt[0])
-			self.ystrt=str(strt[1])
-			self.xfini=str(fini[0])
-			self.yfini=str(fini[1])
+		def __init__(self, direct=1, strt=("",""), fini=(1,1), lsharn="нет", rsharn="нет", txt="", alttxt=False, xstrt=None, ystrt=None, xfini=None, yfini=None):
+			self.xstrt=str(strt[0]) if xstrt is None else xstrt
+			self.ystrt=str(strt[1]) if ystrt is None else ystrt
+			self.xfini=str(fini[0]) if xfini is None else xfini
+			self.yfini=str(fini[1]) if yfini is None else yfini
 			self.lsharn = lsharn
 			self.rsharn = rsharn
 			self.txt = txt
