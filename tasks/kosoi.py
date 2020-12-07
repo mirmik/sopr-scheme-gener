@@ -688,7 +688,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			]
 
 		def force(apnt, bpnt, txt, txtpnt_type):
-			if txtpnt_type is None:
+			if txtpnt_type is None or txtpnt_type is True or txtpnt_type is False:
 				txtpnt_type = "1"
 
 			diff = bpnt - apnt
