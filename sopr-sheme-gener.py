@@ -275,12 +275,19 @@ class MainWindow(QMainWindow):
 		dir = os.path.dirname(path)
 		self.save_last_dirpath(dir)
 
-		savepath = os.path.join(dir, ".save")
+		if curext == ".dat":
+			savepath = dir
+		else:
+			savepath = os.path.join(dir, ".save")
 
 		h = self.file_hash(path)
 
-		marchpath = os.path.join(savepath, os.path.basename(h) + ".dat")
-		print(marchpath)
+		if curext != ".dat":
+			marchpath = os.path.join(savepath, os.path.basename(h) + ".dat")
+		else:
+			marchpath = path
+
+		#print(marchpath)
 		if os.path.exists(marchpath):
 			pass
 		else:
