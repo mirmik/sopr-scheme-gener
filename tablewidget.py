@@ -104,6 +104,8 @@ class TableWidget(QTableWidget):
 					obj.currentIndexChanged.connect(sig.emit_signal)
 
 					cur = str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name))
+					print(variant)
+					print(cur)
 					no = variant.index(cur)
 					obj.setCurrentIndex(no)
 
