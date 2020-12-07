@@ -256,25 +256,32 @@ class MainWindow(QMainWindow):
 		filters = "*.png;;*.jpg;;*.*"
 		defaultFilter = "*.png"
 
+		print("A")
+
 		path, ext = QFileDialog.getOpenFileName(
 			self, "Загрузить схему", 
 			self.get_last_dirpath(), filters, defaultFilter
 		)
 
+		print("A")
 		if not path:
 			return
 
+		print("A")
 		ext = os.path.splitext(ext)[1]
 		if ext == '.*':
 			ext = ".png"
 
+		print("A")
 		curext = os.path.splitext(path)[1]
 		if curext == '':
 			path = path + ext
 
+		print("A")
 		dir = os.path.dirname(path)
 		self.save_last_dirpath(dir)
 
+		print("A")
 		if curext == ".dat":
 			savepath = dir
 		else:
