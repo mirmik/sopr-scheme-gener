@@ -26,6 +26,11 @@ class ConfWidget(common.ConfWidget):
 	"""Виджет настроек задачи T0"""
 	class sect:
 		def __init__(self, Fx="нет", Fy="нет", Fz="нет", Fx_txt="", Fy_txt="", Fz_txt="", Fx_txt_alttxt="1", Fy_txt_alttxt="1", Fz_txt_alttxt="1"):
+			if Fx_txt_alttxt is None: Fx_txt_alttxt = "1"
+			if Fy_txt_alttxt is None: Fy_txt_alttxt = "1"
+			if Fz_txt_alttxt is None: Fz_txt_alttxt = "1"
+			
+
 			self.Fx = Fx
 			self.Fy = Fy
 			self.Fz = Fz
