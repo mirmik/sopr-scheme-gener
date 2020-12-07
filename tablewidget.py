@@ -108,9 +108,8 @@ class TableWidget(QTableWidget):
 					print(cur)
 
 					print(isinstance(variant, list))
-					print(isinstance(cur, bool))
-
-					if isinstance(variant, list) and isinstance(cur, bool): 
+					
+					if isinstance(variant, list) and (cur is True or cur is False): 
 						cur = "1" if cur else "2"
 
 					no = variant.index(cur)
