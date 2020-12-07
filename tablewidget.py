@@ -106,6 +106,9 @@ class TableWidget(QTableWidget):
 					cur = str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name))
 					print(variant)
 					print(cur)
+					if isinstance(variant, list) and isinstance(cur, bool): 
+						cur = "1" if cur else "2"
+
 					no = variant.index(cur)
 					obj.setCurrentIndex(no)
 
