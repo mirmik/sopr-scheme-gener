@@ -106,6 +106,10 @@ class TableWidget(QTableWidget):
 					cur = str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name))
 					print(variant)
 					print(cur)
+
+					print(isinstance(variant, list))
+					print(isinstance(cur, bool))
+
 					if isinstance(variant, list) and isinstance(cur, bool): 
 						cur = "1" if cur else "2"
 
