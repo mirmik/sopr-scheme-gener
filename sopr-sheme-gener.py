@@ -293,6 +293,8 @@ class MainWindow(QMainWindow):
 		else:
 			marchpath = os.path.join(savepath, os.path.basename(path) + ".dat")
 	
+		print(marchpath)
+
 		if not os.path.exists(marchpath):
 			util.msgbox_error("Не найден файл для загрузки")
 	
