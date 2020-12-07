@@ -106,7 +106,7 @@ class TableWidget(QTableWidget):
 					cur = str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name))
 					
 					a = isinstance(variant, list)
-					b = (cur is True or cur is False) or (cur == "True" or cur == False) 
+					b = (cur is True or cur is False) or (cur == "True" or cur == "False") 
 
 					if a and b: 
 						cur = "1" if cur is True or cur == "True" else "2"
