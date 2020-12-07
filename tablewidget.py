@@ -104,16 +104,12 @@ class TableWidget(QTableWidget):
 					obj.currentIndexChanged.connect(sig.emit_signal)
 
 					cur = str(getattr(self.shemetype.task[self.modelname][j], self.columns[i].name))
-					print(variant)
-					print(cur)
+					
+					a = isinstance(variant, list)
+					b = (cur is True or cur is False) or (cur == "True" or cur == False) 
 
-					print("B", isinstance(variant, list))
-					print(cur is False)
-					print(cur.__class__)
-					print("A", cur is True or cur is False, cur)
-
-					if isinstance(variant, list) and (cur is True or cur is False): 
-						cur = "1" if cur is True else "2"
+					if a and b: 
+						cur = "1" if cur is True or cur == "True" else "2"
 
 					no = variant.index(cur)
 					obj.setCurrentIndex(no)
