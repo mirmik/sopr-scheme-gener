@@ -228,6 +228,9 @@ def draw_element_sharn(self,
 			pnt+QPointF(termrad/3,termrad/3))
 		)
 
+	self.painter.setPen(self.pen)
+	self.painter.setBrush(Qt.white)
+
 	return
 
 def draw_text_by_points(self, strt, fini, txt, alttxt, off=14, polka=None):
