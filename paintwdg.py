@@ -111,6 +111,7 @@ class PaintWidget(QWidget):
 		lwidth = self.shemetype.line_width.get()
 
 		painter = QPainter(self)
+		painter.setRenderHints(QPainter.Antialiasing)
 		self.font = painter.font()
 		self.font.setItalic(True)
 		self.font.setPointSize(font_size)

@@ -83,13 +83,13 @@ class ConfWidget(common.ConfWidget):
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "labels")
 		self.table2.addColumn("text", "str")
-		self.table2.addColumn("x", "int")
-		self.table2.addColumn("y", "int")
+		#self.table2.addColumn("x", "int")
+		#self.table2.addColumn("y", "int")
 
 		if self.second_cube:
 			self.table2.addColumn("text2", "str")
-			self.table2.addColumn("x2", "int")
-			self.table2.addColumn("y2", "int")
+			#self.table2.addColumn("x2", "int")
+			#self.table2.addColumn("y2", "int")
 
 		self.table_clearing()
 		self.table2.updateTable()

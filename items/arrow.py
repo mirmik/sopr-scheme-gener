@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 import math
 
 class ArrowItem(QGraphicsItem):
-	def __init__(self, p1, p2, arrow_size, pen, brush, reverse=False):
+	def __init__(self, p1, p2, arrow_size, pen, brush, reverse=False, double=False):
 		super().__init__()
 		self.p1 = p1
 		self.p2 = p2
@@ -16,6 +16,7 @@ class ArrowItem(QGraphicsItem):
 		self.arrow_size_2 = arrow_size[1]
 		self.pen = pen
 		self.brush = brush
+		self.double = double
 
 	def boundingRect(self):
 		return QRectF(self.p1, self.p2)
@@ -31,5 +32,9 @@ class ArrowItem(QGraphicsItem):
 
 		normal = QPointF(diff.y(), -diff.x())
 		p3 = self.p2 - diff * self.arrow_size 
+		p4 = self.p1 + diff * self.arrow_size 
 
 		painter.drawPolygon(QPolygonF([self.p2, p3 + normal*self.arrow_size_2, p3 - normal*self.arrow_size_2]))
+
+		if self.double:
+			painter.drawPolygon(QPolygonF([self.p1, p4 + normal*self.arrow_size_2, p4 - normal*self.arrow_size_2]))

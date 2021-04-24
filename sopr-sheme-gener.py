@@ -24,6 +24,7 @@ import tasks.balki
 import tasks.ar3d2
 import tasks.kosoi
 import tasks.cube
+import tasks.vali
 
 import common
 import container
@@ -63,16 +64,17 @@ class CentralWidget(QWidget):
 
 		self.scheme_types = [
 			tasks.task0.ShemeTypeT0(),
-			#task0kr.ShemeTypeT01(),
+			
 			tasks.balki.ShemeType(),
 			tasks.sharn_sterhen.ShemeTypeT2(),
 			tasks.star.ShemeTypeT1(),
 			tasks.plastina.ShemeTypeT3(),
 			tasks.fermes.ShemeTypeT4(),
-			#tasks.ar3d.ShemeType(),
+			
 			tasks.ar3d2.ShemeType(),
 			tasks.kosoi.ShemeType(),
 			tasks.cube.ShemeType(),
+			tasks.vali.ShemeType(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]
