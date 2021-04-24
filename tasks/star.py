@@ -85,11 +85,9 @@ class ConfWidget_T1(common.ConfWidget):
 		self.table2.updated.connect(self.redraw)
 		self.vlayout.addWidget(self.shemetype.texteditor)
 		
-	"""Виджет настроек задачи T0"""
 	def __init__(self, sheme):
 		super().__init__(sheme)
 		self.sett = taskconf_menu.TaskConfMenu()
-		#self.shemetype.first_dir = self.sett.add("Положение первого стержня (верт/гор):", "bool", True)
 		self.shemetype.base_length = self.sett.add("Базовая длина:", "int", "80")
 		self.shemetype.sharnrad = self.sett.add("Радиус шарнира:", "int", "4")
 		self.sett.updated.connect(self.redraw)

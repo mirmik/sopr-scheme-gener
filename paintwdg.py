@@ -79,7 +79,12 @@ class PaintPreDialog(QDialog):
 
 class PaintWidget(QWidget):
 	def __init__(self):
+		self.resize_after_render_data = None
+		self.no_text_render = False
 		super().__init__()
+
+	def resize_after_render(self, x, y):
+		self.resize_after_render_data = (x, y)
 
 	def resizeEvent(self, ev):
 		self.shemetype.width_getter.set(self.width())
@@ -161,9 +166,10 @@ class PaintWidget(QWidget):
 		self.painter = painter
 		
 	def eval_hcenter(self):
-		addtext = self.shemetype.texteditor.toPlainText()
-		self.hcenter = self.height()/2 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2
-		self.text_height = QFontMetrics(self.font).height() * len(addtext.splitlines())
+		if not self.no_text_render:
+			addtext = self.shemetype.texteditor.toPlainText()
+			self.hcenter = self.height()/2 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2
+			self.text_height = QFontMetrics(self.font).height() * len(addtext.splitlines())
 
 	def paintEvent(self, ev):
 		try:
@@ -171,17 +177,27 @@ class PaintWidget(QWidget):
 			self.eval_hcenter()
 			self.paintEventImplementation(ev)
 
-			addtext = self.shemetype.texteditor.toPlainText()
-			self.painter.setPen(self.pen)
-			self.painter.setFont(self.font)
-			self.painter.setBrush(Qt.black)
-			n = len(addtext.splitlines())
-			for i, l in enumerate(addtext.splitlines()):
-				self.painter.drawText(QPoint(
-				40, 
-				self.height() - QFontMetrics(self.font).height()*(n-i)), 
-				paintool.greek(l))
+			if not self.no_text_render:
+				addtext = self.shemetype.texteditor.toPlainText()
+				self.painter.setPen(self.pen)
+				self.painter.setFont(self.font)
+				self.painter.setBrush(Qt.black)
+				n = len(addtext.splitlines())
+				for i, l in enumerate(addtext.splitlines()):
+					self.painter.drawText(QPoint(
+					40, 
+					self.height() - QFontMetrics(self.font).height()*(n-i)), 
+					paintool.greek(l))
+			
 			self.painter.end()
+	
+			if self.resize_after_render_data is not None:
+				common.PAINT_CONTAINER.resize(
+					self.resize_after_render_data[0],
+					self.resize_after_render_data[1]
+				)
+				self.resize_after_render_data = None
+
 		except Exception as ex:
 			txt = traceback.format_exc()
 			msg = QMessageBox()

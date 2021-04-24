@@ -82,12 +82,12 @@ class ConfWidget(common.ConfWidget):
 		self.table.addColumn("Fz_txt", "str")
 		self.table.addColumn("Fz_txt_alttxt", "list", variant=["1","2","3","4","5","6"])
 		self.table.updateTable()
+		self.table.updated.connect(self.redraw)
 
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
 		self.vlayout.addWidget(self.sett)
 
-		self.table.updated.connect(self.redraw)
 		self.vlayout.addWidget(self.shemetype.texteditor)
 		
 

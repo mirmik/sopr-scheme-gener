@@ -23,6 +23,8 @@ import tasks.fermes
 import tasks.balki
 import tasks.ar3d2
 import tasks.kosoi
+import tasks.cube
+
 import common
 import container
 import paintwdg
@@ -70,6 +72,7 @@ class CentralWidget(QWidget):
 			#tasks.ar3d.ShemeType(),
 			tasks.ar3d2.ShemeType(),
 			tasks.kosoi.ShemeType(),
+			tasks.cube.ShemeType(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]
@@ -256,28 +259,22 @@ class MainWindow(QMainWindow):
 		filters = "*.png;;*.jpg;;*.*"
 		defaultFilter = "*.png"
 
-		print("A")
-
 		path, ext = QFileDialog.getOpenFileName(
 			self, "Загрузить схему", 
 			self.get_last_dirpath(), filters, defaultFilter
 		)
 
-		print("A")
 		if not path:
 			return
 
-		print("A")
 		ext = os.path.splitext(ext)[1]
 		if ext == '.*':
 			ext = ".png"
 
-		print("A")
 		curext = os.path.splitext(path)[1]
 		if curext == '':
 			path = path + ext
 
-		print("A")
 		dir = os.path.dirname(path)
 		self.save_last_dirpath(dir)
 
@@ -305,8 +302,6 @@ class MainWindow(QMainWindow):
 		if not os.path.exists(marchpath):
 			util.msgbox_error("Не найден файл для загрузки")
 	
-		#print(marchpath)
-
 		lll = None
 		try:
 			lll = pickle.load(open(marchpath, "rb"))
