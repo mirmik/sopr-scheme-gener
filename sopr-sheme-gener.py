@@ -402,8 +402,11 @@ class MainWindow(QMainWindow):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--type", default="-1")
+parser.add_argument("--debug", action="store_true")
 parser.add_argument("--error", action="store_true")
 pargs = parser.parse_args()
+
+common.DEBUG = pargs.debug
 
 if pargs.error:
 	paintwdg.set_EXIT_ON_ERROR()

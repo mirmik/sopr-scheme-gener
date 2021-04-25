@@ -8,6 +8,7 @@ import math
 import taskconf_menu
 import pickle
 
+DEBUG = False
 APP = None
 CONFVIEW = None
 SCHEMETYPE = None
@@ -31,9 +32,18 @@ def do_deserialize(obj, info):
 		return obj.setText(info)
 
 	if hasattr(obj, "deserialize"):
+		if DEBUG:
+			print("do_deserialize::Internal deserialize")
 		return obj.deserialize(info)
+
 	else:
+		if DEBUG:
+			print("do_deserialize::unpickle")
 		p = pickle.loads(info)
+
+		if DEBUG:
+			print("unpickle:", p)
+
 		if isinstance(p, dict):
 			for k, v in p.items():
 				for i in range(len(v)):
@@ -58,17 +68,31 @@ class SchemeType:
 		pickle.dump(lst, open(marchpath,"wb"))
 
 	def deserialize(self, dct):
+		self.paintwidget.prevent_errors = True
+		self.confwidget.prevent_errors = True
+
+		if DEBUG:
+			print("SchemeType::deserialize")
+
 		slst = self.confwidget.serialize_list()
 
 		for k, v in slst:
 			for kd, vd in dct:
 				if k == kd:
+					print("SchemeType::deserialize", k)
 					do_deserialize(v, vd)
-					self.confwidget.clean_and_update_interface()
+
+		if DEBUG:
+			print("SchemeType::clean_and_update_interface")
+	
+		self.confwidget.clean_and_update_interface()
 
 		for kd, vd in dct:
 			if kd == "size":
 				CONFVIEW.load_size(vd)
+
+		self.paintwidget.prevent_errors = False
+		self.confwidget.prevent_errors = False
 	
 	def setwidgets(self,confwidget, paintwidget, tablewidget):
 		self.paintwidget = paintwidget
@@ -106,6 +130,7 @@ class ConfWidget_Stub(StyleWidget):
 	def __init__(self):
 		super().__init__()
 		self.text = "STUB"
+		self.prevent_errors = False
 		self.layout = QVBoxLayout()
 		self.label = QLabel(self.text)
 		self.layout.addWidget(self.label)
@@ -172,6 +197,7 @@ class ConfWidget(StyleWidget):
 	def __init__(self, sheme=None, noinitbuttons=False):
 		super().__init__()
 		self.shemetype = sheme
+		self.prevent_errors = False
 
 		if sheme:
 			self.vlayout = QVBoxLayout()
@@ -196,7 +222,13 @@ class ConfWidget(StyleWidget):
 		return self.shemetype.task["sectforce"]
 
 	def redraw(self):
-		self.shemetype.paintwidget.repaint()
+		try:
+			self.shemetype.paintwidget.repaint()
+		except:
+			if self.prevent_errors == True:
+				pass
+			else:
+				raise
 
 	def update_interface(self):
 		print("update interface is not reimplemented")

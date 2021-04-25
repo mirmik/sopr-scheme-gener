@@ -206,6 +206,10 @@ class TaskConfMenu(QWidget):
 		#return pickle.dumps([ g.get() for g in self.getters ])
 
 	def deserialize(self, ppp):
+		import common
+
+		if common.DEBUG:
+			print("TaskConfMenu::deserialize")
 		ppp = pickle.loads(ppp)
 
 		if (isinstance(ppp, list)):
@@ -216,6 +220,9 @@ class TaskConfMenu(QWidget):
 			for i in range(min(len(self.getters), len(ppp))):
 				for k,v in ppp.items():
 					if self.getters[i].parent.serlbl == k:
-						self.getters[i].set(v)
+							self.getters[i].set(v)
 		else:
 			util.error_msgbox("unresolved deserializated type")
+
+		if common.DEBUG:
+			print("TaskConfMenu::deserialize ... ok")

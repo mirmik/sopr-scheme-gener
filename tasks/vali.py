@@ -31,7 +31,7 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
 
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.has_central = self.sett.add("Центральная секция:", "bool", True)
+		self.shemetype.has_central = self.sett.add("Центральная секция:", "bool", False)
 		self.shemetype.external_camera = self.sett.add("Внешняя камера:", "bool", True)
 		self.shemetype.ztube = self.sett.add("Полая труба:", "bool", True)
 		self.shemetype.razrez = self.sett.add("Тип торца:", "list", 0, variant=["труба", "камера", "разрез"])
@@ -341,8 +341,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				text=self.shemetype.text_force.get(),
 				font = self.font,
 				center=(QPointF(wpoint1-5, -RR-13) + QPointF(wpoint1-50, -RR-13)) / 2,
-				pen = self.pen,
-				clean = True
+				pen = self.pen
 			))
 
 			self.scene.addItem(TextItem(
