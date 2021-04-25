@@ -348,7 +348,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.scene.addItem(TextItem(
 				text=self.shemetype.text_force.get(),
 				font = self.font,
-				center=(QPointF(wpoint4+5, -R-13) + QPointF(wpoint4+50, -R-13)) / 2,
+				center=(QPointF(wpoint4+5, -RR-13) + QPointF(wpoint4+50, -RR-13)) / 2,
 				pen = self.pen
 			))
 
