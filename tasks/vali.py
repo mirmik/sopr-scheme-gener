@@ -33,7 +33,7 @@ class ConfWidget(common.ConfWidget):
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.has_central = self.sett.add("Центральная секция:", "bool", False)
 		self.shemetype.external_camera = self.sett.add("Внешняя камера:", "bool", True)
-		self.shemetype.socr = self.sett.add("Сокращённая длина:", "bool", True)
+		self.shemetype.socr = self.sett.add("Сокращённая длина:", "bool", False)
 		self.shemetype.ztube = self.sett.add("Полая труба:", "bool", True)
 		self.shemetype.razrez = self.sett.add("Тип торца:", "list", 0, variant=["труба", "камера", "разрез"])
 		self.sett.add_delimiter()
@@ -47,6 +47,7 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.text_pressure = self.sett.add("Метка давления внешн.:", "str", "p")
 		self.shemetype.text_pressure_in = self.sett.add("Метка давления внутр.:", "str", "")
 		self.shemetype.htext = self.sett.add("Текст толщины трубы", "str", "h")
+		self.shemetype.Ltext = self.sett.add("Размер расчётной секции", "str", "")
 		self.sett.add_delimiter()
 		self.shemetype.camera_w = self.sett.add("Толщина камеры:", "int", "25")
 		self.shemetype.tubewidth = self.sett.add("Толщина трубы:", "int", "10")
@@ -370,6 +371,9 @@ class PaintWidget(paintwdg.PaintWidget):
 		tpos = None
 		if self.shemetype.socr.get():
 			tpos = (wpoint3*3+wpoint4)/4
+		else:
+			tpos = (wpoint3*2+wpoint4*2)/4
+			
 
 		if self.shemetype.has_central.get():
 			self.draw_tube(wpoint1, wpoint2, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, notext=True, tpos=-tpos)
@@ -484,6 +488,34 @@ class PaintWidget(paintwdg.PaintWidget):
 			for i in range(len(line) - 1):
 				self.scene.addLine(QLineF(line[i], line[i+1]))
 
+
+		#Размер расчётной секции:
+		if self.shemetype.Ltext.get() != "":
+			self.scene.addLine(QLineF(
+				QPointF(wpoint2, 0),
+				QPointF(wpoint2, ymax + 30 + camera_w + 33),
+			))
+
+			self.scene.addLine(QLineF(
+				QPointF(wpoint3, 0),
+				QPointF(wpoint3, ymax + 30 + camera_w + 33),
+			))
+
+			self.scene.addItem(ArrowItem(
+				QPointF(wpoint2, ymax + 30 + camera_w + 30),
+				QPointF(wpoint3, ymax + 30 + camera_w + 30),
+				double = True,
+				pen = self.halfpen,
+				brush = Qt.black,
+				arrow_size=(10,3)
+			))
+
+			self.scene.addItem(TextItem(
+				text=self.shemetype.Ltext.get(),
+				font=self.font,
+				center = QPointF(0, ymax + 30 + camera_w + 20),
+				pen=self.pen
+			))
 
 		br = QColor(0,0,0)
 		br.setAlphaF(0)
