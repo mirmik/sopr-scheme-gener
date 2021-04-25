@@ -33,6 +33,7 @@ class ConfWidget(common.ConfWidget):
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.has_central = self.sett.add("Центральная секция:", "bool", False)
 		self.shemetype.external_camera = self.sett.add("Внешняя камера:", "bool", True)
+		self.shemetype.socr = self.sett.add("Сокращённая длина:", "bool", True)
 		self.shemetype.ztube = self.sett.add("Полая труба:", "bool", True)
 		self.shemetype.razrez = self.sett.add("Тип торца:", "list", 0, variant=["труба", "камера", "разрез"])
 		self.sett.add_delimiter()
@@ -255,10 +256,21 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		WIDTH=500
 
-		wpoint1 = -WIDTH*0.45
-		wpoint2 = -WIDTH*0.2
-		wpoint3 = WIDTH*0.2
-		wpoint4 = WIDTH*0.45
+		if self.shemetype.socr.get():
+			wpoint1 = -WIDTH*0.45
+			wpoint2 = -WIDTH*0.1
+			wpoint3 = WIDTH*0.1
+			wpoint4 = WIDTH*0.45
+
+		else:
+			wpoint1 = -WIDTH*0.45
+			wpoint2 = -WIDTH*0.2
+			wpoint3 = WIDTH*0.2
+			wpoint4 = WIDTH*0.45
+
+
+		wpoint2c = -WIDTH*0.2
+		wpoint3c = WIDTH*0.2
 
 		if len(self.shemetype.task["sections"]) == 2:
 			ymax =self.shemetype.task["sections"][0].D if self.shemetype.task["sections"][0].D > self.shemetype.task["sections"][1].D else self.shemetype.task["sections"][1].D
@@ -382,8 +394,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		# Рисуем камеру.
 		if self.shemetype.external_camera.get():
 			self.draw_camera(
-				wmax=wpoint3 + 20+camera_w,
-				wmin=wpoint3 + 20,
+				wmax=wpoint3c + 20+camera_w,
+				wmin=wpoint3c + 20,
 				hmax=ymax + 30+camera_w,
 				hmin=ymax + 30,
 				hint = self.shemetype.task["sections"][0].D)
