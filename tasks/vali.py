@@ -43,6 +43,7 @@ class ConfWidget(common.ConfWidget):
 		self.sett.add_delimiter()
 		self.shemetype.invert_moment = self.sett.add("Направление момента:", "list", 0, variant=["нет", "+", "-"])
 		self.shemetype.text_moment = self.sett.add("Текст момента:", "str", "M")
+		self.shemetype.torc_moment = self.sett.add("Моменты на торцах:", "bool", False)
 		self.sett.add_delimiter()
 		self.shemetype.text_pressure = self.sett.add("Метка давления внешн.:", "str", "p")
 		self.shemetype.text_pressure_in = self.sett.add("Метка давления внутр.:", "str", "")
@@ -295,23 +296,27 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		# Рисуем моменты:
 		if self.shemetype.invert_moment.get() != "нет":
+			pos = (3*wpoint1+wpoint2)/4
+			if self.shemetype.torc_moment.get():
+				pos = wpoint1
+
 			minr = self.shemetype.task["sections"][0].D
 			maxr = self.shemetype.task["sections"][0].D+30
-			self.scene.addLine(QLineF(QPointF((3*wpoint1+wpoint2)/4, minr), QPointF((3*wpoint1+wpoint2)/4, maxr)))
-			self.scene.addLine(QLineF(QPointF((3*wpoint1+wpoint2)/4, -minr), QPointF((3*wpoint1+wpoint2)/4, -maxr)))
-			self.scene.addLine(QLineF(QPointF(-(3*wpoint1+wpoint2)/4, minr), QPointF(-(3*wpoint1+wpoint2)/4, maxr)))
-			self.scene.addLine(QLineF(QPointF(-(3*wpoint1+wpoint2)/4, -minr), QPointF(-(3*wpoint1+wpoint2)/4, -maxr)))
+			self.scene.addLine(QLineF(QPointF(pos, minr), QPointF(pos, maxr)))
+			self.scene.addLine(QLineF(QPointF(pos, -minr), QPointF(pos, -maxr)))
+			self.scene.addLine(QLineF(QPointF(-pos, minr), QPointF(-pos, maxr)))
+			self.scene.addLine(QLineF(QPointF(-pos, -minr), QPointF(-pos, -maxr)))
 
 			point_or_crest = self.shemetype.invert_moment.get() == "-"
-			self.set_crest_circle(QPointF((3*wpoint1+wpoint2)/4, -maxr), r=10, invert = point_or_crest)
-			self.set_crest_circle(QPointF(-(3*wpoint1+wpoint2)/4, -maxr), r=10, invert = not point_or_crest)
-			self.set_crest_circle(QPointF((3*wpoint1+wpoint2)/4, maxr), r=10, invert = not point_or_crest)
-			self.set_crest_circle(QPointF(-(3*wpoint1+wpoint2)/4, maxr), r=10, invert = point_or_crest)
+			self.set_crest_circle(QPointF(pos, -maxr), r=10, invert = point_or_crest)
+			self.set_crest_circle(QPointF(-pos, -maxr), r=10, invert = not point_or_crest)
+			self.set_crest_circle(QPointF(pos, maxr), r=10, invert = not point_or_crest)
+			self.set_crest_circle(QPointF(-pos, maxr), r=10, invert = point_or_crest)
 
 			self.scene.addItem(TextItem(
 				text=self.shemetype.text_moment.get(),
 				font=self.font,
-				center=QPointF((3*wpoint1+wpoint2)/4 -15, -maxr),
+				center=QPointF(pos -15, -maxr),
 				pen=self.pen,
 				offset="left"
 				))
@@ -319,7 +324,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.scene.addItem(TextItem(
 				text=self.shemetype.text_moment.get(),
 				font=self.font,
-				center=QPointF(-(3*wpoint1+wpoint2)/4 +15, -maxr),
+				center=QPointF(-pos +15, -maxr),
 				pen=self.pen,
 				offset="right"
 				))
