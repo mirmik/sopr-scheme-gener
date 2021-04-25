@@ -13,6 +13,7 @@ import paintool
 import items.arrow
 from items.arrow import ArrowItem
 from items.circmoment import CircMomentItem
+from items.squaremoment import SquareMomentItem
 from items.text import TextItem
 import math
 
@@ -48,6 +49,7 @@ class ConfWidget(common.ConfWidget):
 		self.sett.add_delimiter()
 		self.shemetype.invert_izgmoment = self.sett.add("Направление изг. момента:", "list", 0, variant=["нет", "+", "-"])
 		self.shemetype.text_izgmoment = self.sett.add("Текст изг. момента:", "str", "M")
+		self.shemetype.var_izgmoment = self.sett.add("Вариант изображения:", "list", 0, variant=["круговой", "угловой"])
 		self.sett.add_delimiter()
 		self.shemetype.text_pressure = self.sett.add("Метка давления внешн.:", "str", "p")
 		self.shemetype.text_pressure_in = self.sett.add("Метка давления внутр.:", "str", "")
@@ -335,39 +337,79 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		# изгиб.
 		if self.shemetype.invert_izgmoment.get()!="нет":
-			self.scene.addItem(CircMomentItem(
-				center=QPointF(wpoint1,0),
-				angle=deg(180),
-				rad = 50,
-				pen = self.pen,
-				brush=Qt.black,
-				inverse=self.shemetype.invert_izgmoment.get()=="-"
-			))
-
-			self.scene.addItem(CircMomentItem(
-				center=QPointF(wpoint4,0),
-				angle=deg(0),
-				rad = 50,
-				pen = self.pen,
-				brush=Qt.black,
-				inverse=self.shemetype.invert_izgmoment.get()=="+"
-			))
-
-			self.scene.addItem(TextItem(
-				text=self.shemetype.text_izgmoment.get(),
-				font=self.font,
-				center=QPointF(wpoint1 - 56, 0),
-				pen=self.pen,
-				offset="left"
+			if self.shemetype.var_izgmoment.get() == "круговой":
+				self.scene.addItem(CircMomentItem(
+					center=QPointF(wpoint1,0),
+					angle=deg(180),
+					rad = 50,
+					pen = self.pen,
+					brush=Qt.black,
+					inverse=self.shemetype.invert_izgmoment.get()=="-"
 				))
-
-			self.scene.addItem(TextItem(
-				text=self.shemetype.text_izgmoment.get(),
-				font=self.font,
-				center=QPointF(wpoint4 + 56, 0),
-				pen=self.pen,
-				offset="right"
+	
+				self.scene.addItem(CircMomentItem(
+					center=QPointF(wpoint4,0),
+					angle=deg(0),
+					rad = 50,
+					pen = self.pen,
+					brush=Qt.black,
+					inverse=self.shemetype.invert_izgmoment.get()=="+"
 				))
+	
+				self.scene.addItem(TextItem(
+					text=self.shemetype.text_izgmoment.get(),
+					font=self.font,
+					center=QPointF(wpoint1 - 56, 0),
+					pen=self.pen,
+					offset="left"
+					))
+	
+				self.scene.addItem(TextItem(
+					text=self.shemetype.text_izgmoment.get(),
+					font=self.font,
+					center=QPointF(wpoint4 + 56, 0),
+					pen=self.pen,
+					offset="right"
+					))
+			else:
+				x = 35
+				y = self.shemetype.task["sections"][0].D + 15
+
+				self.scene.addItem(SquareMomentItem(
+					center=QPointF(wpoint1,0),
+					x = x,
+					y = y,
+					pen = self.pen,
+					brush=Qt.black,
+					inverse=self.shemetype.invert_izgmoment.get()=="-"
+				))
+	
+				self.scene.addItem(SquareMomentItem(
+					center=QPointF(wpoint4,0),
+					x = x,
+					y = y,
+					pen = self.pen,
+					brush=Qt.black,
+					inverse=self.shemetype.invert_izgmoment.get()=="+"
+				))
+	
+				y = y - 15
+				inv = self.shemetype.invert_izgmoment.get()=="+"  
+				self.scene.addItem(TextItem(
+					text=self.shemetype.text_izgmoment.get(),
+					font=self.font,
+					center=QPointF(wpoint1 - 20, y if inv else -y),
+					pen=self.pen,
+					offset="left"
+					))
+	
+				self.scene.addItem(TextItem(
+					text=self.shemetype.text_izgmoment.get(),
+					font=self.font,
+					center=QPointF(wpoint4 + 20, y if inv else -y),
+					pen=self.pen,
+					offset="right"
+					))
 
 		# Рисуем силы
 		if self.shemetype.uncentered_force.get() != "нет":
