@@ -59,9 +59,9 @@ class ConfWidget(common.ConfWidget):
 	def redraw(self):
 		if self.shemetype.has_central.get() != self.has_central:
 			self.has_central = self.shemetype.has_central.get()
-			if self.has_central:
+			if self.has_central and len(self.shemetype.task["sections"]) != 2:
 				self.shemetype.task["sections"].append(self.sect())
-			else:
+			elif len(self.shemetype.task["sections"]) != 1:
 				del self.shemetype.task["sections"][1]
 			self.clean_and_update_interface()
 

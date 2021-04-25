@@ -42,14 +42,14 @@ class ConfWidget(common.ConfWidget):
 		self.update_interface()
 
 	def redraw(self):
-		if self.shemetype.second_cube.get() != self.second_cube:
-			self.second_cube = self.shemetype.second_cube.get()
-			if self.second_cube:
-				self.shemetype.task["sections"].append(self.sect())
-			else:
-				del self.shemetype.task["sections"][1]
+		if self.shemetype.second_cube.get() and len(self.shemetype.task["sections"]) != 2:
+			self.shemetype.task["sections"].append(self.sect())
 			self.clean_and_update_interface()
 
+		if not self.shemetype.second_cube.get() and len(self.shemetype.task["sections"]) != 1:
+			del self.shemetype.task["sections"][1]	
+			self.clean_and_update_interface()
+		
 		super().redraw()
 
 	def table_clearing(self):
@@ -86,7 +86,7 @@ class ConfWidget(common.ConfWidget):
 		#self.table2.addColumn("x", "int")
 		#self.table2.addColumn("y", "int")
 
-		if self.second_cube:
+		if self.shemetype.second_cube.get():
 			self.table2.addColumn("text2", "str")
 			#self.table2.addColumn("x2", "int")
 			#self.table2.addColumn("y2", "int")
