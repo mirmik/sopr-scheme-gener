@@ -32,14 +32,19 @@ class ConfWidget(common.ConfWidget):
 
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.has_central = self.sett.add("Центральная секция:", "bool", False)
-		self.shemetype.ztube = self.sett.add("Полая труба:", "bool", False)
-		self.shemetype.razrez = self.sett.add("Разрез на концах трубы:", "bool", False)
-		self.shemetype.uncentered_force = self.sett.add("Внецентренная сила:", "list", 0, variant=["нет", "+", "-"])
-		self.shemetype.text_force = self.sett.add("Текст внец. силы:", "str", "P")
+		self.shemetype.ztube = self.sett.add("Полая труба:", "bool", True)
+		self.shemetype.razrez = self.sett.add("Тип торца:", "list", 0, variant=["труба", "камера", "разрез"])
+		self.sett.add_delimiter()
+		self.shemetype.uncentered_force = self.sett.add("Сила:", "list", 0, variant=["нет", "+", "-"])
+		self.shemetype.is_uncentered_force = self.sett.add("Внецентренная сила:", "bool", True)
+		self.shemetype.text_force = self.sett.add("Текст силы:", "str", "P")
+		self.sett.add_delimiter()
 		self.shemetype.invert_moment = self.sett.add("Направление момента:", "list", 0, variant=["нет", "+", "-"])
 		self.shemetype.text_moment = self.sett.add("Текст момента:", "str", "M")
+		self.sett.add_delimiter()
 		self.shemetype.text_pressure = self.sett.add("Текст метки давления:", "str", "p")
 		self.shemetype.htext = self.sett.add("Текст толщины трубы", "str", "h")
+		self.sett.add_delimiter()
 		self.shemetype.camera_w = self.sett.add("Толщина камеры:", "int", "25")
 		self.shemetype.tubewidth = self.sett.add("Толщина трубы:", "int", "10")
 		self.shemetype.wborder = self.sett.add("Поля по горизонтали:", "float", "10")
@@ -73,7 +78,7 @@ class ConfWidget(common.ConfWidget):
 		self.setLayout(self.vlayout)
 
 	class sect:
-		def __init__(self, D=30, Dtext=""):
+		def __init__(self, D=30, Dtext="d"):
 			self.D = D
 			self.Dtext = Dtext
 
@@ -93,58 +98,68 @@ class PaintWidget(paintwdg.PaintWidget):
 		super().__init__()
 		self.no_text_render = True
 
-	def draw_tube(self, wmin, wmax, R, z=False, text=""):
+	def draw_tube(self, wmin, wmax, R, z=False, text="", camera=False, notext=False, nobody=False):
 		S = self.shemetype.tubewidth.get()
 
-		if not z:
-			self.scene.addRect(QRectF(wmin, -R, -wmin+wmax, 2*R), pen=self.pen)
-		else:
-			zbrush = QBrush(Qt.BDiagPattern)
-			self.scene.addRect(QRectF(wmin, -R, -wmin+wmax, S), pen=self.pen, brush=zbrush)
-			self.scene.addRect(QRectF(wmin, -R+S, -wmin+wmax, 2*R-S*2), pen=self.pen)
-			self.scene.addRect(QRectF(wmin, R, -wmin+wmax, -S), pen=self.pen, brush=zbrush)
-		
-		if z:
-			self.scene.addLine(QLineF(
-				QPointF(wmin, -R+S/2),
-				QPointF(wmax, -R+S/2)
-			), pen = self.axpen)
-
-			self.scene.addLine(QLineF(
-				QPointF(wmin, R-S/2),
-				QPointF(wmax, R-S/2)
-			), pen = self.axpen)
-
-			self.scene.addItem(
-				items.arrow.ArrowItem(
-					QPointF((wmax+wmin)/2, R-S/2), 
-					QPointF((wmax+wmin)/2, -R+S/2),
-					arrow_size=(10,3),
-					pen=self.pen,
-					brush=Qt.black,
-					double=True
+		if not nobody:
+			if not z:
+				self.scene.addRect(QRectF(wmin, -R, -wmin+wmax, 2*R), pen=self.pen)
+			else:
+	
+				if camera:
+					zbrush = QBrush(Qt.BDiagPattern)
+					self.scene.addRect(QRectF(wmin, -R, -wmin+wmax, 2*R), pen=self.pen, brush=zbrush)
+					self.scene.addRect(QRectF(wmin+S, -R+S, -wmin+wmax-S*2, 2*R-S*2), pen=self.pen, brush=Qt.white)
+					
+	
+				else:
+					zbrush = QBrush(Qt.BDiagPattern)
+					self.scene.addRect(QRectF(wmin, -R, -wmin+wmax, S), pen=self.pen, brush=zbrush)
+					self.scene.addRect(QRectF(wmin, -R+S, -wmin+wmax, 2*R-S*2), pen=self.pen)
+					self.scene.addRect(QRectF(wmin, R, -wmin+wmax, -S), pen=self.pen)
+			
+			if z:
+				self.scene.addLine(QLineF(
+					QPointF(wmin, -R+S/2),
+					QPointF(wmax, -R+S/2)
+				), pen = self.axpen)
+	
+				self.scene.addLine(QLineF(
+					QPointF(wmin, R-S/2),
+					QPointF(wmax, R-S/2)
+				), pen = self.axpen)
+	
+				self.scene.addItem(
+					items.arrow.ArrowItem(
+						QPointF((wmax+wmin)/2, R-S/2), 
+						QPointF((wmax+wmin)/2, -R+S/2),
+						arrow_size=(10,3),
+						pen=self.pen,
+						brush=Qt.black,
+						double=True
+					)
 				)
-			)
-		else:
-			self.scene.addItem(
-				items.arrow.ArrowItem(
-					QPointF((wmax+wmin)/2, R), 
-					QPointF((wmax+wmin)/2, -R),
-					arrow_size=(10,3),
-					pen=self.pen,
-					brush=Qt.black,
-					double=True
+			else:
+				self.scene.addItem(
+					items.arrow.ArrowItem(
+						QPointF((wmax+wmin)/2, R), 
+						QPointF((wmax+wmin)/2, -R),
+						arrow_size=(10,3),
+						pen=self.pen,
+						brush=Qt.black,
+						double=True
+					)
 				)
-			)
 
-		self.scene.addItem(TextItem(
-			text=paintool.greek(text),
-			font=self.font,
-			center=QPointF((wmax+wmin)/2-15, 0),
-			pen=self.pen,
-			rotate=deg(90),
-			clean=True
-		))
+		if not notext:
+			self.scene.addItem(TextItem(
+				text=paintool.greek(text),
+				font=self.font,
+				center=QPointF((wmax+wmin)/2-15, 0),
+				pen=self.pen,
+				rotate=deg(90),
+				clean=True
+			))
 
 	def scene_bound(self):
 		return (self.scene.itemsBoundingRect().width(),
@@ -242,10 +257,6 @@ class PaintWidget(paintwdg.PaintWidget):
 		wpoint3 = WIDTH*0.2
 		wpoint4 = WIDTH*0.45
 
-		# Рисуем ось:
-		self.scene.addLine(QLineF(QPointF(wpoint1-20, 0), QPointF(wpoint4+20, 0)), pen=self.axpen)
-
-
 		if len(self.shemetype.task["sections"]) == 2:
 			ymax =self.shemetype.task["sections"][0].D if self.shemetype.task["sections"][0].D > self.shemetype.task["sections"][1].D else self.shemetype.task["sections"][1].D
 		else:
@@ -293,11 +304,13 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		# Рисуем силы
 		if self.shemetype.uncentered_force.get() != "нет":
+			RR = R if self.shemetype.is_uncentered_force.get() else 0
+
 			inverse = self.shemetype.uncentered_force.get() == "-"
 			self.scene.addItem(
 				ArrowItem(
-					QPointF(wpoint4+5, -R),
-					QPointF(wpoint4+50, -R),
+					QPointF(wpoint4+5, -RR),
+					QPointF(wpoint4+50, -RR),
 					arrow_size=(15,5), 
 					pen=self.pen, 
 					brush=Qt.black,
@@ -308,8 +321,8 @@ class PaintWidget(paintwdg.PaintWidget):
 			
 			self.scene.addItem(
 				ArrowItem(
-					QPointF(wpoint1-5, -R),
-					QPointF(wpoint1-50, -R),
+					QPointF(wpoint1-5, -RR),
+					QPointF(wpoint1-50, -RR),
 					arrow_size=(15,5), 
 					pen=self.pen, 
 					brush=Qt.black,
@@ -321,8 +334,9 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.scene.addItem(TextItem(
 				text=self.shemetype.text_force.get(),
 				font = self.font,
-				center=(QPointF(wpoint1-5, -R-13) + QPointF(wpoint1-50, -R-13)) / 2,
-				pen = self.pen
+				center=(QPointF(wpoint1-5, -RR-13) + QPointF(wpoint1-50, -RR-13)) / 2,
+				pen = self.pen,
+				clean = True
 			))
 
 			self.scene.addItem(TextItem(
@@ -334,11 +348,22 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		# Рисуем трубы
 		if self.shemetype.has_central.get():
-			self.draw_tube(wpoint1, wpoint2, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext)
-			self.draw_tube(wpoint2, wpoint3, self.shemetype.task["sections"][1].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][1].Dtext)
-			self.draw_tube(wpoint3, wpoint4, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext)
+			self.draw_tube(wpoint1, wpoint2, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, notext=True)
+			self.draw_tube(wpoint2, wpoint3, self.shemetype.task["sections"][1].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][1].Dtext, notext=True)
+			self.draw_tube(wpoint3, wpoint4, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, notext=True)
 		else:
-			self.draw_tube(wpoint1, wpoint4, self.shemetype.task["sections"][0].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][0].Dtext)
+			self.draw_tube(wpoint1, wpoint4, self.shemetype.task["sections"][0].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][0].Dtext, camera=self.shemetype.razrez.get()=="камера", notext=True)
+
+		# Рисуем ось:
+		self.scene.addLine(QLineF(QPointF(wpoint1-20, 0), QPointF(wpoint4+20, 0)), pen=self.axpen)
+
+		# Текст диаметров:
+		if self.shemetype.has_central.get():
+			self.draw_tube(wpoint1, wpoint2, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, nobody=True)
+			self.draw_tube(wpoint2, wpoint3, self.shemetype.task["sections"][1].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][1].Dtext, nobody=True)
+			self.draw_tube(wpoint3, wpoint4, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, nobody=True)
+		else:
+			self.draw_tube(wpoint1, wpoint4, self.shemetype.task["sections"][0].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][0].Dtext, camera=self.shemetype.razrez.get()=="камера", nobody=True)
 
 		# Рисуем камеру.
 		self.draw_camera(
@@ -389,7 +414,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			)
 
 		# Рисуем разрезы на концах трубы
-		if self.shemetype.razrez.get():
+		if self.shemetype.razrez.get() == "разрез":
 			line = [
 				QPointF(wpoint1+5, R), 
 				QPointF(wpoint1+0, R/2), 
