@@ -26,13 +26,13 @@ class TextItem(QGraphicsItem):
 		self.height = height
 
 		if self.offset == "none":
-			box = QRectF(self.center.x() - width/2, self.center.y() - height/2, width, height)
+			box = QRectF(self.center.x() - width/2, self.center.y() - height/2, width+5, height)
 
 		elif self.offset == "left":
-			box = QRectF(self.center.x() - width, self.center.y() - height/2, width, height)
+			box = QRectF(self.center.x() - width, self.center.y() - height/2, width+5, height)
 
 		elif self.offset == "right":
-			box = QRectF(self.center.x(), self.center.y() - height/2, width, height)
+			box = QRectF(self.center.x(), self.center.y() - height/2, width+5, height)
 	
 		self.spoint = self.center + QPointF(-width/2, -height/2) 
 

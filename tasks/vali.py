@@ -269,13 +269,13 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		R = self.shemetype.task["sections"][0].D
 		# Метка давления:
-		if self.shemetype.external_camera.get():
-			self.scene.addItem(TextItem(
-				text=self.shemetype.text_pressure.get(),
-				font=self.font,
-				center=QPointF(-(wpoint3+3*wpoint2)/4 +15, -ymax-18),
-				pen=self.pen,
-			))
+		#if self.shemetype.external_camera.get():
+		self.scene.addItem(TextItem(
+			text=self.shemetype.text_pressure.get(),
+			font=self.font,
+			center=QPointF(-(wpoint3+3*wpoint2)/4 +15, -ymax-18),
+			pen=self.pen,
+		))
 
 		# Рисуем моменты:
 		if self.shemetype.invert_moment.get() != "нет":
