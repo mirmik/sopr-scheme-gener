@@ -24,7 +24,7 @@ class ShemeType(common.SchemeType):
 
 class ConfWidget(common.ConfWidget):
 	def __init__(self, scheme):
-		super().__init__(scheme)
+		super().__init__(scheme, noinitbuttons=True)
 		self.has_central = False
 		
 		self.shemetype.texteditor = QTextEdit()
@@ -32,6 +32,7 @@ class ConfWidget(common.ConfWidget):
 
 		self.sett = taskconf_menu.TaskConfMenu()
 		self.shemetype.has_central = self.sett.add("Центральная секция:", "bool", False)
+		self.shemetype.external_camera = self.sett.add("Внешняя камера:", "bool", False)
 		self.shemetype.ztube = self.sett.add("Полая труба:", "bool", True)
 		self.shemetype.razrez = self.sett.add("Тип торца:", "list", 0, variant=["труба", "камера", "разрез"])
 		self.sett.add_delimiter()
@@ -42,7 +43,8 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.invert_moment = self.sett.add("Направление момента:", "list", 0, variant=["нет", "+", "-"])
 		self.shemetype.text_moment = self.sett.add("Текст момента:", "str", "M")
 		self.sett.add_delimiter()
-		self.shemetype.text_pressure = self.sett.add("Текст метки давления:", "str", "p")
+		self.shemetype.text_pressure = self.sett.add("Метка давления внешн.:", "str", "p")
+		self.shemetype.text_pressure_in = self.sett.add("Метка давления внутр.:", "str", "")
 		self.shemetype.htext = self.sett.add("Текст толщины трубы", "str", "h")
 		self.sett.add_delimiter()
 		self.shemetype.camera_w = self.sett.add("Толщина камеры:", "int", "25")
@@ -259,17 +261,20 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		if len(self.shemetype.task["sections"]) == 2:
 			ymax =self.shemetype.task["sections"][0].D if self.shemetype.task["sections"][0].D > self.shemetype.task["sections"][1].D else self.shemetype.task["sections"][1].D
+			ymin =self.shemetype.task["sections"][0].D if self.shemetype.task["sections"][0].D < self.shemetype.task["sections"][1].D else self.shemetype.task["sections"][1].D
 		else:
 			ymax = self.shemetype.task["sections"][0].D 
+			ymin = self.shemetype.task["sections"][0].D 
 
 		R = self.shemetype.task["sections"][0].D
 		# Метка давления:
-		self.scene.addItem(TextItem(
-			text=self.shemetype.text_pressure.get(),
-			font=self.font,
-			center=QPointF(-(wpoint3+3*wpoint2)/4 +15, -ymax-18),
-			pen=self.pen,
-		))
+		if self.shemetype.external_camera.get():
+			self.scene.addItem(TextItem(
+				text=self.shemetype.text_pressure.get(),
+				font=self.font,
+				center=QPointF(-(wpoint3+3*wpoint2)/4 +15, -ymax-18),
+				pen=self.pen,
+			))
 
 		# Рисуем моменты:
 		if self.shemetype.invert_moment.get() != "нет":
@@ -354,6 +359,14 @@ class PaintWidget(paintwdg.PaintWidget):
 		else:
 			self.draw_tube(wpoint1, wpoint4, self.shemetype.task["sections"][0].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][0].Dtext, camera=self.shemetype.razrez.get()=="камера", notext=True)
 
+		# Внутренняя метка давления:
+		self.scene.addItem(TextItem(
+			text=self.shemetype.text_pressure_in.get(),
+			font=self.font,
+			center=QPointF(-(wpoint3+3*wpoint2)/4 +15, -ymin+25),
+			pen=self.pen,
+		))
+
 		# Рисуем ось:
 		self.scene.addLine(QLineF(QPointF(wpoint1-20, 0), QPointF(wpoint4+20, 0)), pen=self.axpen)
 
@@ -366,12 +379,13 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.draw_tube(wpoint1, wpoint4, self.shemetype.task["sections"][0].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][0].Dtext, camera=self.shemetype.razrez.get()=="камера", nobody=True)
 
 		# Рисуем камеру.
-		self.draw_camera(
-			wmax=wpoint3 + 20+camera_w,
-			wmin=wpoint3 + 20,
-			hmax=ymax + 30+camera_w,
-			hmin=ymax + 30,
-			hint = self.shemetype.task["sections"][0].D)
+		if self.shemetype.external_camera.get():
+			self.draw_camera(
+				wmax=wpoint3 + 20+camera_w,
+				wmin=wpoint3 + 20,
+				hmax=ymax + 30+camera_w,
+				hmin=ymax + 30,
+				hint = self.shemetype.task["sections"][0].D)
 
 		# Толщина трубы:
 		T = self.shemetype.tubewidth.get()

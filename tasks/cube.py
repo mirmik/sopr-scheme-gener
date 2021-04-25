@@ -23,7 +23,7 @@ class ShemeType(common.SchemeType):
 class ConfWidget(common.ConfWidget):
 	def __init__(self, scheme):
 		self.second_cube = False
-		super().__init__(scheme)
+		super().__init__(scheme, noinitbuttons=True)
 		
 		self.shemetype.texteditor = QTextEdit()
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
