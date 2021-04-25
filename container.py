@@ -73,6 +73,8 @@ class ContainerWidget(QWidget):
 		x = ev.pos().x()
 		y = ev.pos().y()
 
+		if hasattr(self.curwidget, "no_resize") and self.curwidget.no_resize:
+			return
 
 		if self.mtrack:
 			xdiff = self.lastx - x

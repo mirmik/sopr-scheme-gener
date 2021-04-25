@@ -31,8 +31,8 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.texteditor.textChanged.connect(self.redraw)
 
 		self.sett = taskconf_menu.TaskConfMenu()
-		self.shemetype.has_central = self.sett.add("Центральная секция:", "bool", False)
-		self.shemetype.external_camera = self.sett.add("Внешняя камера:", "bool", False)
+		self.shemetype.has_central = self.sett.add("Центральная секция:", "bool", True)
+		self.shemetype.external_camera = self.sett.add("Внешняя камера:", "bool", True)
 		self.shemetype.ztube = self.sett.add("Полая труба:", "bool", True)
 		self.shemetype.razrez = self.sett.add("Тип торца:", "list", 0, variant=["труба", "камера", "разрез"])
 		self.sett.add_delimiter()
@@ -99,6 +99,7 @@ class PaintWidget(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
 		self.no_text_render = True
+		self.no_resize = True
 
 	def draw_tube(self, wmin, wmax, R, z=False, text="", camera=False, notext=False, nobody=False):
 		S = self.shemetype.tubewidth.get()
@@ -359,16 +360,17 @@ class PaintWidget(paintwdg.PaintWidget):
 		else:
 			self.draw_tube(wpoint1, wpoint4, self.shemetype.task["sections"][0].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][0].Dtext, camera=self.shemetype.razrez.get()=="камера", notext=True)
 
+		# Рисуем ось:
+		self.scene.addLine(QLineF(QPointF(wpoint1-20, 0), QPointF(wpoint4+20, 0)), pen=self.axpen)
+
 		# Внутренняя метка давления:
 		self.scene.addItem(TextItem(
 			text=self.shemetype.text_pressure_in.get(),
 			font=self.font,
 			center=QPointF(-(wpoint3+3*wpoint2)/4 +15, -ymin+25),
 			pen=self.pen,
+			clean = True
 		))
-
-		# Рисуем ось:
-		self.scene.addLine(QLineF(QPointF(wpoint1-20, 0), QPointF(wpoint4+20, 0)), pen=self.axpen)
 
 		# Текст диаметров:
 		if self.shemetype.has_central.get():
@@ -470,14 +472,16 @@ class PaintWidget(paintwdg.PaintWidget):
 		p = QPen()
 		p.setColor(br)
 		rect = self.scene.itemsBoundingRect()
-				
-		height = self.scene.itemsBoundingRect().height()
-		text = self.scene.addText(paintool.greek(self.shemetype.texteditor.toPlainText()), self.font)
-		text.setPos(
-			self.scene.itemsBoundingRect().x(), 
-			self.scene.itemsBoundingRect().height() 
-				+ self.scene.itemsBoundingRect().y()
-				)
+
+		rect = self.scene.itemsBoundingRect()
+		addtext = paintool.greek(self.shemetype.texteditor.toPlainText())
+		n = len(addtext.splitlines())
+		for i, l in enumerate(addtext.splitlines()):
+			t = self.scene.addText(l, self.font)
+			t.setPos(
+				rect.x(), 
+				rect.height() + rect.y() + QFontMetrics(self.font).height()*i
+			)
 
 		WBORDER = self.shemetype.wborder.get()
 		HBORDER = self.shemetype.hborder.get()

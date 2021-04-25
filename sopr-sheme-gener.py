@@ -25,6 +25,7 @@ import tasks.ar3d2
 import tasks.kosoi
 import tasks.cube
 import tasks.vali
+import tasks.balki3d
 
 import common
 import container
@@ -75,6 +76,7 @@ class CentralWidget(QWidget):
 			tasks.kosoi.ShemeType(),
 			tasks.cube.ShemeType(),
 			tasks.vali.ShemeType(),
+			tasks.balki3d.ShemeType(),
 
 			#SchemeType("Проверка функциональности1", ConfWidget_Stub(), PaintWidget_T0(), TableWidget())
 		]

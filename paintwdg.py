@@ -81,6 +81,7 @@ class PaintWidget(QWidget):
 	def __init__(self):
 		self.resize_after_render_data = None
 		self.no_text_render = False
+		self.no_resize=False
 		super().__init__()
 
 	def resize_after_render(self, x, y):
@@ -111,7 +112,7 @@ class PaintWidget(QWidget):
 		lwidth = self.shemetype.line_width.get()
 
 		painter = QPainter(self)
-		painter.setRenderHints(QPainter.Antialiasing)
+		#painter.setRenderHints(QPainter.Antialiasing)
 		self.font = painter.font()
 		self.font.setItalic(True)
 		self.font.setPointSize(font_size)

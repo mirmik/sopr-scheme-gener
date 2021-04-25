@@ -176,7 +176,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.mouse_pressed = False
 		self.selected_item = None
 		self.last_point = QPointF(0,0)
-		self.last_size = (0,0)
+		self.no_resize = True
+
 
 	def scene_bound(self):
 		return (self.scene.itemsBoundingRect().width(),
@@ -303,9 +304,15 @@ class PaintWidget(paintwdg.PaintWidget):
 				green70.setAlphaF(0.7)
 				self.scene.addRect(h.boundingRect(), brush=green70)
 
-		height = self.scene_bound()[1]
-		text = self.scene.addText(paintool.greek(self.shemetype.texteditor.toPlainText()), self.font)
-		text.setPos(self.scene.itemsBoundingRect().x(), self.scene.itemsBoundingRect().height() + self.scene.itemsBoundingRect().y())
+		rect = self.scene.itemsBoundingRect()
+		addtext = paintool.greek(self.shemetype.texteditor.toPlainText())
+		n = len(addtext.splitlines())
+		for i, l in enumerate(addtext.splitlines()):
+			t = self.scene.addText(l, self.font)
+			t.setPos(
+				rect.x(), 
+				rect.height() + rect.y() + QFontMetrics(self.font).height()*i
+			)
 
 		WBORDER = self.shemetype.wborder.get()
 		HBORDER = self.shemetype.hborder.get()
@@ -322,8 +329,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		#self.scene.setSceneRect(rect.x() - 1*BORDER, rect.y() - 1*BORDER, rect.width() + 2*BORDER, rect.height() + 2*BORDER)
 		self.scene.render(self.painter)
 
-		if self.scene_bound() != self.last_size:
-			self.resize_after_render(*self.scene_bound())
+		#if self.scene_bound() != self.last_size:
+		self.resize_after_render(*self.scene_bound())
 
 	def mousePressEvent(self, ev):
 		self.mouse_pressed=True
