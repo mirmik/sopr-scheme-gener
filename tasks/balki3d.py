@@ -32,10 +32,11 @@ class ConfWidget(common.ConfWidget):
 			self.bz = bz
 
 	class node:
-		def __init__(self, x, y, z, type):
+		def __init__(self, x, y, z, type=""):
 			self.x = x
 			self.y = y
 			self.z = z
+
 
 	def __init__(self, scheme):
 		super().__init__(scheme)
