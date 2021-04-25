@@ -18,7 +18,7 @@ def deg(x): return x / 180.0 * math.pi
 
 class ShemeType(common.SchemeType):
 	def __init__(self):
-		super().__init__("Напряжения")
+		super().__init__("Пространственные балки")
 		self.setwidgets(ConfWidget(self), PaintWidget(), common.TableWidget())
 
 class ConfWidget(common.ConfWidget):
