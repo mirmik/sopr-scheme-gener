@@ -102,8 +102,11 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.no_text_render = True
 		self.no_resize = True
 
-	def draw_tube(self, wmin, wmax, R, z=False, text="", camera=False, notext=False, nobody=False):
+	def draw_tube(self, wmin, wmax, R, z=False, text="", camera=False, notext=False, nobody=False, tpos=None):
 		S = self.shemetype.tubewidth.get()
+
+		if tpos is None:
+			tpos=(wmax+wmin)/2
 
 		if not nobody:
 			if not z:
@@ -135,8 +138,8 @@ class PaintWidget(paintwdg.PaintWidget):
 	
 				self.scene.addItem(
 					items.arrow.ArrowItem(
-						QPointF((wmax+wmin)/2, R-S/2), 
-						QPointF((wmax+wmin)/2, -R+S/2),
+						QPointF(tpos, R-S/2), 
+						QPointF(tpos, -R+S/2),
 						arrow_size=(10,3),
 						pen=self.pen,
 						brush=Qt.black,
@@ -146,8 +149,8 @@ class PaintWidget(paintwdg.PaintWidget):
 			else:
 				self.scene.addItem(
 					items.arrow.ArrowItem(
-						QPointF((wmax+wmin)/2, R), 
-						QPointF((wmax+wmin)/2, -R),
+						QPointF(tpos, R), 
+						QPointF(tpos, -R),
 						arrow_size=(10,3),
 						pen=self.pen,
 						brush=Qt.black,
@@ -159,7 +162,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.scene.addItem(TextItem(
 				text=paintool.greek(text),
 				font=self.font,
-				center=QPointF((wmax+wmin)/2-15, 0),
+				center=QPointF(tpos-15, 0),
 				pen=self.pen,
 				rotate=deg(90),
 				clean=True
@@ -364,10 +367,14 @@ class PaintWidget(paintwdg.PaintWidget):
 			))
 
 		# Рисуем трубы
+		tpos = None
+		if self.shemetype.socr.get():
+			tpos = (wpoint3*3+wpoint4)/4
+
 		if self.shemetype.has_central.get():
-			self.draw_tube(wpoint1, wpoint2, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, notext=True)
+			self.draw_tube(wpoint1, wpoint2, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, notext=True, tpos=-tpos)
 			self.draw_tube(wpoint2, wpoint3, self.shemetype.task["sections"][1].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][1].Dtext, notext=True)
-			self.draw_tube(wpoint3, wpoint4, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, notext=True)
+			self.draw_tube(wpoint3, wpoint4, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, notext=True, tpos = tpos)
 		else:
 			self.draw_tube(wpoint1, wpoint4, self.shemetype.task["sections"][0].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][0].Dtext, camera=self.shemetype.razrez.get()=="камера", notext=True)
 
@@ -385,9 +392,9 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		# Текст диаметров:
 		if self.shemetype.has_central.get():
-			self.draw_tube(wpoint1, wpoint2, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, nobody=True)
+			self.draw_tube(wpoint1, wpoint2, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, nobody=True, tpos=-tpos)
 			self.draw_tube(wpoint2, wpoint3, self.shemetype.task["sections"][1].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][1].Dtext, nobody=True)
-			self.draw_tube(wpoint3, wpoint4, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, nobody=True)
+			self.draw_tube(wpoint3, wpoint4, self.shemetype.task["sections"][0].D, False, text=self.shemetype.task["sections"][0].Dtext, nobody=True, tpos = tpos)
 		else:
 			self.draw_tube(wpoint1, wpoint4, self.shemetype.task["sections"][0].D, self.shemetype.ztube.get(), text=self.shemetype.task["sections"][0].Dtext, camera=self.shemetype.razrez.get()=="камера", nobody=True)
 
