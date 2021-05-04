@@ -146,6 +146,11 @@ class PaintWidget(QWidget):
 		self.green.setColor(Qt.green)
 		paintool.green = self.green
 
+		self.blue = QPen()
+		self.blue.setWidth(lwidth)
+		self.blue.setColor(Qt.blue)
+		paintool.blue = self.blue
+
 		self.halfgreen = QPen()
 		self.halfgreen.setWidth(lwidth/2)
 		self.halfgreen.setColor(Qt.green)
@@ -201,6 +206,10 @@ class PaintWidget(QWidget):
 				self.resize_after_render_data = None
 
 		except Exception as ex:
+			if EXIT_ON_EXCEPT:
+				traceback.print_exc()				
+				exit(0)
+
 			txt = traceback.format_exc()
 			msg = QMessageBox()
 			msg.setText("Возникла ошибка при отрисовке задачи:")
