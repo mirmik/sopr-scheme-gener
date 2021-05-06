@@ -41,6 +41,7 @@ class ConfWidget(common.ConfWidget):
 		self.sett.add_delimiter()
 		self.shemetype.uncentered_force = self.sett.add("Сила:", "list", 0, variant=["нет", "+", "-"])
 		self.shemetype.is_uncentered_force = self.sett.add("Внецентренная сила:", "bool", True)
+		self.shemetype.is_uncentered_force_alternate = self.sett.add("сверху / снизу:", "bool", False)
 		self.shemetype.text_force = self.sett.add("Текст силы:", "str", "P")
 		self.sett.add_delimiter()
 		self.shemetype.invert_moment = self.sett.add("Направление момента:", "list", 0, variant=["нет", "+", "-"])
@@ -424,6 +425,9 @@ class PaintWidget(paintwdg.PaintWidget):
 				if self.shemetype.ztube.get() and len(self.sections()) == 1:
 					RR = R - self.shemetype.tubewidth.get() / 2
 
+			if self.shemetype.is_uncentered_force_alternate.get():
+				RR = - RR
+
 			inverse = self.shemetype.uncentered_force.get() == "-"
 			self.scene.addItem(
 				ArrowItem(
@@ -587,24 +591,46 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		#Размер расчётной секции:
 		if self.shemetype.Ltext.get() != "":
-			self.scene.addLine(QLineF(
-				QPointF(wpoint2, 0),
-				QPointF(wpoint2, ymax + 30 + camera_w + 33),
-			))
+			if self.shemetype.external_camera.get():
+				self.scene.addLine(QLineF(
+					QPointF(wpoint2, 0),
+					QPointF(wpoint2, ymax + 30 + camera_w + 33),
+				))
+	
+				self.scene.addLine(QLineF(
+					QPointF(wpoint3, 0),
+					QPointF(wpoint3, ymax + 30 + camera_w + 33),
+				))
+	
+				self.scene.addItem(ArrowItem(
+					QPointF(wpoint2, ymax + 30 + camera_w + 30),
+					QPointF(wpoint3, ymax + 30 + camera_w + 30),
+					double = True,
+					pen = self.halfpen,
+					brush = Qt.black,
+					arrow_size=(10,3)
+				))
+			else:
+				z = self.shemetype.tubewidth.get() if self.shemetype.razrez.get() == "камера" else 0
 
-			self.scene.addLine(QLineF(
-				QPointF(wpoint3, 0),
-				QPointF(wpoint3, ymax + 30 + camera_w + 33),
-			))
-
-			self.scene.addItem(ArrowItem(
-				QPointF(wpoint2, ymax + 30 + camera_w + 30),
-				QPointF(wpoint3, ymax + 30 + camera_w + 30),
-				double = True,
-				pen = self.halfpen,
-				brush = Qt.black,
-				arrow_size=(10,3)
-			))
+				self.scene.addLine(QLineF(
+					QPointF(wpoint1 + z, 0),
+					QPointF(wpoint1 + z, ymax + 63),
+				))
+	
+				self.scene.addLine(QLineF(
+					QPointF(wpoint4 - z, 0),
+					QPointF(wpoint4 - z, ymax + 63),
+				))
+	
+				self.scene.addItem(ArrowItem(
+					QPointF(wpoint1 + z, ymax + 60),
+					QPointF(wpoint4 - z, ymax + 60),
+					double = True,
+					pen = self.halfpen,
+					brush = Qt.black,
+					arrow_size=(10,3)
+				))
 
 			self.scene.addItem(TextItem(
 				text=self.shemetype.Ltext.get(),
