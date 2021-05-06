@@ -259,7 +259,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				text = self.shemetype.task["labels"][i].text
 				x = self.shemetype.task["labels"][i].x
 				y = self.shemetype.task["labels"][i].y
-				item = TextItem(text, font=self.font, center=pnt+QPointF(x,y), pen=self.pen)
+				item = TextItem(paintool.greek(text), font=self.font, center=pnt+QPointF(x,y), pen=self.pen)
 				self.scene.addItem(item)
 				self.hovers[hint] = item
 				item.hint = hint
