@@ -144,37 +144,42 @@ class PaintWidget(paintwdg.PaintWidget):
 					QPointF(wmax, R-S/2)
 				), pen = self.axpen)
 	
-				self.scene.addItem(
-					items.arrow.ArrowItem(
-						QPointF(tpos, R-S/2), 
-						QPointF(tpos, -R+S/2),
-						arrow_size=(10,3),
-						pen=self.pen,
-						brush=Qt.black,
-						double=True
+
+
+				if text != "":
+					self.scene.addItem(
+						items.arrow.ArrowItem(
+							QPointF(tpos, R-S/2), 
+							QPointF(tpos, -R+S/2),
+							arrow_size=(10,3),
+							pen=self.pen,
+							brush=Qt.black,
+							double=True
 					)
 				)
 			else:
-				self.scene.addItem(
-					items.arrow.ArrowItem(
-						QPointF(tpos, R), 
-						QPointF(tpos, -R),
-						arrow_size=(10,3),
-						pen=self.pen,
-						brush=Qt.black,
-						double=True
-					)
+				if text != "":
+					self.scene.addItem(
+						items.arrow.ArrowItem(
+							QPointF(tpos, R), 
+							QPointF(tpos, -R),
+							arrow_size=(10,3),
+							pen=self.pen,
+							brush=Qt.black,
+							double=True
+						)
 				)
 
 		if not notext:
-			self.scene.addItem(TextItem(
-				text=paintool.greek(text),
-				font=self.font,
-				center=QPointF(tpos-15, 0),
-				pen=self.pen,
-				rotate=deg(90),
-				clean=True
-			))
+			if text != "":
+				self.scene.addItem(TextItem(
+					text=paintool.greek(text),
+					font=self.font,
+					center=QPointF(tpos-15, 0),
+					pen=self.pen,
+					rotate=deg(90),
+					clean=True
+				))
 
 	def scene_bound(self):
 		return (self.scene.itemsBoundingRect().width(),
