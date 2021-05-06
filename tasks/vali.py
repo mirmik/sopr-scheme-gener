@@ -420,6 +420,10 @@ class PaintWidget(paintwdg.PaintWidget):
 		if self.shemetype.uncentered_force.get() != "нет":
 			RR = R if self.shemetype.is_uncentered_force.get() else 0
 
+			if RR == R:
+				if self.shemetype.ztube.get() and len(self.sections()) == 1:
+					RR = R - self.shemetype.tubewidth.get() / 2
+
 			inverse = self.shemetype.uncentered_force.get() == "-"
 			self.scene.addItem(
 				ArrowItem(
