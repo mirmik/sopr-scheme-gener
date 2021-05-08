@@ -570,7 +570,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			return False, None
 
 	def find_for_sect(self, pos, lst):
-		
+		pass	
 
 	def mouseMoveEvent(self, ev):
 		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
