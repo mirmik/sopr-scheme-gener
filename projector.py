@@ -80,4 +80,6 @@ class Projector:
 		return QPointF(vec[0], -vec[2])
 
 	def __call__(self, *args):
+		if len(args) == 1:
+			return self.project(args[0][0], args[0][1], args[0][2])
 		return self.project(*args)

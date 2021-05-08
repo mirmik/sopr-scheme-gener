@@ -19,7 +19,12 @@ class ArrowItem(QGraphicsItem):
 		self.double = double
 
 	def boundingRect(self):
-		return QRectF(self.p1, self.p2)
+		x0 = min(self.p1.x(), self.p2.x())
+		x1 = max(self.p1.x(), self.p2.x())
+		y0 = min(self.p1.y(), self.p2.y())
+		y1 = max(self.p1.y(), self.p2.y())
+
+		return QRectF(QPointF(x0, y0) + QPointF(-5,-5), QPointF(x1, y1) + QPointF(5,5))
 
 
 	def paint(self, painter, option, widget):

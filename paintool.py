@@ -382,7 +382,7 @@ def half_moment_arrow(painter, pnt, rad, left=True, inverse = False, arrow_size=
 
 
 def radrect(pnt, rad):
-	return QRect(pnt.x() - rad, pnt.y() - rad, rad*2+1, rad*2+1)
+	return QRectF(pnt.x() - rad, pnt.y() - rad, rad*2+1, rad*2+1)
 
 def placedtext(painter, pnt, y, size, text = "NoText", right=False):
 	"""
