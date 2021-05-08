@@ -583,12 +583,12 @@ class PaintWidget(paintwdg.PaintWidget):
 			else:
 				self.hovered_node = None			
 		
-			if self.hovered_node is None:
-				sts, idx = self.find_for_sect(pos, [((s.ax, s.ay, s.az), (s.bx, s.by, s.bz)) for s in self.shemetype.task["sections"]])
-				if sts: 
-					self.hovered_sect = self.shemetype.task["sections"][idx]
-				else:
-					self.hovered_sect = None
+			#if self.hovered_node is None:
+			#	sts, idx = self.find_for_sect(pos, [((s.ax, s.ay, s.az), (s.bx, s.by, s.bz)) for s in self.shemetype.task["sections"]])
+			#	if sts: 
+			#		self.hovered_sect = self.shemetype.task["sections"][idx]
+			#	else:
+			#		self.hovered_sect = None
 
 
 		else: 
