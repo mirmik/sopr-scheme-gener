@@ -11,6 +11,7 @@ import tablewidget
 from items.arrow import *
 from items.text import *
 from items.sharn3d import *
+from items.distrib import *
 
 import functools
 
@@ -34,6 +35,15 @@ class ConfWidget(common.ConfWidget):
 			self.by = by
 			self.bz = bz
 
+			self.distrib = None
+
+			self.internal_node = ConfWidget.node(
+				(self.ax+self.bx)/2,
+				(self.ay+self.by)/2,
+				(self.az+self.bz)/2,
+				base_section = self
+			)
+
 		def __str__(self):
 			return str((self.ax, self.ay, self.az, self.bx, self.by, self.bz))
 
@@ -45,7 +55,7 @@ class ConfWidget(common.ConfWidget):
 			return False
 
 	class node:
-		def __init__(self, x, y, z, type="", sharn="нет"):
+		def __init__(self, x, y, z, type="", sharn="нет", base_section=None):
 			self.x = x
 			self.y = y
 			self.z = z
@@ -58,6 +68,7 @@ class ConfWidget(common.ConfWidget):
 			self.moment_x = None
 			self.moment_y = None
 			self.moment_z = None
+			self.section=base_section
 
 		def equal(self, oth):
 			return self.x == oth.x and self.y==oth.y and self.z == oth.z
@@ -87,9 +98,14 @@ class ConfWidget(common.ConfWidget):
 		for t in to_del:
 			self.nodes().remove(t)
 
-		if len(self.nodes() == 0):
+		if len(self.nodes()) == 0:
 			self.nodes.append(self.node(0,0,0))
 
+
+	def delete_sect(self, sect):
+		sections = self.shemetype.task["sections"]
+		sections.remove(sect)
+		self.nodes_clean()
 
 	def delete_node(self, node):
 		sections = self.shemetype.task["sections"]
@@ -113,7 +129,6 @@ class ConfWidget(common.ConfWidget):
 			nodes.remove(s)
 
 		self.nodes_clean()
-
 
 
 	def __init__(self, scheme):
@@ -191,6 +206,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.no_resize = True
 		self.hovered_node = None
 		self.grid_enabled = False
+		self.hovered_sect = None
 
 	def scene_bound(self):
 		return (self.scene.itemsBoundingRect().width(),
@@ -292,7 +308,6 @@ class PaintWidget(paintwdg.PaintWidget):
 		_pnt = numpy.array((node.x * rebro, node.y * rebro, node.z * rebro))
 
 		def doit(f):
-			print(f)
 			if f is None:
 				return
 
@@ -304,6 +319,23 @@ class PaintWidget(paintwdg.PaintWidget):
 		doit(node.force_x)
 		doit(node.force_y)
 		doit(node.force_z)
+
+	def draw_distrib_forces(self, sect, scene=None):
+		if scene is None:
+			scene = self.scene
+
+		if sect.distrib is None:
+			return
+
+		rebro = self.shemetype.rebro.get()
+		p1 = self.proj(numpy.array((sect.ax, sect.ay, sect.az)) * rebro)
+		p2 = self.proj(numpy.array((sect.bx, sect.by, sect.bz)) * rebro)
+		vec = self.proj(numpy.array(sect.distrib) * 30)
+		item = DistribArrowsItem(p1, p2, vec, 
+			(8,2), 
+			pen=self.halfpen, 
+			brush=Qt.black)
+		scene.addItem(item)
 
 	def paintEventImplementation(self, ev):
 		self.scene = QGraphicsScene()
@@ -335,6 +367,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				proj(s.ax, s.ay, s.az) * rebro,
 				proj(s.bx, s.by, s.bz) * rebro,
 			), pen = self.pen)
+			self.draw_distrib_forces(s)
 
 		# Кружки нодов.
 		for n in self.shemetype.task["nodes"]:
@@ -375,6 +408,13 @@ class PaintWidget(paintwdg.PaintWidget):
 					do((h.x,h.y,h.z), self.hovered_node_pressed, self.blue, force=True)
 
 		
+		if self.hovered_sect:
+			s = self.hovered_sect
+			self.scene.addLine(QLineF(
+				self.proj(s.ax, s.ay, s.az) * rebro,
+				self.proj(s.bx, s.by, s.bz) * rebro,
+			), pen=self.blue)
+
 		WBORDER = self.shemetype.wborder.get()
 		HBORDER = self.shemetype.hborder.get()
 
@@ -437,6 +477,12 @@ class PaintWidget(paintwdg.PaintWidget):
 
 	def delete_node_trig(self):
 		self.shemetype.confwidget.delete_node(self.hovered_node)
+		self.hovered_node=None
+		self.repaint()
+
+	def delete_sect_trig(self):
+		self.shemetype.confwidget.delete_sect(self.hovered_sect)
+		self.hovered_sect=None
 		self.repaint()
 
 	def set_sharn_flag(self, arg, arg1, arg2):
@@ -447,6 +493,10 @@ class PaintWidget(paintwdg.PaintWidget):
 
 	def set_force(self, arg, arg1, arg2):
 		setattr(self.hovered_node, arg, (arg1,arg2))
+		self.repaint()
+
+	def set_distrib_force(self, arg):
+		self.hovered_sect.distrib = arg
 		self.repaint()
 
 	def mousePressEvent(self, ev):
@@ -501,7 +551,6 @@ class PaintWidget(paintwdg.PaintWidget):
 				for a in acts:
 					forcesmenu.addAction(a)
 
-
 				clean = self.Action(("Очистить узел"), self, functools.partial(self.set_sharn_flag, "нет", (0,0,0), (0,0,0)))
 				delete = self.Action(("Удалить узел и граничащие балки"), self, self.delete_node_trig)
 	
@@ -511,8 +560,29 @@ class PaintWidget(paintwdg.PaintWidget):
 				menu.addSeparator()
 				menu.addAction(delete)
 
-				
 				menu.popup(self.mapToGlobal(ev.pos()))
+
+			if self.hovered_sect:
+				menu = QMenu(self)
+				forces = QMenu("Распределённые силы", self)
+				acts = [
+					 self.Action("нет", self, functools.partial(self.set_distrib_force, None)),
+					 self.Action("-x", self, functools.partial(self.set_distrib_force, (-1,0,0))),
+					 self.Action("+x", self, functools.partial(self.set_distrib_force, (+1,0,0))),
+					 self.Action("-y", self, functools.partial(self.set_distrib_force, (0,-1,0))),
+					 self.Action("+y", self, functools.partial(self.set_distrib_force, (0,+1,0))),
+					 self.Action("-z", self, functools.partial(self.set_distrib_force, (0,0,-1))),
+					 self.Action("+z", self, functools.partial(self.set_distrib_force, (0,0,+1))),
+				]
+				for a in acts:
+					forces.addAction(a)
+
+				menu.addMenu(forces)
+				menu.addSeparator()
+				delete = self.Action(("Удалить балку"), self, self.delete_sect_trig)
+				menu.addAction(delete)
+				menu.popup(self.mapToGlobal(ev.pos()))
+				
 
 			return
 
@@ -569,9 +639,6 @@ class PaintWidget(paintwdg.PaintWidget):
 		else:
 			return False, None
 
-	def find_for_sect(self, pos, lst):
-		pass	
-
 	def mouseMoveEvent(self, ev):
 		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
 		pos = self.track_point
@@ -580,15 +647,17 @@ class PaintWidget(paintwdg.PaintWidget):
 			sts, idx = self.find_for_node(pos, [(n.x, n.y, n.z) for n in self.shemetype.task["nodes"]])
 			if sts: 
 				self.hovered_node = self.shemetype.task["nodes"][idx]
+				self.hovered_sect = None
 			else:
 				self.hovered_node = None			
+				self.hovered_sect = None
 		
-			#if self.hovered_node is None:
-			#	sts, idx = self.find_for_sect(pos, [((s.ax, s.ay, s.az), (s.bx, s.by, s.bz)) for s in self.shemetype.task["sections"]])
-			#	if sts: 
-			#		self.hovered_sect = self.shemetype.task["sections"][idx]
-			#	else:
-			#		self.hovered_sect = None
+			if self.hovered_node is None:
+				sts, idx = self.find_for_node(pos, [(s.internal_node.x, s.internal_node.y, s.internal_node.z) for s in self.shemetype.task["sections"]])
+				if sts: 
+					self.hovered_sect = self.shemetype.task["sections"][idx]
+				else:
+					self.hovered_sect = None
 
 
 		else: 
