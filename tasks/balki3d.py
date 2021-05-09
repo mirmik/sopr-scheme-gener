@@ -28,25 +28,21 @@ class ShemeType(common.SchemeType):
 
 class ConfWidget(common.ConfWidget):
 	class sect:
-		def __init__(self, ax, ay, az, bx, by, bz):
+		def __init__(self, ax, ay, az, bx, by, bz, distrib=None, internal_node=None):
 			self.ax = ax
 			self.ay = ay
 			self.az = az
 			self.bx = bx
 			self.by = by
 			self.bz = bz
-			self.length_label = "l"
-			self.length_offset = (0,0)
 
-			self.distrib = None
-			self.distrib_label = "ql"
-			self.distrib_offset = (0,0)
+			self.distrib = distrib
 
 			self.internal_node = ConfWidget.node(
 				(self.ax+self.bx)/2,
 				(self.ay+self.by)/2,
 				(self.az+self.bz)/2,
-				base_section = self
+				section = self
 			)
 
 		def __str__(self):
@@ -60,26 +56,43 @@ class ConfWidget(common.ConfWidget):
 			return False
 
 	class node:
-		def __init__(self, x, y, z, type="", sharn="нет", base_section=None):
+		def __init__(self, x, y, z, type="", sharn="нет",
+				sharn_vec = numpy.array([0,0,0]),
+				sharn_vec2 = numpy.array([0,0,0]),
+				force_x = None,
+				force_y = None,
+				force_z = None,
+				moment_x = None,
+				moment_y = None,
+				moment_z = None,
+			 	section=None):
 			self.x = x
 			self.y = y
 			self.z = z
 			self.sharn = sharn
-			self.sharn_vec = numpy.array([0,0,0])
-			self.sharn_vec2 = numpy.array([0,0,0])
-			self.force_x = None
-			self.force_y = None
-			self.force_z = None
-			self.moment_x = None
-			self.moment_y = None
-			self.moment_z = None
-			self.section=base_section
+			self.sharn_vec = sharn_vec
+			self.sharn_vec2 = sharn_vec2
+			self.force_x = force_x
+			self.force_y = force_y
+			self.force_z = force_z
+			self.moment_x = moment_x
+			self.moment_y = moment_y
+			self.moment_z = moment_z
+			self.section=section
 
 		def pos(self):
 			return numpy.array((self.x, self.y, self.z))
 
 		def equal(self, oth):
 			return self.x == oth.x and self.y==oth.y and self.z == oth.z
+
+	class label:
+		def __init__(self, text, pos):
+			self.text = text
+			self.pos = pos
+
+		def move2(self, qp):
+			self.pos = (self.pos[0] + qp.x(), self.pos[1] + qp.y())
 
 	def add_sect(self, a, b):
 		x, y, z = a.x, a.y, a.z
@@ -107,7 +120,7 @@ class ConfWidget(common.ConfWidget):
 			self.nodes().remove(t)
 
 		if len(self.nodes()) == 0:
-			self.nodes.append(self.node(0,0,0))
+			self.nodes().append(self.node(0,0,0))
 
 
 	def delete_sect(self, sect):
@@ -177,6 +190,11 @@ class ConfWidget(common.ConfWidget):
 				self.node(0,-1,0),
 				self.node(1,-1,0),
 				self.node(1,-1,1),
+			],
+
+			"labels" :
+			[
+				self.label(text="HelloWorld", pos=(40,40))
 			]
 		}
 
@@ -215,6 +233,9 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.hovered_node = None
 		self.grid_enabled = False
 		self.hovered_sect = None
+		self.selected_label_id = None
+		self.last_point=QPointF(0,0)
+		self.label_items = {}
 
 	def scene_bound(self):
 		return (self.scene.itemsBoundingRect().width(),
@@ -345,19 +366,22 @@ class PaintWidget(paintwdg.PaintWidget):
 			brush=Qt.black)
 		scene.addItem(item)
 
-	def draw_text(self, text, off, pos):
+	def draw_text(self, text, pos, label):
 		rebro = self.shemetype.rebro.get()
-		p = self.proj(numpy.array(pos) * rebro)
+		#p = self.proj(numpy.array(pos) * rebro)
 
 		item = TextItem(
 			text, 
 			self.font, 
-			p + QPointF(*off), 
+			QPointF(*pos), 
 			self.pen)
 
+		item.label = label
+		self.label_items[id(label)] = item
 		self.scene.addItem(item)
 
 	def paintEventImplementation(self, ev):
+		self.selected_item = None
 		self.scene = QGraphicsScene()
 		self.painter.setRenderHints(QPainter.Antialiasing)
 		
@@ -374,7 +398,14 @@ class PaintWidget(paintwdg.PaintWidget):
 		br.setAlphaF(0)
 		p = QPen()
 		p.setColor(br)
-				
+
+		if self.selected_label_id:
+			for label_id, item in self.label_items.items():
+				if self.selected_label_id == label_id:
+					green70 = QColor(0,255,0)
+					green70.setAlphaF(0.7)
+					self.scene.addRect(item.boundingRect(), brush=green70)
+
 		# Рисуем линии.
 		for s in self.shemetype.task["sections"]:
 			self.scene.addLine(QLineF(
@@ -388,11 +419,10 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.draw_sharn(n)
 			self.draw_forces(n)
 
+		self.label_items = {}
 		# Тексты
-		for s in self.shemetype.task["sections"]:
-			self.draw_text(paintool.greek(s.length_label), s.length_offset, s.internal_node.pos())
-
-			self.draw_text(paintool.greek(s.distrib_label), s.distrib_offset, s.internal_node.pos())
+		for s in self.shemetype.task["labels"]:
+			self.draw_text(paintool.greek(s.text), s.pos, label=s)
 
 		# Отрисовка при наведении.
 		if self.hovered_node:
@@ -515,6 +545,9 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.repaint()
 
 	def mousePressEvent(self, ev):
+		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
+
+		create_label = self.Action("Создать метку", self, functools.partial(self.create_label, self.track_point))
 		if ev.button() == Qt.RightButton:
 			
 			if self.hovered_node:
@@ -574,8 +607,11 @@ class PaintWidget(paintwdg.PaintWidget):
 				menu.addAction(clean)
 				menu.addSeparator()
 				menu.addAction(delete)
+				menu.addSeparator()
+				menu.addAction(create_label)
 
 				menu.popup(self.mapToGlobal(ev.pos()))
+				return
 
 			if self.hovered_sect:
 				menu = QMenu(self)
@@ -596,13 +632,53 @@ class PaintWidget(paintwdg.PaintWidget):
 				menu.addSeparator()
 				delete = self.Action(("Удалить балку"), self, self.delete_sect_trig)
 				menu.addAction(delete)
+				menu.addSeparator()
+				menu.addAction(create_label)
 				menu.popup(self.mapToGlobal(ev.pos()))
+				return
 				
 
+			if self.selected_label_id:
+				label = self.label_items[self.selected_label_id]
+				menu = QMenu(self)
+				acts = [
+					 self.Action("Редактировать текст", self, functools.partial(self.edit_text)),
+					 self.Action("Удалить метку", self, functools.partial(self.delete_label)),
+					 self.Action("Клонировать метку", self, functools.partial(self.clone_label, self.track_point)),
+				]
+				for a in acts:
+					menu.addAction(a)
+
+				menu.popup(self.mapToGlobal(ev.pos()))
+				return
+			
+			menu = QMenu(self)
+			acts = [
+				 self.Action("Создать метку", self, functools.partial(self.create_label, self.track_point)),
+			]
+			for a in acts:
+				menu.addAction(a)
+
+			menu.popup(self.mapToGlobal(ev.pos()))
 			return
 
 		self.mouse_pressed=True
 		self.update()
+
+	def delete_label(self):
+		 self.shemetype.task["labels"].remove(self.label_items[self.selected_label_id].label)
+
+	def edit_text(self):
+		text, ok = QInputDialog.getText(self, 'Текст', 'Введите текст:')
+		if (ok):
+			self.label_items[self.selected_label_id].label.text = text
+		self.update()
+
+	def create_label(self, pos):
+		self.shemetype.task["labels"].append(self.shemetype.confwidget.label("Text", (pos.x(), pos.y())))
+
+	def clone_label(self, pos):
+		self.shemetype.task["labels"].append(self.shemetype.confwidget.label(self.label_items[self.selected_label_id].label.text, (pos.x() + 30, pos.y())))
 
 	def mouseReleaseEvent(self, ev):
 		self.mouse_pressed = False
@@ -657,22 +733,33 @@ class PaintWidget(paintwdg.PaintWidget):
 	def mouseMoveEvent(self, ev):
 		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
 		pos = self.track_point
+		diff = self.track_point - self.last_point
 
 		if not self.mouse_pressed:
-			sts, idx = self.find_for_node(pos, [(n.x, n.y, n.z) for n in self.shemetype.task["nodes"]])
-			if sts: 
-				self.hovered_node = self.shemetype.task["nodes"][idx]
-				self.hovered_sect = None
-			else:
-				self.hovered_node = None			
-				self.hovered_sect = None
-		
-			if self.hovered_node is None:
-				sts, idx = self.find_for_node(pos, [(s.internal_node.x, s.internal_node.y, s.internal_node.z) for s in self.shemetype.task["sections"]])
-				if sts: 
-					self.hovered_sect = self.shemetype.task["sections"][idx]
-				else:
+
+			self.selected_label_id = None
+			for k, h in self.label_items.items():
+				if h.boundingRect().contains(self.track_point):
+					self.selected_label_id = k
 					self.hovered_sect = None
+					self.hovered_node = None
+					break
+
+			else:
+				sts, idx = self.find_for_node(pos, [(n.x, n.y, n.z) for n in self.shemetype.task["nodes"]])
+				if sts: 
+					self.hovered_node = self.shemetype.task["nodes"][idx]
+					self.hovered_sect = None
+				else:
+					self.hovered_node = None			
+					self.hovered_sect = None
+			
+				if self.hovered_node is None:
+					sts, idx = self.find_for_node(pos, [(s.internal_node.x, s.internal_node.y, s.internal_node.z) for s in self.shemetype.task["sections"]])
+					if sts: 
+						self.hovered_sect = self.shemetype.task["sections"][idx]
+					else:
+						self.hovered_sect = None
 
 		else: 
 			sts, idx = self.find_for_node(pos, [(n.x, n.y, n.z) for n in self.pressed_nodes])
@@ -680,7 +767,13 @@ class PaintWidget(paintwdg.PaintWidget):
 				self.hovered_node_pressed = self.pressed_nodes[idx]
 			else:
 				self.hovered_node_pressed = None
-			
+
+
+			if self.selected_label_id:
+				item = self.label_items[self.selected_label_id]
+				label = item.label
+
+				label.move2(diff)
 
 		self.last_point = self.track_point 
 		self.repaint()
