@@ -14,6 +14,7 @@ from items.sharn3d import *
 from items.distrib import *
 
 import functools
+import paintool
 
 from projector import Projector
 import math
@@ -34,8 +35,12 @@ class ConfWidget(common.ConfWidget):
 			self.bx = bx
 			self.by = by
 			self.bz = bz
+			self.length_label = "l"
+			self.length_offset = (0,0)
 
 			self.distrib = None
+			self.distrib_label = "ql"
+			self.distrib_offset = (0,0)
 
 			self.internal_node = ConfWidget.node(
 				(self.ax+self.bx)/2,
@@ -69,6 +74,9 @@ class ConfWidget(common.ConfWidget):
 			self.moment_y = None
 			self.moment_z = None
 			self.section=base_section
+
+		def pos(self):
+			return numpy.array((self.x, self.y, self.z))
 
 		def equal(self, oth):
 			return self.x == oth.x and self.y==oth.y and self.z == oth.z
@@ -337,6 +345,18 @@ class PaintWidget(paintwdg.PaintWidget):
 			brush=Qt.black)
 		scene.addItem(item)
 
+	def draw_text(self, text, off, pos):
+		rebro = self.shemetype.rebro.get()
+		p = self.proj(numpy.array(pos) * rebro)
+
+		item = TextItem(
+			text, 
+			self.font, 
+			p + QPointF(*off), 
+			self.pen)
+
+		self.scene.addItem(item)
+
 	def paintEventImplementation(self, ev):
 		self.scene = QGraphicsScene()
 		self.painter.setRenderHints(QPainter.Antialiasing)
@@ -354,12 +374,6 @@ class PaintWidget(paintwdg.PaintWidget):
 		br.setAlphaF(0)
 		p = QPen()
 		p.setColor(br)
-
-
-		#self.scene.addEllipse(QRectF(
-		#	self.track_point + QPointF(-3,-3),
-		#	self.track_point + QPointF(3,3)
-		#), brush=br, pen=self.pen)
 				
 		# Рисуем линии.
 		for s in self.shemetype.task["sections"]:
@@ -370,14 +384,15 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.draw_distrib_forces(s)
 
 		# Кружки нодов.
-		for n in self.shemetype.task["nodes"]:
-		#	self.scene.addEllipse(QRectF(
-		#		proj(n.x, n.y, n.z) * rebro + QPointF(-1,-1),
-		#		proj(n.x, n.y, n.z) * rebro + QPointF(1,1),					
-		#	), pen = self.pen)
-#
+		for n in self.shemetype.task["nodes"]:#
 			self.draw_sharn(n)
 			self.draw_forces(n)
+
+		# Тексты
+		for s in self.shemetype.task["sections"]:
+			self.draw_text(paintool.greek(s.length_label), s.length_offset, s.internal_node.pos())
+
+			self.draw_text(paintool.greek(s.distrib_label), s.distrib_offset, s.internal_node.pos())
 
 		# Отрисовка при наведении.
 		if self.hovered_node:
@@ -658,7 +673,6 @@ class PaintWidget(paintwdg.PaintWidget):
 					self.hovered_sect = self.shemetype.task["sections"][idx]
 				else:
 					self.hovered_sect = None
-
 
 		else: 
 			sts, idx = self.find_for_node(pos, [(n.x, n.y, n.z) for n in self.pressed_nodes])
