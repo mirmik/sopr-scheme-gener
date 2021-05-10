@@ -354,7 +354,6 @@ class PaintWidget(paintwdg.PaintWidget):
 
 
 	def draw_torques(self, node, scene=None):
-		print("draw_torques")
 		if scene is None:
 			scene = self.scene
 
