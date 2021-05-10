@@ -683,7 +683,7 @@ class PaintWidget(paintwdg.PaintWidget):
 	def mouseReleaseEvent(self, ev):
 		self.mouse_pressed = False
 
-		if ev.button() == Qt.LeftButton and self.hovered_node_pressed:
+		if ev.button() == Qt.LeftButton and self.hovered_node_pressed and self.hovered_node:
 			self.shemetype.confwidget.add_sect(self.hovered_node, self.hovered_node_pressed)
 
 		self.hovered_node = None
