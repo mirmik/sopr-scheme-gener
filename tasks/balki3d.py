@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import *
 
 import taskconf_menu
 import tablewidget
+from items.moment3d import *
 from items.arrow import *
 from items.text import *
 from items.sharn3d import *
@@ -65,7 +66,8 @@ class ConfWidget(common.ConfWidget):
 				moment_x = None,
 				moment_y = None,
 				moment_z = None,
-			 	section=None):
+			 	section=None,
+			 	torque = None):
 			self.x = x
 			self.y = y
 			self.z = z
@@ -75,10 +77,11 @@ class ConfWidget(common.ConfWidget):
 			self.force_x = force_x
 			self.force_y = force_y
 			self.force_z = force_z
-			self.moment_x = moment_x
-			self.moment_y = moment_y
-			self.moment_z = moment_z
+			self.moment_x = moment_x # unused
+			self.moment_y = moment_y # unused
+			self.moment_z = moment_z # unused
 			self.section=section
+			self.torque=torque
 
 		def pos(self):
 			return numpy.array((self.x, self.y, self.z))
@@ -349,6 +352,25 @@ class PaintWidget(paintwdg.PaintWidget):
 		doit(node.force_y)
 		doit(node.force_z)
 
+
+	def draw_torques(self, node, scene=None):
+		print("draw_torques")
+		if scene is None:
+			scene = self.scene
+
+		if node.torque is None or node.torque[0] == (0,0,0):
+			return
+
+		rebro = self.shemetype.rebro.get()
+		_pnt = numpy.array((node.x * rebro, node.y * rebro, node.z * rebro))
+
+		xvec = numpy.array(node.torque[0]) * 25
+		yvec = numpy.array(node.torque[1]) * 30
+
+		item = Torque3dItem(trans=self.proj, pnt=_pnt, xvec=xvec, 
+			yvec=yvec, arrow_size=(8,4), pen=self.halfpen, brush=Qt.black)
+		scene.addItem(item)
+
 	def draw_distrib_forces(self, sect, scene=None):
 		if scene is None:
 			scene = self.scene
@@ -418,6 +440,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		for n in self.shemetype.task["nodes"]:#
 			self.draw_sharn(n)
 			self.draw_forces(n)
+			self.draw_torques(n)
 
 		self.label_items = {}
 		# Тексты
@@ -518,6 +541,18 @@ class PaintWidget(paintwdg.PaintWidget):
 			painter.end()
 			act.setIcon(QIcon(pix))
 
+		if isinstance(trig, functools.partial) and trig.func == self.set_torque:
+			pix = QPixmap(200,200)
+			pix.fill()
+			painter = QPainter(pix)
+			scene = QGraphicsScene()
+			node = self.shemetype.confwidget.node(0,0,0)
+			node.torque = (trig.args[0],trig.args[1])
+			self.draw_torques(node, scene)
+			scene.render(painter)
+			painter.end()
+			act.setIcon(QIcon(pix))
+
 		return act
 
 	def delete_node_trig(self):
@@ -538,6 +573,10 @@ class PaintWidget(paintwdg.PaintWidget):
 
 	def set_force(self, arg, arg1, arg2):
 		setattr(self.hovered_node, arg, (arg1,arg2))
+		self.repaint()
+
+	def set_torque(self, arg1, arg2):
+		self.hovered_node.torque = (arg1,arg2)
 		self.repaint()
 
 	def set_distrib_force(self, arg):
@@ -575,7 +614,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				for a in acts:
 					nodevars.addAction(a)
 
-				forcesmenu = QMenu("Сосредоточенные силы и моменты", self)
+				forcesmenu = QMenu("Сосредоточенные силы", self)
 				S = 0.1
 				acts = [
 					 self.Action("Сила x+1", self, functools.partial(self.set_force, "force_x", (-1,0,0), (-S,0,0))),
@@ -599,11 +638,33 @@ class PaintWidget(paintwdg.PaintWidget):
 				for a in acts:
 					forcesmenu.addAction(a)
 
+				momentsmenu = QMenu("Сосредоточенные моменты", self)
+				S = 0.1
+				acts = [
+					 self.Action("Момент -x(y)", self, functools.partial(self.set_torque, (0,1,0), (0,0,1))),
+					 self.Action("Момент -x(z)", self, functools.partial(self.set_torque, (0,0,1), (0,1,0))),
+					 self.Action("Момент +x(y)", self, functools.partial(self.set_torque, (0,1,0), (0,0,-1))),
+					 self.Action("Момент +x(z)", self, functools.partial(self.set_torque, (0,0,1), (0,-1,0))),
+					 self.Action("Момент -y(x)", self, functools.partial(self.set_torque, (1,0,0), (0,0,1))),
+					 self.Action("Момент -y(z)", self, functools.partial(self.set_torque, (0,0,1), (1,0,0))),
+					 self.Action("Момент +y(x)", self, functools.partial(self.set_torque, (1,0,0), (0,0,-1))),
+					 self.Action("Момент +y(z)", self, functools.partial(self.set_torque, (0,0,1), (-1,0,0))),
+					 self.Action("Момент -z(x)", self, functools.partial(self.set_torque, (1,0,0), (0,1,0))),
+					 self.Action("Момент -z(y)", self, functools.partial(self.set_torque, (0,1,0), (1,0,0))),
+					 self.Action("Момент +z(x)", self, functools.partial(self.set_torque, (1,0,0), (0,-1,0))),
+					 self.Action("Момент +z(y)", self, functools.partial(self.set_torque, (0,1,0), (-1,0,0))),
+					 self.Action("Момент нет", self, functools.partial(self.set_torque,  (0,0,0), (0,0,0))),	
+				]
+				for a in acts:
+					momentsmenu.addAction(a)
+
+
 				clean = self.Action(("Очистить узел"), self, functools.partial(self.set_sharn_flag, "нет", (0,0,0), (0,0,0)))
 				delete = self.Action(("Удалить узел и граничащие балки"), self, self.delete_node_trig)
 	
 				menu.addMenu(nodevars)
 				menu.addMenu(forcesmenu)
+				menu.addMenu(momentsmenu)
 				menu.addAction(clean)
 				menu.addSeparator()
 				menu.addAction(delete)
