@@ -102,7 +102,7 @@ class ConfWidget(common.ConfWidget):
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 		self.table2.addColumn("sectname", "str", "Имя")
 		self.table2.addColumn("sharn", "list", "Шарн.", variant=["Нет", "1", "2"])
-		self.table2.addColumn("F", "list", variant=["Нет", "+", "-", "влево от узла", "вправо от узла"])
+		self.table2.addColumn("F", "list", variant=["Нет", "+", "-", "влево", "вправо"])
 		self.table2.addColumn("M", "list", variant=["Нет", "+", "-"])
 		self.table2.addColumn("FT", "str", "Текст F")
 		self.table2.addColumn("MT", "str", "Текст M")
@@ -277,23 +277,65 @@ class PaintWidget(paintwdg.PaintWidget):
 						bpnt, apnt,
 						arrow_size=self.shemetype.arrow_size.get()
 					)
-				
+
+				if self.bsections()[i].F == "влево" or self.bsections()[i].F == "вправо":
+					apnt=QPoint(wpnts[i], hcenter)
+					d = 40
+					
+					if i == 0:
+						paintool.common_arrow(painter,  
+							apnt if self.bsections()[i].F == "влево" else apnt + QPointF(-d,0), 
+							apnt + QPointF(-d,0) if self.bsections()[i].F == "влево" else apnt,
+							arrow_size=self.shemetype.arrow_size.get()
+						)
+					elif i == len(self.bsections()) - 1:
+						paintool.common_arrow(painter,  
+							apnt + QPointF(d,0) if self.bsections()[i].F == "влево" else apnt,
+							apnt if self.bsections()[i].F == "влево" else apnt + QPointF(d,0), 
+							arrow_size=self.shemetype.arrow_size.get()
+						)
+					else:
+						d=30
+						bpnt = apnt + QPointF(0,25)
+						cpnt = apnt - QPointF(0,25)
+						
+						nnn = QPointF(-d,0) if self.bsections()[i].F == "влево" else QPointF(d,0)
+						
+						paintool.common_arrow(painter,  
+							bpnt,
+							bpnt+nnn, 
+							arrow_size=self.shemetype.arrow_size.get()
+						)
+						paintool.common_arrow(painter,  
+							cpnt,
+							cpnt+nnn, 
+							arrow_size=self.shemetype.arrow_size.get()
+						)
+						self.painter.drawLine(bpnt,cpnt)
+
 			if self.bsections()[i].M != "Нет":
 				paintool.draw_text_centered(
 					painter,
 					pnt=QPoint(wpnts[i], hcenter-rad-5), 
 					text=paintool.greek(self.bsections()[i].MT),
 					font=self.font)
-
-			if self.bsections()[i].F != "Нет" and fdown == False:
-				painter.drawText(
-					QPoint(wpnts[i]+10, hcenter-rad), 
-					paintool.greek(self.bsections()[i].FT))
+			if self.bsections()[i].F != "Нет":
+				if (self.bsections()[i].F != "вправо" and self.bsections()[i].F != "влево"):
+					if fdown == False:
+						painter.drawText(
+							QPoint(wpnts[i]+10, hcenter-rad), 
+							paintool.greek(self.bsections()[i].FT))
 					
-			if self.bsections()[i].F != "Нет" and fdown == True:
-				painter.drawText(
-					QPoint(wpnts[i]+10, hcenter+25), 
-					paintool.greek(self.bsections()[i].FT))
+					if fdown == True:
+						painter.drawText(
+							QPoint(wpnts[i]+10, hcenter+25), 
+							paintool.greek(self.bsections()[i].FT))
+				else:
+					painter.drawText(
+						QPoint(wpnts[i]+0, hcenter-30), 
+						paintool.greek(self.bsections()[i].FT))
+
+
 
 			if self.bsections()[i].sectname != "":
 				off = 11 if self.bsections()[i].sharn != "" else 5

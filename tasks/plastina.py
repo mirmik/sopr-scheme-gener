@@ -38,9 +38,10 @@ class ConfWidget_T3(common.ConfWidget):
 
 
 	class betsect:
-		def __init__(self, fen=True, men="clean"):
+		def __init__(self, fen=False, men="clean", sharn="нет"):
 			self.fen = fen
 			self.men = men
+			self.sharn = sharn
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -53,16 +54,16 @@ class ConfWidget_T3(common.ConfWidget):
 
 			"sectforce": 
 			[
-				self.sectforce(distrib=False),
-				self.sectforce(distrib=False),
-				self.sectforce(distrib=True),
+				self.sectforce(),
+				self.sectforce(),
+				self.sectforce(),
 			],
 
 			"betsect": 
 			[
 				self.betsect(),
-				self.betsect(men="+"),
-				self.betsect(fen=True)
+				self.betsect(),
+				self.betsect()
 			],
 
 			"labels": []
@@ -88,6 +89,7 @@ class ConfWidget_T3(common.ConfWidget):
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 		self.table2.addColumn("fen", "bool", "Сила")
 		self.table2.addColumn("men", "list", "Момент", variant=["clean", "+", "-"])
+		self.table2.addColumn("sharn", "list", "Шарнир", variant=["нет", "1", "2"])
 		self.table2.updateTable()
 
 		#self.table2.addColumn("l", "float", "Длина опоры")
@@ -458,5 +460,29 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 					arrow_size=arrow_size_pair,
 					brush=Qt.black
 				))
+
+			if b.sharn != "нет":
+				termrad = 20
+				for w in [w, -w]:
+					if self.bsections()[i].sharn == "1":
+						paintool.draw_sharnir_1dim(
+							self.painter, 
+							pnt=center+QPoint(w/2,h/2+3), 
+							angle=math.pi/2, 
+							rad=3.5, 
+							termrad=termrad, 
+							termx=15, 
+							termy=10, pen=self.pen, halfpen=self.halfpen, doublepen=self.doublepen)
+
+					elif self.bsections()[i].sharn == "2":
+						paintool.draw_sharnir_2dim(
+							self.painter, 
+							pnt=center+QPoint(w/2,h/2+3), 
+							angle=math.pi/2, 
+							rad=3.5, 
+							termrad=termrad, 
+							termx=15, 
+							termy=10, pen=self.pen, halfpen=self.halfpen)
+
 
 		self.draw_labels()
