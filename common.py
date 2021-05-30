@@ -49,7 +49,8 @@ def do_deserialize(obj, info):
 				for i in range(len(v)):
 					v[i] = v[i].__class__(** v[i].__dict__)
 		for k in obj.keys():
-			obj[k] = p[k]
+			if k in p.keys():
+				obj[k] = p[k]
 
 class StyleWidget(QWidget):
 	def __init__(self):
