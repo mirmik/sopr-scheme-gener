@@ -23,6 +23,7 @@ section_variant=[
 ]
 
 section_variant2=[
+	"Нет",
 	MAIN_SECTION_TYPE,  
 	#"Круг",  
 	#"Толстая труба",
@@ -55,6 +56,20 @@ class BaseSectionType(taskconf_menu.TaskConfMenu):
 		self.arg1 = self.add("Сечение.Аргумент2:", "int", "50")
 		self.arg2 = self.add("Сечение.Аргумент3:", "int", "10")
 
+
+class NoneSection(taskconf_menu.TaskConfMenu):
+	def __init__(self):
+		super().__init__()
+	
+	def draw(self,
+			wdg,
+			shemetype, 
+			right, 
+			hcenter, 
+			arrow_size,
+			painter = None):
+		return 0
+
 class MainSection0(taskconf_menu.TaskConfMenu):
 	def __init__(self):
 		super().__init__()
@@ -82,9 +97,11 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 			shemetype, 
 			right, 
 			hcenter, 
-			arrow_size):
+			arrow_size,
+			painter = None):
 
-		painter = wdg.painter
+		if painter is None:
+			painter = wdg.painter
 		
 		w=h=self.w.get()[1]
 		w_text = self.w.get()[0]
@@ -284,8 +301,10 @@ class HRect(taskconf_menu.TaskConfMenu):
 			shemetype, 
 			right, 
 			hcenter, 
-			arrow_size):
-		painter = wdg.painter
+			arrow_size,
+			painter = None):
+		if painter is None:
+			painter = wdg.painter
 
 		h = self.h.get()[1]
 		w = self.w.get()[1]
@@ -482,8 +501,10 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 			shemetype, 
 			right, 
 			hcenter, 
-			arrow_size):
-		painter = wdg.painter
+			arrow_size,
+			painter = None):
+		if painter is None:
+			painter = wdg.painter
 
 		h = self.h.get()[1]
 		w = self.w.get()[1]
@@ -686,17 +707,19 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 		self.base_section_widget.updated.connect(self.updated)
 
 		self.rect_minus_rect = RectMinusRect() 
+		self.none_section = NoneSection() 
 		self.main_section_0 = MainSection0() 
 		self.hrect = HRect() 
 		self.rect_minus_rect.updated.connect(self.updated)
 		self.main_section_0.updated.connect(self.updated)
+		self.none_section.updated.connect(self.updated)
 		self.hrect.updated.connect(self.updated)
 
 		self.updated.connect(self.updated_selfhandle)
 		self.container = self._SectionContainerWidget()
 		self.section_type = self.add("Тип сечения:", "list", defval=0, variant=section_variant2)
 		self.add_widget(self.container)
-		self.container.replace(self.main_section_0)
+		self.container.replace(self.none_section)
 		self.oldtype = ""
 
 	def draw(self, *args, **kwargs):
@@ -717,37 +740,19 @@ class SectionContainer(taskconf_menu.TaskConfMenu):
 			self.container.replace(self.main_section_0)		 
 
 		elif self.section_type.get() == "H - профиль":
-			self.container.replace(self.hrect)		 
+			self.container.replace(self.hrect)	
+			
+		elif self.section_type.get() == "Нет":
+			self.container.replace(self.none_section)		 
 
 def draw_section(wdg, section_type, right, hcenter,
-	arg0, arg1, arg2, txt0, txt1, txt2, arrow_size
+	arg0, arg1, arg2, txt0, txt1, txt2, arrow_size, painter=None
 ):
 	self = wdg
-	painter = self.painter
+	if painter is None:
+		painter = self.painter
 	painter.setFont(self.font)
 	
-	#if section_type == "Круг":
-	#	center = QPoint(right - 10 -20 - arg0/2, hcenter)
-	#	section_width = arg0 + 100
-	#	dimlines_off = arg0 + 30
-	#	painter.setPen(self.pen)
-	#	painter.setBrush(QBrush(Qt.BDiagPattern))
-	#	painter.drawEllipse(
-	#		QRect(center - QPoint(arg0,arg0), center + QPoint(arg0,arg0)))
-	#	painter.setPen(self.halfpen)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center-QPoint(arg0, 0),
-	#		bpnt = center+QPoint(arg0, 0),
-	#		offset = QPoint(0,dimlines_off),
-	#		textoff = QPoint(0, -10),
-	#		text = txt0,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	painter.setPen(self.axpen)
-	#	llen = arg0 + 10
-	#	painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
-	#	painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
 	if section_type == "Тонкая труба":
 		center = QPoint(right - 20 - 10 - arg0/2, hcenter)
 		section_width = arg0 + 120
@@ -788,116 +793,7 @@ def draw_section(wdg, section_type, right, hcenter,
 		llen = arg0 + 10
 		painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
 		painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
-	#elif section_type == "Толстая труба":
-	#	center = QPoint(right - 20 - 10 - arg0/2, hcenter)
-	#	section_width = arg0 + 120
-	#	dimlines_off = arg0 + 20
-	#	painter.setPen(self.pen)
-	#	painter.setBrush(QBrush(Qt.BDiagPattern))
-	#	painter.drawEllipse(
-	#		QRect(center - QPoint(arg0,arg0), center + QPoint(arg0,arg0)))
-	#	painter.setBrush(QBrush(Qt.white))
-	#	painter.drawEllipse(
-	#		QRect(center - QPoint(arg1,arg1), center + QPoint(arg1,arg1)))
-	#	painter.setPen(self.halfpen)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center-QPoint(0,arg0),
-	#		bpnt = center+QPoint(0,arg0),
-	#		offset = QPoint(-dimlines_off,0),
-	#		textoff = QPoint(-10, 0) - QPoint(QFontMetrics(self.font).width(txt0)/2, 0),
-	#		text = txt0,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center+QPoint(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
-	#		bpnt = center+QPoint(- math.cos(math.pi/4) * arg1, - math.sin(math.pi/4) * arg1),
-	#		offset = QPoint(0,0),
-	#		textoff = QPoint(10,-10),
-	#		text = txt1,
-	#		arrow_size = arrow_size / 3 * 2,
-	#	)
-	#	
-	#	painter.setPen(self.axpen)
-	#	llen = arg0 + 10
-	#	painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
-	#	painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
-	#elif section_type == "Квадрат - окружность":
-	#	center = QPoint(right - 20 - 10 - arg0/2, hcenter)
-	#	section_width = arg0 + 120
-	#	dimlines_off = arg0 + 20
-	#	painter.setPen(self.pen)
-	#	painter.setBrush(QBrush(Qt.BDiagPattern))
-	#	painter.drawRect(
-	#		QRect(center - QPoint(arg0,arg0), center + QPoint(arg0,arg0)))
-	#	painter.setBrush(QBrush(Qt.white))
-	#	painter.drawEllipse(
-	#		QRect(center - QPoint(arg1,arg1), center + QPoint(arg1,arg1)))
-	#	painter.setPen(self.halfpen)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center+QPoint(-arg0,arg0),
-	#		bpnt = center+QPoint(-arg0,-arg0),
-	#		offset = QPoint(-20,0),
-	#		textoff = QPoint(-10, 0),
-	#		text = txt0,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center+QPoint(arg0,arg0),
-	#		bpnt = center+QPoint(-arg0,arg0),
-	#		offset = QPoint(0,25),
-	#		textoff = QPoint(0, -6),
-	#		text = txt1,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center+QPoint(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
-	#		bpnt = center+QPoint(- math.cos(math.pi/4) * arg1, - math.sin(math.pi/4) * arg1),
-	#		offset = QPoint(0,0),
-	#		textoff = QPoint(8,-8),
-	#		text = txt2,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	painter.setPen(self.axpen)
-	#	llen = arg0 + 10
-	#	painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
-	#	painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
-	#elif section_type == "Прямоугольник":
-	#	center = QPoint(right - 20 - 10 - arg0/2, hcenter)
-	#	section_width = arg1 + 120
-	#	painter.setPen(self.pen)
-	#	painter.setBrush(QBrush(Qt.BDiagPattern))
-	#	painter.drawRect(
-	#		QRect(center - QPoint(arg1,arg0), center + QPoint(arg1,arg0)))
-	#	painter.setBrush(QBrush(Qt.white))
-#
-	#	painter.setPen(self.halfpen)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center+QPoint(-arg1,arg0),
-	#		bpnt = center+QPoint(-arg1,-arg0),
-	#		offset = QPoint(-20,0),
-	#		textoff = QPoint(-10, 0),
-	#		text = txt0,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center+QPoint(arg1,arg0),
-	#		bpnt = center+QPoint(-arg1,arg0),
-	#		offset = QPoint(0,25),
-	#		textoff = QPoint(0, -6),
-	#		text = txt1,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	painter.setPen(self.axpen)
-	#	llen = arg0 + 10
-	#	painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
-	#	painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
 	elif section_type == "Треугольник":
 		center = QPoint(right - 20 - 10 - arg0/2, hcenter)
 		section_width = arg1 + 120
@@ -935,45 +831,7 @@ def draw_section(wdg, section_type, right, hcenter,
 		llen = arg0 + 10
 		painter.drawLine(center + QPoint(-llen,-arg0+4/3*arg0), center + QPoint(llen,-arg0+4/3*arg0))
 		painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
-	#elif section_type == "Квадрат повёрнутый":
-	#	l = arg0/math.sqrt(2) 
-	#	center = QPoint(right - 20 - 20 - arg0/2, hcenter)
-	#	section_width = arg1 + 95
-	#	painter.setPen(self.pen)
-	#	painter.setBrush(QBrush(Qt.BDiagPattern))
-	#	painter.drawPolygon(
-	#		QPolygon([
-	#			center+QPoint(-arg0, 0),
-	#			center+QPoint(0, arg0),
-	#			center+QPoint(arg0, 0),
-	#			center+QPoint(0, -arg0),
-	#		])
-	#	)
-	#	painter.setBrush(QBrush(Qt.white))
-#
-	#	painter.setPen(self.halfpen)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center+QPoint(0,arg0),
-	#		bpnt = center+QPoint(arg0,0),
-	#		offset = QPoint(10, 10),
-	#		textoff = QPoint(10, 10),
-	#		text = txt0,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	paintool.draw_dimlines(
-	#		painter = painter,
-	#		apnt = center+QPoint(0,-arg0),
-	#		bpnt = center+QPoint(arg0,0),
-	#		offset = QPoint(10, -10),
-	#		textoff = QPoint(10, -10),
-	#		text = txt0,
-	#		arrow_size = arrow_size / 3 * 2
-	#	)
-	#	painter.setPen(self.axpen)
-	#	llen = arg0 + 10
-	#	painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
-	#	painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+
 	else:
 		print("Unresolved section type:", section_type)
 		exit(0)
@@ -981,7 +839,7 @@ def draw_section(wdg, section_type, right, hcenter,
 
 
 
-def draw_section_routine(self, hcenter, right):
+def draw_section_routine(self, hcenter, right, painter=None):
 	if hasattr(self.shemetype, "section_enable"):
 		section_enable = self.shemetype.section_enable.get()
 	else:
@@ -999,7 +857,8 @@ def draw_section_routine(self, hcenter, right):
 			txt2 = paintool.greek(self.shemetype.section_container.base_section_widget.txt2.get()),
 			arrow_size = self.shemetype.arrow_size.get(),
 			right = right,
-			hcenter=hcenter
+			hcenter=hcenter,
+			painter = painter
 		)
 		
 	elif section_enable: # небазовый список
@@ -1008,7 +867,8 @@ def draw_section_routine(self, hcenter, right):
 			shemetype=self.shemetype, 
 			right=right, 
 			hcenter=hcenter, 
-			arrow_size=self.shemetype.arrow_size.get())
+			arrow_size=self.shemetype.arrow_size.get(),
+			painter = painter)
 
 	else:
 		section_width = 0

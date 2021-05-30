@@ -13,9 +13,11 @@ from items.arrow import *
 from items.text import *
 from items.sharn3d import *
 from items.distrib import *
+from items.section import *
 
 import functools
 import paintool
+import sections
 
 from projector import Projector
 import math
@@ -170,7 +172,14 @@ class ConfWidget(common.ConfWidget):
 		self.shemetype.wborder = self.sett.add("Поля по горизонтали:", "float", "10")
 		self.shemetype.hborder = self.sett.add("Поля по вертикали:", "float", "10")
 		self.sett.updated.connect(self.redraw)
+
+		self.shemetype.section_container = self.sett.add_widget(sections.SectionContainer(None))
+		self.shemetype.section_container.updated.connect(self.redraw)
 		
+		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "15")
+		self.shemetype.font_size = common.CONFVIEW.font_size_getter
+		self.shemetype.line_width = common.CONFVIEW.lwidth_getter
+
 		self.update_interface()
 
 	def update_interface(self):
@@ -196,9 +205,7 @@ class ConfWidget(common.ConfWidget):
 			],
 
 			"labels" :
-			[
-				self.label(text="HelloWorld", pos=(40,40))
-			]
+			[]
 		}
 
 	def inittask(self):
@@ -445,6 +452,17 @@ class PaintWidget(paintwdg.PaintWidget):
 		# Тексты
 		for s in self.shemetype.task["labels"]:
 			self.draw_text(paintool.greek(s.text), s.pos, label=s)
+
+		#Сечение
+		
+		#section_width = sections.draw_section_routine(
+		#	self, 
+		#	hcenter=0, 
+		#	right=fini_width)
+		rect = self.scene.itemsBoundingRect()
+		sectitem = SectionItem(self)
+		sectitem.setPos(rect.x() + rect.width(), rect.y() + rect.height()*(4/8))
+		self.scene.addItem(sectitem)
 
 		# Отрисовка при наведении.
 		if self.hovered_node:
