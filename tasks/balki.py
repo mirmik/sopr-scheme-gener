@@ -62,7 +62,9 @@ class ConfWidget(common.ConfWidget):
 				self.sectforce(),
 				self.sectforce(),
 				self.sectforce(Fr="+", FrT="ql")
-			]
+			],
+
+			"labels" : []
 		}
 
 	def init_taskconf(self):
@@ -100,7 +102,7 @@ class ConfWidget(common.ConfWidget):
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
 		self.table2.addColumn("sectname", "str", "Имя")
 		self.table2.addColumn("sharn", "list", "Шарн.", variant=["Нет", "1", "2"])
-		self.table2.addColumn("F", "list", variant=["Нет", "+", "-"])
+		self.table2.addColumn("F", "list", variant=["Нет", "+", "-", "влево от узла", "вправо от узла"])
 		self.table2.addColumn("M", "list", variant=["Нет", "+", "-"])
 		self.table2.addColumn("FT", "str", "Текст F")
 		self.table2.addColumn("MT", "str", "Текст M")
@@ -177,6 +179,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 	def __init__(self):
 		super().__init__()
+		self.enable_common_mouse_events()
 
 	def lsum(self):
 		ret = 0
@@ -396,6 +399,7 @@ class PaintWidget(paintwdg.PaintWidget):
 
 		strt_width = 20
 		fini_width = width-20
+		
 
 		actual_width = fini_width - strt_width
 
@@ -403,9 +407,14 @@ class PaintWidget(paintwdg.PaintWidget):
 		hcenter = self.hcenter
 
 		section_width = sections.draw_section_routine(self, hcenter=hcenter, right=fini_width)
-
+		
 		actual_width -= section_width
 		fini_width -= section_width
 
+		self.labels_center= QPointF((strt_width + fini_width)/2, hcenter)
+		self.labels_width_scale = actual_width
+
 		self.draw_body(
 			hcenter=hcenter, left=strt_width, right=fini_width)
+			
+		self.draw_labels()

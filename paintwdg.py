@@ -3,8 +3,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from items.text import *
 import traceback
 import common
+import functools
 import paintool
 
 EXIT_ON_EXCEPT = False
@@ -82,7 +84,19 @@ class PaintWidget(QWidget):
 		self.resize_after_render_data = None
 		self.no_text_render = False
 		self.no_resize=False
+		self.common_mouse_events_enabled = False
+		self.offset = QPointF(0,0)
+
+		self.labels_center = QPointF(0,0)
+		self.labels_width_scale = 1
+
+		self.last_point = QPointF(0,0)
+		self.mouse_pressed = False
+		self.label_items = {}
 		super().__init__()
+
+	def enable_common_mouse_events(self):
+		self.common_mouse_events_enabled = True
 
 	def resize_after_render(self, x, y):
 		self.resize_after_render_data = (x, y)
@@ -112,7 +126,7 @@ class PaintWidget(QWidget):
 		lwidth = self.shemetype.line_width.get()
 
 		painter = QPainter(self)
-		#painter.setRenderHints(QPainter.Antialiasing)
+		painter.setRenderHints(QPainter.Antialiasing)
 		self.font = painter.font()
 		self.font.setItalic(True)
 		self.font.setPointSize(font_size)
@@ -179,10 +193,16 @@ class PaintWidget(QWidget):
 			self.text_height = QFontMetrics(self.font).height() * len(addtext.splitlines())
 
 	def paintEvent(self, ev):
+		self.common_scene = QGraphicsScene()
+
 		try:
 			self.paintEventCommon()			
 			self.eval_hcenter()
 			self.paintEventImplementation(ev)
+
+			if self.common_mouse_events_enabled:
+				self.common_scene.addRect(0,0,self.width(),self.height(), pen=QPen(Qt.NoPen))
+				self.common_scene.render(self.painter)
 
 			if not self.no_text_render:
 				addtext = self.shemetype.texteditor.toPlainText()
@@ -232,3 +252,124 @@ class PaintWidget(QWidget):
 
 	def sectforces(self):
 		return self.sectforce()
+
+
+
+
+
+	def mousePressEvent(self, ev):
+		if not self.common_mouse_events_enabled:
+			return
+
+		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
+
+		create_label = self.Action("Создать метку", self, functools.partial(self.create_label, self.track_point))
+		if ev.button() == Qt.RightButton:
+			if self.selected_label_id:
+				label = self.label_items[self.selected_label_id]
+				menu = QMenu(self)
+				acts = [
+					 self.Action("Редактировать текст", self, functools.partial(self.edit_text)),
+					 self.Action("Удалить метку", self, functools.partial(self.delete_label)),
+					 self.Action("Клонировать метку", self, functools.partial(self.clone_label, self.track_point)),
+				]
+				for a in acts:
+					menu.addAction(a)
+
+				menu.popup(self.mapToGlobal(ev.pos()))
+				return
+			
+			menu = QMenu(self)
+			acts = [
+				 self.Action("Создать метку", self, functools.partial(self.create_label, self.track_point)),
+			]
+			for a in acts:
+				menu.addAction(a)
+
+			menu.popup(self.mapToGlobal(ev.pos()))
+			return
+
+		self.mouse_pressed=True
+		self.update()
+
+	def delete_label(self):
+		 self.shemetype.task["labels"].remove(self.label_items[self.selected_label_id].label)
+
+	def edit_text(self):
+		text, ok = QInputDialog.getText(self, 'Текст', 'Введите текст:')
+		if (ok):
+			self.label_items[self.selected_label_id].label.text = text
+		self.update()
+
+	def create_label(self, pos):
+		pos = pos - self.labels_center
+		self.shemetype.task["labels"].append(self.shemetype.confwidget.label("Text", (pos.x()/self.labels_width_scale, pos.y())))
+
+	def clone_label(self, pos):
+		pos = pos - self.labels_center
+		self.shemetype.task["labels"].append(self.shemetype.confwidget.label(self.label_items[self.selected_label_id].label.text, ((pos.x() + 30)/self.labels_width_scale, pos.y())))
+
+	def mouseReleaseEvent(self, ev):
+		if not self.common_mouse_events_enabled:
+			return
+
+		self.mouse_pressed = False
+		self.update()
+
+	def mouseMoveEvent(self, ev):
+		if not self.common_mouse_events_enabled:
+			return
+
+		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
+		pos = self.track_point
+		diff = self.track_point - self.last_point
+
+		if not self.mouse_pressed:
+			self.selected_label_id = None
+			for k, h in self.label_items.items():
+				if h.boundingRect().contains(self.track_point):
+					self.selected_label_id = k
+					self.hovered_sect = None
+					self.hovered_node = None
+					break
+		else:
+			if self.selected_label_id:
+				item = self.label_items[self.selected_label_id]
+				label = item.label
+
+				label.move2(QPointF(diff.x()/self.labels_width_scale, diff.y()))
+
+		self.last_point = self.track_point 
+		self.repaint()
+
+	def Action(self, name, parent, trig=None):
+		act = QAction(name, parent)
+		if trig:
+			act.triggered.connect(trig)
+
+		return act
+
+	def draw_labels(self):
+		self.label_items = {}
+		# Тексты
+		for s in self.shemetype.task["labels"]:
+			self.draw_label(
+				paintool.greek(s.text), 
+				(
+					s.pos[0]*self.labels_width_scale+self.labels_center.x(),
+				  	s.pos[1]+self.labels_center.y() 
+				), label=s)
+
+	def draw_label(self, text, pos, label):
+		item = TextItem(
+			text, 
+			self.font, 
+			QPointF(*pos), 
+			self.pen)
+
+		item.label = label
+		self.label_items[id(label)] = item
+		if (self.selected_label_id == id(label)):
+			self.common_scene.addRect(item.boundingRect(), brush=Qt.green)
+
+		self.common_scene.addItem(item)

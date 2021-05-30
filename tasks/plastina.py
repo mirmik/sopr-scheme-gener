@@ -7,6 +7,7 @@ import paintool
 import taskconf_menu
 
 from paintool import deg
+from items.squaremoment import *
 
 from PyQt5 import *
 from PyQt5.QtCore import *
@@ -63,6 +64,8 @@ class ConfWidget_T3(common.ConfWidget):
 				self.betsect(men="+"),
 				self.betsect(fen=True)
 			],
+
+			"labels": []
 		}
 
 	def update_interface(self):
@@ -165,6 +168,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 
 	def __init__(self):
 		super().__init__()
+		self.enable_common_mouse_events()
 
 	def paintEventImplementation(self, ev):
 		assert len(self.sections()) == len(self.bsections())
@@ -173,6 +177,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		height = self.height()
 
 		center = QPoint(width/2, self.hcenter)
+		self.labels_center = center
 
 		font_size = self.shemetype.font_size.get()
 		lwidth = self.shemetype.line_width.get()
@@ -223,7 +228,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			if s.h > maxh: maxh = s.h
 
 		base_d = (width - width_span) / maxd
-		#base_h = (height - height_span) / maxh
+		self.labels_width_scale = base_d
 
 		sprev = None
 		for s in reversed(self.sections()):
@@ -430,22 +435,28 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 				apnt = center + QPoint(-w/2, -h/2-lwidth)
 				paintool.common_arrow(self.painter, apnt + QPoint(0,-alen), apnt, arrow_size)				
 
-			if b.men == "+":
-				direction = True
+			if b.men != "clean":
+				direction = b.men == "+"
+
+				arrow_size_pair = (arrow_size, 4)
 				apnt = center + QPoint(-w/2, 0)
-				paintool.half_moment_arrow(self.painter, apnt, moment_radius, 
-					arrow_size=arrow_size, left=True, inverse=direction)
+				self.common_scene.addItem(SquareMomentItem(
+					apnt, 
+					moment_radius/2, 
+					moment_radius,  
+					inverse=direction, 
+					arrow_size=arrow_size_pair,
+					brush=Qt.black
+				))
 
 				apnt = center + QPoint(w/2, 0)
-				paintool.half_moment_arrow(self.painter, apnt, moment_radius, 
-					arrow_size=arrow_size, left=False, inverse=direction)
+				self.common_scene.addItem(SquareMomentItem(
+					apnt, 
+					moment_radius/2, 
+					moment_radius,  
+					inverse=not direction, 
+					arrow_size=arrow_size_pair,
+					brush=Qt.black
+				))
 
-			elif b.men == "-":
-				direction = False
-				apnt = center + QPoint(-w/2, 0)
-				paintool.half_moment_arrow(self.painter, apnt, moment_radius, 
-					arrow_size=arrow_size, left=True, inverse=direction)
-
-				apnt = center + QPoint(w/2, 0)
-				paintool.half_moment_arrow(self.painter, apnt, moment_radius, 
-					arrow_size=arrow_size, left=False, inverse=direction)
+		self.draw_labels()

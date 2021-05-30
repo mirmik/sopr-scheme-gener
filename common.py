@@ -140,6 +140,14 @@ class ConfWidget_Stub(StyleWidget):
 		return {}
 
 class ConfWidget(StyleWidget):
+	class label:
+		def __init__(self, text, pos):
+			self.text = text
+			self.pos = pos
+
+		def move2(self, qp):
+			self.pos = (self.pos[0] + qp.x(), self.pos[1] + qp.y())
+
 	def create_task_structure(self):
 		raise NotImplementedError()
 
