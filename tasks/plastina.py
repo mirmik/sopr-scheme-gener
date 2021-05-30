@@ -38,7 +38,8 @@ class ConfWidget_T3(common.ConfWidget):
 
 
 	class betsect:
-		def __init__(self, fen=False, men="clean", sharn="нет"):
+		def __init__(self, fen="нет", men="нет", sharn="нет"):
+			if men == "clean": men = "нет"
 			self.fen = fen
 			self.men = men
 			self.sharn = sharn
@@ -87,8 +88,8 @@ class ConfWidget_T3(common.ConfWidget):
 
 
 		self.table2 = tablewidget.TableWidget(self.shemetype, "betsect")
-		self.table2.addColumn("fen", "bool", "Сила")
-		self.table2.addColumn("men", "list", "Момент", variant=["clean", "+", "-"])
+		self.table2.addColumn("fen", "list", "Сила", variant=["нет", "+", "-"])
+		self.table2.addColumn("men", "list", "Момент", variant=["нет", "+", "-"])
 		self.table2.addColumn("sharn", "list", "Шарнир", variant=["нет", "1", "2"])
 		self.table2.updateTable()
 
@@ -124,6 +125,7 @@ class ConfWidget_T3(common.ConfWidget):
 		self.shemetype.zadelka_len = self.sett.add("Длина заделки:", "float", "30")
 		self.shemetype.dimlines_start_step = self.sett.add("Отступ размерных линий:", "float", "20")
 		self.shemetype.dimlines_step = self.sett.add("Шаг размерных линий:", "float", "40")
+		self.shemetype.arrow_size = self.sett.add("Размер стрелки:", "int", "13")
 		#self.shemetype.base_height = self.sett.add("Базовая высота стержня:", "int", "10")
 		self.sett.updated.connect(self.redraw)
 
@@ -190,7 +192,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		zadelka_len = self.shemetype.zadelka_len.get()
 		dimlines_step = self.shemetype.dimlines_step.get()
 		dimlines_start_step = self.shemetype.dimlines_start_step.get()
-		arrow_size = self.shemetype.arrow_size_getter.get()
+		arrow_size = self.shemetype.arrow_size.get()
 
 		font = self.painter.font()
 		font.setItalic(True)
@@ -388,7 +390,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 					self.painter, 
 					c + QPoint(wprev/2+(w-wprev)/4, -h/2), 
 					c + QPoint(wprev/2+(w-wprev)/4, h/2), 
-					arrow_size, c, htxt, font)
+					10, c, htxt, font)
 
 			wprev = w
 
@@ -408,13 +410,17 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			c = center
 
 			if sf.distrib:
-				apnt = center + QPoint(w/2, -h/2-lwidth)
-				bpnt = center + QPoint(wprev/2, -h/2-lwidth)
+				apnt = center + QPointF(w/2, -h/2-lwidth)
+				bpnt = center + QPointF(wprev/2, -h/2-lwidth)
 				paintool.draw_distribload(self.painter, apnt, bpnt, distrib_step, arrow_size/3*2, distrib_alen)
 
-				apnt = center + QPoint(-wprev/2, -h/2-lwidth)
-				bpnt = center + QPoint(-w/2, -h/2-lwidth)
+				apnt = center + QPointF(-wprev/2, -h/2-lwidth)
+				bpnt = center + QPointF(-w/2, -h/2-lwidth)
 				paintool.draw_distribload(self.painter, apnt, bpnt, distrib_step, arrow_size/3*2, distrib_alen)
+
+				apnt = center + QPointF(wprev/2, -h/2-lwidth-distrib_alen)
+				bpnt = center + QPointF(-wprev/2, -h/2-lwidth-distrib_alen)
+				self.painter.drawLine(apnt, bpnt)
 
 			wprev = w
 
@@ -427,39 +433,39 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			h = s.h * base_h
 			c = center
 
-			alen = 30
+			alen = 40
 			moment_radius = 40
 
-			if b.fen:
-				apnt = center + QPoint(w/2, -h/2-lwidth)
-				paintool.common_arrow(self.painter, apnt + QPoint(0,-alen), apnt, arrow_size)	
+			if b.fen != "нет":
+				apnt0 = center + QPoint(w/2, -h/2-lwidth)
+				apnt1 = center + QPoint(-w/2, -h/2-lwidth)
 
-				apnt = center + QPoint(-w/2, -h/2-lwidth)
-				paintool.common_arrow(self.painter, apnt + QPoint(0,-alen), apnt, arrow_size)				
+				if b.fen == "-":
+					paintool.common_arrow(self.painter, apnt0 + QPoint(0,-alen), apnt0, arrow_size)	
+					paintool.common_arrow(self.painter, apnt1 + QPoint(0,-alen), apnt1, arrow_size)				
 
-			if b.men != "clean":
+				if b.fen == "+":
+					paintool.common_arrow(self.painter, apnt0, apnt0 + QPoint(0,-alen), arrow_size)	
+					paintool.common_arrow(self.painter, apnt1, apnt1 + QPoint(0,-alen), arrow_size)				
+
+				self.painter.drawLine(apnt0+ QPoint(0,-alen),apnt1+ QPoint(0,-alen))
+
+			if b.men != "нет":
 				direction = b.men == "+"
 
 				arrow_size_pair = (arrow_size, 4)
-				apnt = center + QPoint(-w/2, 0)
-				self.common_scene.addItem(SquareMomentItem(
-					apnt, 
-					moment_radius/2, 
-					moment_radius,  
-					inverse=direction, 
-					arrow_size=arrow_size_pair,
-					brush=Qt.black
-				))
-
-				apnt = center + QPoint(w/2, 0)
-				self.common_scene.addItem(SquareMomentItem(
-					apnt, 
-					moment_radius/2, 
-					moment_radius,  
-					inverse=not direction, 
-					arrow_size=arrow_size_pair,
-					brush=Qt.black
-				))
+				for apnt, direction in [
+					(center + QPoint(w/2, 0),not direction), 
+					(center + QPoint(-w/2, 0), direction)
+				]:
+					self.common_scene.addItem(SquareMomentItem(
+						apnt, 
+						moment_radius/2, 
+						h/2 + 32,  
+						inverse=direction, 
+						arrow_size=arrow_size_pair,
+						brush=Qt.black
+					))
 
 			if b.sharn != "нет":
 				termrad = 20

@@ -670,7 +670,7 @@ def greek(text):
 #	ψ        Psi          \u03C8
 #	ω        Omega        \u03C9
 
-def dimlines(painter, p0, p1, level):
+def dimlines(painter, p0, p1, level, arrow_size=10):
 	painter.setPen(halfpen)
 
 	pp0 = QPointF(p0.x(), level)
@@ -680,8 +680,8 @@ def dimlines(painter, p0, p1, level):
 	painter.drawLine(p0, pp0)
 	painter.drawLine(p1, pp1)
 
-	left_arrow(painter, pc, length/2, 10)
-	right_arrow(painter, pc, length/2, 10)
+	left_arrow(painter, pc, length/2, arrow_size)
+	right_arrow(painter, pc, length/2, arrow_size)
 
 	painter.setPen(pen)
 
