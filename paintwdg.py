@@ -92,6 +92,7 @@ class PaintWidget(QWidget):
 
 		self.last_point = QPointF(0,0)
 		self.mouse_pressed = False
+		self.selected_label_id = None
 		self.label_items = {}
 		super().__init__()
 
