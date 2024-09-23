@@ -200,6 +200,7 @@ class ConfWidget_T2(common.ConfWidget):
 	def updateTables(self):
 		self.table.updateTable()
 		self.table2.updateTable()
+		self.table3.updateTable()
 
 class PaintWidget_T2(paintwdg.PaintWidget):
 
