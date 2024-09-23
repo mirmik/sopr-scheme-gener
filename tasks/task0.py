@@ -338,30 +338,30 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 				if task["betsect"][i].F == "+":
 					if task["betsect"][i].Fstyle == "выносн.": #not self.next_raspred(i):
 						paintool.right_arrow_double(self.painter, 
-							QPoint(self.wsect(i), hcenter), 
+							QPointF(self.wsect(i), hcenter), 
 							arrow_line_size, 
 							arrow_head_size,
 							h = self.msectrad(i) * 3.2)
 						F_text_policy = "up"
 						F_level = - self.msectrad(i) * 3.2/2 + hcenter
 					elif task["betsect"][i].Fstyle == "от узла": #not self.next_raspred(i):
-						paintool.right_arrow(self.painter, QPoint(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
+						paintool.right_arrow(self.painter, QPointF(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
 					else:
-						paintool.right_arrow(self.painter, QPoint(self.wsect(i) - arrow_line_size, hcenter), arrow_line_size, arrow_head_size)
+						paintool.right_arrow(self.painter, QPointF(self.wsect(i) - arrow_line_size, hcenter), arrow_line_size, arrow_head_size)
 					
 				if task["betsect"][i].F == "-":
 					if task["betsect"][i].Fstyle == "выносн.":
 						paintool.left_arrow_double(self.painter, 
-							QPoint(self.wsect(i), hcenter), 
+							QPointF(self.wsect(i), hcenter), 
 							arrow_line_size, 
 							arrow_head_size,
 							h = self.msectrad(i) * 3.2)
 						F_text_policy = "up"
 						F_level = - self.msectrad(i) * 3.2/2 + hcenter					
 					elif task["betsect"][i].Fstyle == "от узла":
-						paintool.left_arrow(self.painter, QPoint(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
+						paintool.left_arrow(self.painter, QPointF(self.wsect(i), hcenter), arrow_line_size, arrow_head_size)
 					else:
-						paintool.left_arrow(self.painter, QPoint(self.wsect(i) + arrow_line_size, hcenter), arrow_line_size, arrow_head_size)
+						paintool.left_arrow(self.painter, QPointF(self.wsect(i) + arrow_line_size, hcenter), arrow_line_size, arrow_head_size)
 
 			self.painter.setPen(self.pen)
 			if task["betsect"][i].F != "нет":
@@ -378,7 +378,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 					
 					if F_text_policy == "simple":
 						paintool.placedtext(self.painter,
-							QPoint(self.wsect(i)+desp, hcenter), 
+							QPointF(self.wsect(i)+desp, hcenter), 
 							max(leftA, rightA) * height_zone / 2 + 10, 
 							size, 
 							text,
@@ -386,7 +386,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 	
 					if F_text_policy == "up":
 						paintool.draw_text_centered(self.painter,
-							QPoint(
+							QPointF(
 								self.wsect(i)+desp, 
 								F_level - 6), 
 							text, font)
@@ -444,7 +444,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 	
 					size = QFontMetrics(font).width(task["sectforce"][i].mkrT)
 					paintool.placedtext(self.painter,
-						QPoint((fxa + fxb)/2, hcenter), 
+						QPointF((fxa + fxb)/2, hcenter), 
 						self.sectrad(i) + 10, 
 						size, 
 						task["sectforce"][i].mkrT,
@@ -537,10 +537,10 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 		if not self.is_delta(i):
 			self.painter.drawRect(
-				self.wsect(i), 
-				strt_height, 
-				self.wsect(i+1)-self.wsect(i), 
-				fini_height-strt_height)
+				int(self.wsect(i)), 
+				int(strt_height), 
+				int(self.wsect(i+1)-self.wsect(i)), 
+				int(fini_height-strt_height))
 
 	def draw_dimlines(self, i, strt_height, fini_height):		
 		task = self.task
@@ -599,10 +599,10 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 
 			paintool.draw_dimlines(
 				self.painter, 
-				QPoint(self.wsect(i), fini_height), 
-				QPoint(self.wsect(i+1), fini_height), 
-				offset=QPoint(0, self.dimlines_level- fini_height), 
-				textoff=QPoint(0, -3 -QFontMetrics(self.font).height()/2),
+				QPointF(int(self.wsect(i)), fini_height), 
+				QPointF(int(self.wsect(i+1)), fini_height), 
+				offset=QPointF(0, self.dimlines_level- fini_height), 
+				textoff=QPointF(0, -3 -QFontMetrics(self.font).height()/2),
 				arrow_size=10,
 				text=text,
 				splashed=splashed)
@@ -708,7 +708,7 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			if s.l > maxl: maxl = s.l
 			if s.A > maxA: maxA = s.A
 
-		dimlines_level = hcenter + base_section_height*math.sqrt(maxA)/2 + self.shemetype.dimlines_start_step.get()
+		dimlines_level = int(hcenter + base_section_height*math.sqrt(maxA)/2 + self.shemetype.dimlines_start_step.get())
 		self.dimlines_level = dimlines_level
 
 		if razm is True:
@@ -731,8 +731,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		for i in range(len(task["sections"])):
 			hkoeff = self.sectrad_koeff(i)
 
-			strt_height = hcenter - height_zone*hkoeff/2
-			fini_height = hcenter + height_zone*hkoeff/2
+			strt_height = int(hcenter - height_zone*hkoeff/2)
+			fini_height = int(hcenter + height_zone*hkoeff/2)
 
 			self.draw_section(i, strt_height, fini_height)
 			self.draw_dimlines(i, strt_height, fini_height)
@@ -819,9 +819,9 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			pen = QPen()
 			pen.setColor(Qt.blue)
 			pen.setWidth(5)
-			p = QPoint(self.wsect(row), self.hcenter)
+			p = QPointF(self.wsect(row), self.hcenter)
 			self.painter.setBrush(Qt.green)
-			self.painter.drawEllipse(QRect(p-QPoint(5,5),p+QPoint(5,5)))
+			self.painter.drawEllipse(QRectF(p-QPointF(5,5),p+QPointF(5,5)))
 			self.painter.setBrush(Qt.black)
 
 		if zleft:
@@ -838,8 +838,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 			if sects[i].label != "":
 				elements.draw_text_by_points(
 					self,
-					QPoint(self.wsect(i), hcenter-self.sectrad(i)), 
-					QPoint(self.wsect(i+1), hcenter-self.sectrad(i)), 
+					QPointF(self.wsect(i), hcenter-self.sectrad(i)), 
+					QPointF(self.wsect(i+1), hcenter-self.sectrad(i)), 
 					txt=paintool.greek(sects[i].label) + ("" if sects[i].label_height > -20 else "  "),
 					alttxt=True,
 					polka=QPointF((self.wsect(i+1) + self.wsect(i)) / 2, hcenter)

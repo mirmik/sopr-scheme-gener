@@ -140,19 +140,19 @@ class PaintWidget(QWidget):
 		paintool.pen = self.default_pen
 
 		self.halfpen = QPen()
-		self.halfpen.setWidth(lwidth/2)
+		self.halfpen.setWidth((int)(lwidth/2))
 		paintool.halfpen = self.halfpen
 
 		self.doublepen = QPen()
-		self.doublepen.setWidth(lwidth*2)
+		self.doublepen.setWidth((int)(lwidth*2))
 		paintool.doublepen = self.doublepen
 
 		self.axpen = QPen(Qt.DashDotLine)
-		self.axpen.setWidth(lwidth/2)
+		self.axpen.setWidth((int)(lwidth/2))
 		paintool.axpen = self.axpen
 
 		self.widegreen = QPen()
-		self.widegreen.setWidth(lwidth*2)
+		self.widegreen.setWidth((int)(lwidth*2))
 		self.widegreen.setColor(Qt.green)
 		paintool.widegreen = self.widegreen
 
@@ -167,7 +167,7 @@ class PaintWidget(QWidget):
 		paintool.blue = self.blue
 
 		self.halfgreen = QPen()
-		self.halfgreen.setWidth(lwidth/2)
+		self.halfgreen.setWidth((int)(lwidth/2))
 		self.halfgreen.setColor(Qt.green)
 		paintool.halfgreen = self.halfgreen
 
@@ -182,7 +182,7 @@ class PaintWidget(QWidget):
 
 		painter.setPen(Qt.NoPen)
 		painter.setBrush(Qt.white)
-		painter.drawRect(QRect(0,0,self.width(),self.height()))
+		painter.drawRect(QRectF(0,0,self.width(),self.height()))
 		painter.setPen(self.pen)
 		painter.setBrush(Qt.white)
 		self.painter = painter
@@ -212,7 +212,7 @@ class PaintWidget(QWidget):
 				self.painter.setBrush(Qt.black)
 				n = len(addtext.splitlines())
 				for i, l in enumerate(addtext.splitlines()):
-					self.painter.drawText(QPoint(
+					self.painter.drawText(QPointF(
 					40, 
 					self.height() - QFontMetrics(self.font).height()*(n-i)), 
 					paintool.greek(l))

@@ -163,13 +163,13 @@ class PaintWidget(paintwdg.PaintWidget):
 	def trans(self,x,y,z):
 		if self.axonom:
 			p = self.trans_matrix * numpy.array([[x],[y],[-z],[1]])
-			return QPoint(float(p[0]), float(p[2]))
+			return QPointF(float(p[0]), float(p[2]))
 		else:
 			if self.axonom_deg:
-				return QPoint(self.base_x-y*math.cos(deg(60))+x, self.base_y+y*math.sin(deg(60))-z)
+				return QPointF(self.base_x-y*math.cos(deg(60))+x, self.base_y+y*math.sin(deg(60))-z)
 
 			p = self.trans_matrix * numpy.array([[0],[y],[0],[1]])
-			return QPoint(float(p[0])+x, float(p[2])-z)
+			return QPointF(float(p[0])+x, float(p[2])-z)
 
 	def paintEventImplementation(self, ev):
 		greek = paintool.greek
@@ -209,7 +209,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		if self.shemetype.section_type.get() == "прямоугольник":
 			self.painter.setBrush(QColor(220,220,220))
 			self.painter.setPen(Qt.NoPen)
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(-a/2-S,-L,-b/2-S),
 				trans(-a/2-S,-L,b/2+S),
 				trans(a/2+S,-L,b/2+S),
@@ -218,21 +218,21 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			self.painter.setBrush(Qt.white)
 			self.painter.setPen(self.pen)
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(-a/2,0,-b/2),
 				trans(-a/2,0,b/2),
 				trans(a/2,0,b/2),
 				trans(a/2,0,-b/2),
 			]))
 
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(-a/2,0,b/2),
 				trans(-a/2,-L,b/2),
 				trans(a/2,-L,b/2),
 				trans(a/2,0,b/2),
 			]))
 
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(a/2,0,b/2),
 				trans(a/2,-L,b/2),
 				trans(a/2,-L,-b/2),
@@ -244,8 +244,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(-a/2,0,-b/2), 
 				bpnt=trans(-a/2,0,b/2), 
-				offset= QPoint(-dimoff, 0), 
-				textoff = QPoint(), 
+				offset= QPointF(-dimoff, 0), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -256,8 +256,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(a/2,0,-b/2), 
 				bpnt=trans(-a/2,0,-b/2), 
-				offset= QPoint(0,dimoff), 
-				textoff = QPoint(), 
+				offset= QPointF(0,dimoff), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -267,8 +267,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(a/2,-L,-b/2), 
 				bpnt=trans(a/2,0,-b/2), 
-				offset= QPoint(dimoff*0.7,dimoff*0.7), 
-				textoff = QPoint(), 
+				offset= QPointF(dimoff*0.7,dimoff*0.7), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -276,8 +276,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(-a/2,0,-b/2)+QPoint(-dimoff, 0), 
-				fini=trans(-a/2,0,b/2)+QPoint(-dimoff, 0), 
+				strt=trans(-a/2,0,-b/2)+QPointF(-dimoff, 0), 
+				fini=trans(-a/2,0,b/2)+QPointF(-dimoff, 0), 
 				txt=greek(self.shemetype.y_txt.get()), 
 				alttxt=False, 
 				off=10, 
@@ -285,8 +285,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(-a/2,0,-b/2)+QPoint(0,dimoff), 
-				fini=trans(a/2,0,-b/2)+QPoint(0,dimoff), 
+				strt=trans(-a/2,0,-b/2)+QPointF(0,dimoff), 
+				fini=trans(a/2,0,-b/2)+QPointF(0,dimoff), 
 				txt=greek(self.shemetype.x_txt.get()), 
 				alttxt=True, 
 				off=14, 
@@ -294,8 +294,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(a/2,-L,-b/2)+QPoint(dimoff*0.7,dimoff*0.7), 
-				fini=trans(a/2,0,-b/2)+QPoint(dimoff*0.7,dimoff*0.7), 
+				strt=trans(a/2,-L,-b/2)+QPointF(dimoff*0.7,dimoff*0.7), 
+				fini=trans(a/2,0,-b/2)+QPointF(dimoff*0.7,dimoff*0.7), 
 				txt=greek(self.shemetype.l_txt.get()), 
 				alttxt=True, 
 				off=14, 
@@ -325,7 +325,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		elif self.shemetype.section_type.get() == "ромб":
 			self.painter.setBrush(QColor(220,220,220))
 			self.painter.setPen(Qt.NoPen)
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(-a/2-S,-L,-b/2-S),
 				trans(-a/2-S,-L,b/2+S),
 				trans(a/2+S,-L,b/2+S),
@@ -334,28 +334,28 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			self.painter.setBrush(Qt.white)
 			self.painter.setPen(self.pen)
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(-a/2,0,0),
 				trans(-a/2,-L,0),
 				trans(0,-L,b/2),
 				trans(0,0,b/2),
 			]))
 
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(a/2,0,0),
 				trans(a/2,-L,0),
 				trans(0,-L,-b/2),
 				trans(0,0,-b/2),
 			]))
 
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(0,0,b/2),
 				trans(0,-L,b/2),
 				trans(a/2,-L,0),
 				trans(a/2,0,0),
 			]))
 
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(0,0,-b/2),
 				trans(-a/2,0,0),
 				trans(0,0,b/2),
@@ -367,8 +367,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(0,0,-b/2), 
 				bpnt=trans(0,0,b/2), 
-				offset= QPoint(-dimoff-a/2, 0), 
-				textoff = QPoint(), 
+				offset= QPointF(-dimoff-a/2, 0), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -378,8 +378,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(a/2,0,0), 
 				bpnt=trans(-a/2,0,0), 
-				offset= QPoint(0,dimoff+b/2), 
-				textoff = QPoint(), 
+				offset= QPointF(0,dimoff+b/2), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -389,8 +389,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(a/2,-L,0), 
 				bpnt=trans(a/2,0,0), 
-				offset= QPoint(dimoff,0), 
-				textoff = QPoint(), 
+				offset= QPointF(dimoff,0), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -398,8 +398,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(0,0,-b/2)+QPoint(-dimoff-a/2, 0), 
-				fini=trans(0,0,b/2)+QPoint(-dimoff-a/2, 0), 
+				strt=trans(0,0,-b/2)+QPointF(-dimoff-a/2, 0), 
+				fini=trans(0,0,b/2)+QPointF(-dimoff-a/2, 0), 
 				txt=greek(self.shemetype.y_txt.get()), 
 				alttxt=False, 
 				off=10, 
@@ -407,8 +407,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(-a/2,0,0)+QPoint(0,dimoff+b/2), 
-				fini=trans(a/2,0,0)+QPoint(0,dimoff+b/2), 
+				strt=trans(-a/2,0,0)+QPointF(0,dimoff+b/2), 
+				fini=trans(a/2,0,0)+QPointF(0,dimoff+b/2), 
 				txt=greek(self.shemetype.x_txt.get()), 
 				alttxt=True, 
 				off=14, 
@@ -416,8 +416,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(a/2,-L,0)+QPoint(dimoff,0), 
-				fini=trans(a/2,0,0)+QPoint(dimoff,0), 
+				strt=trans(a/2,-L,0)+QPointF(dimoff,0), 
+				fini=trans(a/2,0,0)+QPointF(dimoff,0), 
 				txt=greek(self.shemetype.l_txt.get()), 
 				alttxt=True, 
 				off=14, 
@@ -447,7 +447,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		elif self.shemetype.section_type.get() == "круг":
 			self.painter.setBrush(QColor(220,220,220))
 			self.painter.setPen(Qt.NoPen)
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(-a/2-S,-L,-a/2-S),
 				trans(-a/2-S,-L,a/2+S),
 				trans(a/2+S,-L,a/2+S),
@@ -457,18 +457,18 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.painter.setBrush(Qt.white)
 			self.painter.setPen(self.pen)
 			
-			self.painter.drawEllipse(QRect(
+			self.painter.drawEllipse(QRectF(
 				trans(-a/2,-L,-a/2),
 				trans(a/2,-L,a/2)
 			))
 
 			#self.painter.setBrush(Qt.NoBrush)
 			self.painter.setPen(Qt.NoPen)
-			self.painter.drawPolygon(QPolygon([
-				trans(0,-L,0) - QPoint(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
-				trans(0,-L,0) + QPoint(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
-				trans(0,0,0) + QPoint(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
-				trans(0,0,0) - QPoint(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
+			self.painter.drawPolygon(QPolygonF([
+				trans(0,-L,0) - QPointF(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
+				trans(0,-L,0) + QPointF(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
+				trans(0,0,0) + QPointF(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
+				trans(0,0,0) - QPointF(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
 			]))
 			self.painter.setPen(self.pen)
 			self.painter.drawLine(
@@ -485,7 +485,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.painter.drawLine(trans(0,-L,a/2), trans(0,0,a/2))
 			self.painter.setPen(self.pen)
 
-			self.painter.drawEllipse(QRect(
+			self.painter.drawEllipse(QRectF(
 				trans(-a/2,0,-a/2),
 				trans(a/2,0,a/2)
 			))
@@ -495,8 +495,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(a/2,0,0), 
 				bpnt=trans(-a/2,0,0), 
-				offset= QPoint(0,dimoff+a/2), 
-				textoff = QPoint(), 
+				offset= QPointF(0,dimoff+a/2), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -507,8 +507,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(a/2,-L,0),
 				bpnt=trans(a/2,0,0),
-				offset= QPoint(dimoff,0), 
-				textoff = QPoint(), 
+				offset= QPointF(dimoff,0), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -516,8 +516,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(-a/2,0,-a/2)+QPoint(0,dimoff), 
-				fini=trans(a/2,0,-a/2)+QPoint(0,dimoff), 
+				strt=trans(-a/2,0,-a/2)+QPointF(0,dimoff), 
+				fini=trans(a/2,0,-a/2)+QPointF(0,dimoff), 
 				txt=greek(self.shemetype.x_txt.get()), 
 				alttxt=True, 
 				off=14, 
@@ -525,8 +525,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(a/2,-L,0)+QPoint(dimoff,0), 
-				fini=trans(a/2,0,0)+QPoint(dimoff,0), 
+				strt=trans(a/2,-L,0)+QPointF(dimoff,0), 
+				fini=trans(a/2,0,0)+QPointF(dimoff,0), 
 				txt=greek(self.shemetype.l_txt.get()), 
 				alttxt=True, 
 				off=14, 
@@ -556,7 +556,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		elif self.shemetype.section_type.get() == "труба":
 			self.painter.setBrush(QColor(220,220,220))
 			self.painter.setPen(Qt.NoPen)
-			self.painter.drawPolygon(QPolygon([
+			self.painter.drawPolygon(QPolygonF([
 				trans(-a/2-S,-L,-a/2-S),
 				trans(-a/2-S,-L,a/2+S),
 				trans(a/2+S,-L,a/2+S),
@@ -566,18 +566,18 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.painter.setBrush(Qt.white)
 			self.painter.setPen(self.pen)
 			
-			self.painter.drawEllipse(QRect(
+			self.painter.drawEllipse(QRectF(
 				trans(-a/2,-L,-a/2),
 				trans(a/2,-L,a/2)
 			))
 
 			#self.painter.setBrush(Qt.NoBrush)
 			self.painter.setPen(Qt.NoPen)
-			self.painter.drawPolygon(QPolygon([
-				trans(0,-L,0) - QPoint(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
-				trans(0,-L,0) + QPoint(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
-				trans(0,0,0) + QPoint(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
-				trans(0,0,0) - QPoint(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
+			self.painter.drawPolygon(QPolygonF([
+				trans(0,-L,0) - QPointF(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
+				trans(0,-L,0) + QPointF(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
+				trans(0,0,0) + QPointF(a/2*math.sin(deg(60))+1.5, a/2*math.cos(deg(60))+1.5),
+				trans(0,0,0) - QPointF(a/2*math.sin(deg(60)), a/2*math.cos(deg(60))),
 			]))
 			self.painter.setPen(self.pen)
 			self.painter.drawLine(
@@ -594,19 +594,19 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.painter.drawLine(trans(0,-L,a/2), trans(0,0,a/2))
 			self.painter.setPen(self.pen)
 
-			self.painter.drawEllipse(QRect(
+			self.painter.drawEllipse(QRectF(
 				trans(-a/2,0,-a/2),
 				trans(a/2,0,a/2)
 			))
 
-			self.painter.drawEllipse(QRect(
+			self.painter.drawEllipse(QRectF(
 				trans(-b/2,0,-b/2),
 				trans(b/2,0,b/2)
 			))
 
 			self.painter.setPen(self.axpen)
 			self.painter.setBrush(Qt.NoBrush)
-			self.painter.drawEllipse(QRect(
+			self.painter.drawEllipse(QRectF(
 				trans(-(a+b)/4,0,-(a+b)/4),
 				trans((a+b)/4,0,(a+b)/4)
 			))
@@ -616,8 +616,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans((a+b)/4,0,0), 
 				bpnt=trans(-(a+b)/4,0,0), 
-				offset= QPoint(0,dimoff+a/2), 
-				textoff = QPoint(), 
+				offset= QPointF(0,dimoff+a/2), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -628,8 +628,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(a/2*math.cos(deg(ar)),0,a/2*math.sin(deg(ar))), 
 				bpnt=trans(b/2*math.cos(deg(ar)),0,b/2*math.sin(deg(ar))), 
-				offset= QPoint(0,0), 
-				textoff = (trans(a/2*math.cos(deg(ar)),0,a/2*math.sin(deg(ar))) - trans(b/2*math.cos(deg(ar)),0,b/2*math.sin(deg(ar))))/2 + QPoint(30,-30), 
+				offset= QPointF(0,0), 
+				textoff = (trans(a/2*math.cos(deg(ar)),0,a/2*math.sin(deg(ar))) - trans(b/2*math.cos(deg(ar)),0,b/2*math.sin(deg(ar))))/2 + QPointF(30,-30), 
 				text = greek(self.shemetype.y_txt.get()), 
 				arrow_size = 12, 
 				splashed=True, 
@@ -640,8 +640,8 @@ class PaintWidget(paintwdg.PaintWidget):
 				painter=self.painter, 
 				apnt=trans(a/2,-L,0),
 				bpnt=trans(a/2,0,0),
-				offset= QPoint(dimoff,0), 
-				textoff = QPoint(), 
+				offset= QPointF(dimoff,0), 
+				textoff = QPointF(), 
 				text = "", 
 				arrow_size = 12, 
 				splashed=False, 
@@ -649,8 +649,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(-a/2,0,-a/2)+QPoint(0,dimoff), 
-				fini=trans(a/2,0,-a/2)+QPoint(0,dimoff), 
+				strt=trans(-a/2,0,-a/2)+QPointF(0,dimoff), 
+				fini=trans(a/2,0,-a/2)+QPointF(0,dimoff), 
 				txt=greek(self.shemetype.x_txt.get()), 
 				alttxt=True, 
 				off=14, 
@@ -658,8 +658,8 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			elements.draw_text_by_points(
 				self, 
-				strt=trans(a/2,-L,0)+QPoint(dimoff,0), 
-				fini=trans(a/2,0,0)+QPoint(dimoff,0), 
+				strt=trans(a/2,-L,0)+QPointF(dimoff,0), 
+				fini=trans(a/2,0,0)+QPointF(dimoff,0), 
 				txt=greek(self.shemetype.l_txt.get()), 
 				alttxt=True, 
 				off=14, 

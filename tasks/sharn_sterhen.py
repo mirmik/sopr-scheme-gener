@@ -216,7 +216,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		width = self.width()
 		height = self.height()
 
-		center = QPoint(width/2, self.hcenter)
+		center = QPointF(width/2, self.hcenter)
 
 		font_size = self.shemetype.font_size.get()
 		lwidth = self.shemetype.line_width.get()
@@ -269,10 +269,10 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 			hkoeff = float(fheight)
 		hbase = hkoeff * smax + up_span
 
-		lu = QPoint(left_span, hbase)
-		ru = QPoint(width - right_span, hbase)
-		ld = QPoint(left_span, hbase+base_height)
-		rd = QPoint(width - right_span, hbase+base_height)
+		lu = QPointF(left_span, hbase)
+		ru = QPointF(width - right_span, hbase)
+		ld = QPointF(left_span, hbase+base_height)
+		rd = QPointF(width - right_span, hbase+base_height)
 
 		fsize = width - right_span - left_span
 		lsum = 0
@@ -297,14 +297,14 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 			if sects[i].dims:
 
 				paintool.dimlines(self.painter, 
-					QPoint(xl, hbase), 
-					QPoint(xr, hbase), 
+					QPointF(xl, hbase), 
+					QPointF(xr, hbase), 
 					hbase+dimlines_level)
 
 				elements.draw_text_by_points(
 							self,
-							QPoint(xl, hbase+dimlines_level), 
-							QPoint(xr, hbase+dimlines_level), 
+							QPointF(xl, hbase+dimlines_level), 
+							QPointF(xr, hbase+dimlines_level), 
 							txt=util.text_prepare_ltext(self.sections()[i].l, "a"),
 							alttxt=True,
 							off = 8
@@ -322,8 +322,8 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 			if sects[i].label != "":
 				elements.draw_text_by_points(
 					self,
-					QPoint(xnode(i), hbase-sects[i].label_height), 
-					QPoint(xnode(i+1), hbase-sects[i].label_height), 
+					QPointF(xnode(i), hbase-sects[i].label_height), 
+					QPointF(xnode(i+1), hbase-sects[i].label_height), 
 					txt=paintool.greek(sects[i].label) + ("" if sects[i].label_height > -20 else "  "),
 					alttxt=True,
 					polka=QPointF((xnode(i+1) + xnode(i)) / 2, hbase+base_height/2)
@@ -341,7 +341,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				elif bsects[i].sharn == "2":
 					sharn_type = "снизу шарн2"
 				elements.draw_element_sharn(self,
-					pnt=QPoint(xnode(i), hbase+base_height),
+					pnt=QPointF(xnode(i), hbase+base_height),
 					type=sharn_type,
 					termrad=25,
 					termx=25,
@@ -356,7 +356,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					strt_z = QPointF(xnode(i), hbase - 20)
 					fini = QPointF(xnode(i), hbase - bsects[i].l*hkoeff)
 				else:
-					strt = QPoint(xnode(i), hbase + base_height)
+					strt = QPointF(xnode(i), hbase + base_height)
 					strt_z = QPointF(xnode(i), hbase + base_height + 20)
 					fini = QPointF(xnode(i), hbase - bsects[i].l*hkoeff)
 				
@@ -390,8 +390,8 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 						painter=self.painter, 
 						apnt=strt, 
 						bpnt=strt_z, 
-						offset=QPoint(-20,0), 
-						textoff=QPoint(-10-QFontMetrics(self.font).width(paintool.greek(bsects[i].zazor_txt))/2,0), 
+						offset=QPointF(-20,0), 
+						textoff=QPointF(-10-QFontMetrics(self.font).width(paintool.greek(bsects[i].zazor_txt))/2,0), 
 						text=paintool.greek(bsects[i].zazor_txt), 
 						arrow_size=10, 
 						splashed=True, 
@@ -405,7 +405,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					angle = deg(-90)
 				
 				upnt = bsects[i].l*hkoeff
-				paintool.zadelka_sharnir(self.painter, QPoint(xnode(i), hbase - upnt), angle, 30, 10, 5)
+				paintool.zadelka_sharnir(self.painter, QPointF(xnode(i), hbase - upnt), angle, 30, 10, 5)
 
 				ap = -upnt if bsects[i].l < 0 else 0
 				bp = 0 if bsects[i].l < 0 else -upnt
@@ -481,8 +481,8 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					elements.draw_text_by_points_angled(
 						self,
 						a1, b1,
-#						QPoint(xnode(i)+dimlines_level2, hbase + ap),
-#						QPoint(xnode(i)+dimlines_level2, hbase + cp),
+#						QPointF(xnode(i)+dimlines_level2, hbase + ap),
+#						QPointF(xnode(i)+dimlines_level2, hbase + cp),
 						txt=txt_var1,
 						alttxt=alttxt,
 						off = 15
@@ -490,8 +490,8 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					elements.draw_text_by_points_angled(
 						self,
 						a2, b2,
-#						QPoint(xnode(i)+dimlines_level2, hbase + cp),
-#						QPoint(xnode(i)+dimlines_level2, hbase + bp),
+#						QPointF(xnode(i)+dimlines_level2, hbase + cp),
+#						QPointF(xnode(i)+dimlines_level2, hbase + bp),
 						txt=txt_var2,
 						alttxt=alttxt,
 						off = 15
@@ -504,8 +504,8 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					if bsects[i].lbl != "":
 						elements.draw_text_by_points(
 							self,
-							QPoint(xnode(i), hbase+cp),
-							QPoint(xnode(i), hbase+bp),
+							QPointF(xnode(i), hbase+cp),
+							QPointF(xnode(i), hbase+bp),
 							txt=paintool.greek(bsects[i].lbl),
 							alttxt=False,
 							polka=QPointF(xnode(i), hbase+cp/2+5)
@@ -515,8 +515,8 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					if bsects[i].lbl != "":
 						elements.draw_text_by_points(
 							self,
-							QPoint(xnode(i), hbase+ap),
-							QPoint(xnode(i), hbase+cp),
+							QPointF(xnode(i), hbase+ap),
+							QPointF(xnode(i), hbase+cp),
 							txt=paintool.greek(bsects[i].lbl),
 							alttxt=False,
 							polka=QPointF(xnode(i), hbase+cp/2+5)
@@ -531,8 +531,8 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 					self.painter.setPen(self.halfpen)
 					elements.draw_text_by_points(
 						self,
-						QPoint(xnode(i), hbase),
-						QPoint(xnode(i), hbase-60),
+						QPointF(xnode(i), hbase),
+						QPointF(xnode(i), hbase-60),
 						txt=paintool.greek(bsects[i].lbl),
 						alttxt=False,
 						polka=QPointF(xnode(i), hbase)
@@ -540,7 +540,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 	
 				if self.highlited_node and self.highlited_node[1] == i:
 					self.painter.setPen(self.green)
-					self.painter.drawEllipse(paintool.radrect(QPoint(xnode(i), hbase), 4))
+					self.painter.drawEllipse(paintool.radrect(QPointF(xnode(i), hbase), 4))
 
 
 		self.painter.setPen(self.pen)
@@ -613,9 +613,9 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 		# Рисуем заделку на левом крае
 		self.painter.setPen(self.doublepen)
 		if self.shemetype.zadelka1.get() == "2":
-			#paintool.zadelka_sharnir_type2(self.painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
+			#paintool.zadelka_sharnir_type2(self.painter, QPointF(xnode(0), hbase), deg(0), 30, 10, 5)
 			elements.draw_element_sharn(self, 
-				pnt=QPoint(xnode(0), hbase+base_height/2), 
+				pnt=QPointF(xnode(0), hbase+base_height/2), 
 				type="слева шарн2", 
 				termrad=25,
 				termx=25,
@@ -624,7 +624,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 		elif self.shemetype.zadelka1.get() == "1":
 			elements.draw_element_sharn(self, 
-				pnt=QPoint(xnode(0), hbase+base_height/2), 
+				pnt=QPointF(xnode(0), hbase+base_height/2), 
 				type="слева врез1", 
 				termrad=25,
 				termx=25,
@@ -632,9 +632,9 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 				rad=4)
 
 		if self.shemetype.zadelka2.get() == "2":
-			#paintool.zadelka_sharnir_type2(self.painter, QPoint(xnode(0), hbase), deg(0), 30, 10, 5)
+			#paintool.zadelka_sharnir_type2(self.painter, QPointF(xnode(0), hbase), deg(0), 30, 10, 5)
 			elements.draw_element_sharn(self, 
-				pnt=QPoint(xnode(-1), hbase+base_height/2), 
+				pnt=QPointF(xnode(-1), hbase+base_height/2), 
 				type="справа шарн2", 
 				termrad=25,
 				termx=25,
@@ -643,7 +643,7 @@ class PaintWidget_T2(paintwdg.PaintWidget):
 
 		elif self.shemetype.zadelka2.get() == "1":
 			elements.draw_element_sharn(self, 
-				pnt=QPoint(xnode(-1), hbase+base_height/2), 
+				pnt=QPointF(xnode(-1), hbase+base_height/2), 
 				type="справа врез1", 
 				termrad=25,
 				termx=25,

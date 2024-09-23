@@ -259,7 +259,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			angle=sect.angle
 			length = sect.l * base_length			
 			strt = center + QPointF(base_length * self.xoff(i), base_length * self.yoff(i))
-			pnt = strt + QPoint(math.cos(angle) * length, -math.sin(angle) * length)
+			pnt = strt + QPointF(math.cos(angle) * length, -math.sin(angle) * length)
 			return pnt
 
 		def hasnode(pnt):
@@ -342,7 +342,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 				strt = self.c + self.coordinate_of_start(i) 
 				
 				if hasnode(strt):
-					spnt = strt + QPoint(math.cos(angle) * 7, -math.sin(angle) * 7)
+					spnt = strt + QPointF(math.cos(angle) * 7, -math.sin(angle) * 7)
 				else:
 					spnt = strt
 
@@ -393,7 +393,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			for j in range(len(sects)):
 				jsect = self.sections()[j]
 				#length = jsect.l * base_length		
-				#pnt = strt + QPoint(math.cos(jsect.angle) * length, -math.sin(jsect.angle) * length)
+				#pnt = strt + QPointF(math.cos(jsect.angle) * length, -math.sin(jsect.angle) * length)
 				
 				if hasnode(strt):
 					circrad = 6

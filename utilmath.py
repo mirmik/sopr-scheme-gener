@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+def QPointF(a, b):
+	return QPoint(int(a),int(b))
+
 class line2eq:
 	def __init__(self, a, b, c):
 		a = self.a 
@@ -11,7 +14,7 @@ class line2eq:
 
 
 	@classmethod
-	def from_qpoints(p1, p2):
+	def from_QPointFs(p1, p2):
 		d = p2 - p1
 
 		dx = d.x()

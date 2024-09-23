@@ -180,7 +180,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 		width = self.width()
 		height = self.height()
 
-		center = QPoint(width/2, self.hcenter)
+		center = QPointF(width/2, self.hcenter)
 		self.labels_center = center
 
 		font_size = self.shemetype.font_size.get()
@@ -223,7 +223,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 
 		width_span = left_span + right_span
 		height_span = up_span + down_span
-		center = center + QPoint(left_span - right_span, (up_span - down_span) / 2)
+		center = center + QPointF(left_span - right_span, (up_span - down_span) / 2)
 
 		maxd = 0
 		maxh = 0
@@ -245,7 +245,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 				sprev_h = sprev.h * base_h
 
 			if s.intgran:
-				self.painter.drawRect(QRect(center.x() - w /2, center.y() - h/2, w, h))
+				self.painter.drawRect(QRectF(center.x() - w /2, center.y() - h/2, w, h))
 
 			else:
 				pen = QPen()
@@ -257,19 +257,19 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 				brush.setColor(Qt.white)
 				self.painter.setBrush(brush)
 
-				self.painter.drawRect(QRect(center.x() - w /2, center.y() - (maxh * base_h)/2, w, maxh * base_h))
+				self.painter.drawRect(QRectF(center.x() - w /2, center.y() - (maxh * base_h)/2, w, maxh * base_h))
 
 				pen.setColor(Qt.black)
 				self.painter.setPen(pen)
 
-				self.painter.drawLine(QPoint(center.x() - w/2, center.y() - h/2), QPoint(center.x() + w/2, center.y() - h/2))
-				self.painter.drawLine(QPoint(center.x() - w/2, center.y() + h/2), QPoint(center.x() + w/2, center.y() + h/2))
+				self.painter.drawLine(QPointF(center.x() - w/2, center.y() - h/2), QPointF(center.x() + w/2, center.y() - h/2))
+				self.painter.drawLine(QPointF(center.x() - w/2, center.y() + h/2), QPointF(center.x() + w/2, center.y() + h/2))
 				
 				if sprev:
-					self.painter.drawLine(QPoint(center.x() - w/2, center.y() - h/2), QPoint(center.x() - w/2, center.y() - sprev_h/2))
-					self.painter.drawLine(QPoint(center.x() - w/2, center.y() + h/2), QPoint(center.x() - w/2, center.y() + sprev_h/2))
-					self.painter.drawLine(QPoint(center.x() + w/2, center.y() - h/2), QPoint(center.x() + w/2, center.y() - sprev_h/2))
-					self.painter.drawLine(QPoint(center.x() + w/2, center.y() + h/2), QPoint(center.x() + w/2, center.y() + sprev_h/2))
+					self.painter.drawLine(QPointF(center.x() - w/2, center.y() - h/2), QPointF(center.x() - w/2, center.y() - sprev_h/2))
+					self.painter.drawLine(QPointF(center.x() - w/2, center.y() + h/2), QPointF(center.x() - w/2, center.y() + sprev_h/2))
+					self.painter.drawLine(QPointF(center.x() + w/2, center.y() - h/2), QPointF(center.x() + w/2, center.y() - sprev_h/2))
+					self.painter.drawLine(QPointF(center.x() + w/2, center.y() + h/2), QPointF(center.x() + w/2, center.y() + sprev_h/2))
 
 			if shtrih:
 				pen = QPen(Qt.NoPen)
@@ -280,7 +280,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 				brush.setColor(Qt.black)
 				self.painter.setBrush(brush)
 				
-				self.painter.drawRect(QRect(center.x() - w /2 - lwidth/2, center.y() - h/2 - lwidth/2, w + lwidth, h + lwidth))
+				self.painter.drawRect(QRectF(center.x() - w /2 - lwidth/2, center.y() - h/2 - lwidth/2, w + lwidth, h + lwidth))
 
 			self.painter.setPen(default_pen)
 			self.painter.setBrush(default_brush)
@@ -308,15 +308,15 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			brush.setColor(Qt.black)
 			self.painter.setBrush(brush)
 
-			self.painter.drawRect(QRect(llx - c, uy - c, w + c, h + 2*c))
-			self.painter.drawRect(QRect(rx, uy - c, w + c, h + 2*c))
+			self.painter.drawRect(QRectF(llx - c, uy - c, w + c, h + 2*c))
+			self.painter.drawRect(QRectF(rx, uy - c, w + c, h + 2*c))
 
 			brush = QBrush(Qt.SolidPattern)
 			brush.setColor(Qt.white)
 			self.painter.setBrush(brush)
 
-			self.painter.drawRect(QRect(llx - lwidth/2, uy - lwidth/2, w + lwidth, h + lwidth))
-			self.painter.drawRect(QRect(rx- lwidth/2, uy- lwidth/2, w+ lwidth, h+ lwidth))
+			self.painter.drawRect(QRectF(llx - lwidth/2, uy - lwidth/2, w + lwidth, h + lwidth))
+			self.painter.drawRect(QRectF(rx- lwidth/2, uy- lwidth/2, w+ lwidth, h+ lwidth))
 
 			self.painter.setBrush(default_brush)
 
@@ -324,18 +324,18 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			brush.setColor(Qt.black)
 			self.painter.setBrush(brush)
 
-			self.painter.drawRect(QRect(llx - lwidth/2, uy - lwidth/2, w + lwidth, h + lwidth))
-			self.painter.drawRect(QRect(rx- lwidth/2, uy- lwidth/2, w+ lwidth, h+ lwidth))
+			self.painter.drawRect(QRectF(llx - lwidth/2, uy - lwidth/2, w + lwidth, h + lwidth))
+			self.painter.drawRect(QRectF(rx- lwidth/2, uy- lwidth/2, w+ lwidth, h+ lwidth))
 
 			self.painter.setPen(default_pen)
 
-			self.painter.drawLine(QPoint(llx, uy), QPoint(lx, uy))
-			self.painter.drawLine(QPoint(llx, uy), QPoint(llx, dy))
-			self.painter.drawLine(QPoint(llx, dy), QPoint(lx, dy))
+			self.painter.drawLine(QPointF(llx, uy), QPointF(lx, uy))
+			self.painter.drawLine(QPointF(llx, uy), QPointF(llx, dy))
+			self.painter.drawLine(QPointF(llx, dy), QPointF(lx, dy))
 
-			self.painter.drawLine(QPoint(rx, uy), QPoint(rrx, uy))
-			self.painter.drawLine(QPoint(rrx, uy), QPoint(rrx, dy))
-			self.painter.drawLine(QPoint(rx, dy), QPoint(rrx, dy))
+			self.painter.drawLine(QPointF(rx, uy), QPointF(rrx, uy))
+			self.painter.drawLine(QPointF(rrx, uy), QPointF(rrx, dy))
+			self.painter.drawLine(QPointF(rx, dy), QPointF(rrx, dy))
 
 			self.painter.setPen(default_pen)
 			self.painter.setBrush(default_brush)
@@ -345,7 +345,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			pen.setWidth(lwidth)
 			self.painter.setPen(pen)
 
-			self.painter.drawLine(QPoint(center.x(), center.y() + (maxh) * base_h/2 + 10), QPoint(center.x(), center.y() - (maxh) * base_h /2 - 10))
+			self.painter.drawLine(QPointF(center.x(), center.y() + (maxh) * base_h/2 + 10), QPointF(center.x(), center.y() - (maxh) * base_h /2 - 10))
 
 
 		i = 0
@@ -363,12 +363,12 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			self.painter.setBrush(default_brush)
 
 			pen = QPen()
-			pen.setWidth(lwidth/2)
+			pen.setWidth(int(lwidth/2))
 			self.painter.setPen(pen)
 
 			if s.dtext_en:		
-				p0 = QPoint(center.x() - s.d/2 * base_d, center.y() + s.h/2 * base_h)
-				p1 = QPoint(center.x() + s.d/2 * base_d, center.y() + s.h/2 * base_h)
+				p0 = QPointF(center.x() - s.d/2 * base_d, center.y() + s.h/2 * base_h)
+				p1 = QPointF(center.x() + s.d/2 * base_d, center.y() + s.h/2 * base_h)
 				level = center.y() + maxh/2 * base_h + dimlines_start_step + dimlines_step * i 
 
 				if s.dtext == "":
@@ -377,7 +377,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 					dtxt = paintool.greek(s.dtext) 
 
 				paintool.dimlines(self.painter, p0, p1, level)
-				paintool.draw_text_centered(self.painter, QPoint((p0.x() + p1.x())/2, level - 5), dtxt, font)
+				paintool.draw_text_centered(self.painter, QPointF((p0.x() + p1.x())/2, level - 5), dtxt, font)
 
 			if s.htext_en:
 
@@ -388,8 +388,8 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 
 				paintool.draw_vertical_splashed_dimlines_with_text(
 					self.painter, 
-					c + QPoint(wprev/2+(w-wprev)/4, -h/2), 
-					c + QPoint(wprev/2+(w-wprev)/4, h/2), 
+					c + QPointF(wprev/2+(w-wprev)/4, -h/2), 
+					c + QPointF(wprev/2+(w-wprev)/4, h/2), 
 					10, c, htxt, font)
 
 			wprev = w
@@ -437,26 +437,26 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 			moment_radius = 40
 
 			if b.fen != "нет":
-				apnt0 = center + QPoint(w/2, -h/2-lwidth)
-				apnt1 = center + QPoint(-w/2, -h/2-lwidth)
+				apnt0 = center + QPointF(w/2, -h/2-lwidth)
+				apnt1 = center + QPointF(-w/2, -h/2-lwidth)
 
 				if b.fen == "-":
-					paintool.common_arrow(self.painter, apnt0 + QPoint(0,-alen), apnt0, arrow_size)	
-					paintool.common_arrow(self.painter, apnt1 + QPoint(0,-alen), apnt1, arrow_size)				
+					paintool.common_arrow(self.painter, apnt0 + QPointF(0,-alen), apnt0, arrow_size)	
+					paintool.common_arrow(self.painter, apnt1 + QPointF(0,-alen), apnt1, arrow_size)				
 
 				if b.fen == "+":
-					paintool.common_arrow(self.painter, apnt0, apnt0 + QPoint(0,-alen), arrow_size)	
-					paintool.common_arrow(self.painter, apnt1, apnt1 + QPoint(0,-alen), arrow_size)				
+					paintool.common_arrow(self.painter, apnt0, apnt0 + QPointF(0,-alen), arrow_size)	
+					paintool.common_arrow(self.painter, apnt1, apnt1 + QPointF(0,-alen), arrow_size)				
 
-				self.painter.drawLine(apnt0+ QPoint(0,-alen),apnt1+ QPoint(0,-alen))
+				self.painter.drawLine(apnt0+ QPointF(0,-alen),apnt1+ QPointF(0,-alen))
 
 			if b.men != "нет":
 				direction = b.men == "+"
 
 				arrow_size_pair = (arrow_size, 4)
 				for apnt, direction in [
-					(center + QPoint(w/2, 0),not direction), 
-					(center + QPoint(-w/2, 0), direction)
+					(center + QPointF(w/2, 0),not direction), 
+					(center + QPointF(-w/2, 0), direction)
 				]:
 					self.common_scene.addItem(SquareMomentItem(
 						apnt, 
@@ -473,7 +473,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 					if self.bsections()[i].sharn == "1":
 						paintool.draw_sharnir_1dim(
 							self.painter, 
-							pnt=center+QPoint(w/2,h/2+3), 
+							pnt=center+QPointF(w/2,h/2+3), 
 							angle=math.pi/2, 
 							rad=3.5, 
 							termrad=termrad, 
@@ -483,7 +483,7 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 					elif self.bsections()[i].sharn == "2":
 						paintool.draw_sharnir_2dim(
 							self.painter, 
-							pnt=center+QPoint(w/2,h/2+3), 
+							pnt=center+QPointF(w/2,h/2+3), 
 							angle=math.pi/2, 
 							rad=3.5, 
 							termrad=termrad, 

@@ -55,8 +55,8 @@ class ContainerWidget(QWidget):
 			cw, ch = w, h 
 
 		if self.fixedSize:
-			self.curwidget.setFixedSize(w,h)
-			super().setFixedSize(cw,ch)
+			self.curwidget.setFixedSize(int(w),int(h))
+			super().setFixedSize(int(cw),int(ch))
 		else:
 			pass
 

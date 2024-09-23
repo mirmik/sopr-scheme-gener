@@ -240,7 +240,7 @@ class PaintWidget(paintwdg.PaintWidget):
 	
 			if self.bsections()[i].M != "Нет":
 				fdown=True
-				pnt = QPoint(wpnts[i], hcenter)
+				pnt = QPointF(wpnts[i], hcenter)
 				if self.bsections()[i].M == "+":
 					paintool.half_moment_arrow_common(
 						painter=painter, 
@@ -259,14 +259,14 @@ class PaintWidget(paintwdg.PaintWidget):
 						arrow_size=arrow_size)
 
 			if self.bsections()[i].F != "Нет":
-				apnt=QPoint(wpnts[i], hcenter-rad) 
-				bpnt=QPoint(wpnts[i], hcenter)
+				apnt=QPointF(wpnts[i], hcenter-rad) 
+				bpnt=QPointF(wpnts[i], hcenter)
 				if fdown:
-					apnt = apnt + QPoint(0, rad+hsect/2)
-					bpnt = bpnt + QPoint(0, rad+hsect/2)
+					apnt = apnt + QPointF(0, rad+hsect/2)
+					bpnt = bpnt + QPointF(0, rad+hsect/2)
 				else:
-					apnt = apnt + QPoint(0, -hsect/2)
-					bpnt = bpnt + QPoint(0, -hsect/2)
+					apnt = apnt + QPointF(0, -hsect/2)
+					bpnt = bpnt + QPointF(0, -hsect/2)
 				if self.bsections()[i].F == "-":
 					paintool.common_arrow(painter,
 						apnt, bpnt,
@@ -279,7 +279,7 @@ class PaintWidget(paintwdg.PaintWidget):
 					)
 
 				if self.bsections()[i].F == "влево" or self.bsections()[i].F == "вправо":
-					apnt=QPoint(wpnts[i], hcenter)
+					apnt=QPointF(wpnts[i], hcenter)
 					d = 40
 					
 					if i == 0:
@@ -316,23 +316,23 @@ class PaintWidget(paintwdg.PaintWidget):
 			if self.bsections()[i].M != "Нет":
 				paintool.draw_text_centered(
 					painter,
-					pnt=QPoint(wpnts[i], hcenter-rad-5), 
+					pnt=QPointF(wpnts[i], hcenter-rad-5), 
 					text=paintool.greek(self.bsections()[i].MT),
 					font=self.font)
 			if self.bsections()[i].F != "Нет":
 				if (self.bsections()[i].F != "вправо" and self.bsections()[i].F != "влево"):
 					if fdown == False:
 						painter.drawText(
-							QPoint(wpnts[i]+10, hcenter-rad), 
+							QPointF(wpnts[i]+10, hcenter-rad), 
 							paintool.greek(self.bsections()[i].FT))
 					
 					if fdown == True:
 						painter.drawText(
-							QPoint(wpnts[i]+10, hcenter+25), 
+							QPointF(wpnts[i]+10, hcenter+25), 
 							paintool.greek(self.bsections()[i].FT))
 				else:
 					painter.drawText(
-						QPoint(wpnts[i]+0, hcenter-30), 
+						QPointF(wpnts[i]+0, hcenter-30), 
 						paintool.greek(self.bsections()[i].FT))
 
 
@@ -340,7 +340,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			if self.bsections()[i].sectname != "":
 				off = 11 if self.bsections()[i].sharn != "" else 5
 				painter.drawText(
-					QPoint(wpnts[i]-off-QFontMetrics(self.font).width(self.bsections()[i].sectname), hcenter+21), 
+					QPointF(wpnts[i]-off-QFontMetrics(self.font).width(self.bsections()[i].sectname), hcenter+21), 
 					self.bsections()[i].sectname)
 
 
@@ -352,24 +352,24 @@ class PaintWidget(paintwdg.PaintWidget):
 			if self.sectforce()[i].Fr != "Нет":
 				if self.sectforce()[i].Fr == "+":
 					paintool.raspred_force_vertical(painter=painter,
-						apnt=QPoint(wpnts[i], hcenter-3),
-						bpnt=QPoint(wpnts[i+1], hcenter-3),
+						apnt=QPointF(wpnts[i], hcenter-3),
+						bpnt=QPointF(wpnts[i+1], hcenter-3),
 						step=step,
-						offset=QPoint(0, -rad2),
+						offset=QPointF(0, -rad2),
 						dim = True,
 					arrow_size=arrow_size/3*2)
 				elif self.sectforce()[i].Fr == "-":
 					paintool.raspred_force_vertical(painter=painter,
-						apnt=QPoint(wpnts[i], hcenter-3),
-						bpnt=QPoint(wpnts[i+1], hcenter-3),
+						apnt=QPointF(wpnts[i], hcenter-3),
+						bpnt=QPointF(wpnts[i+1], hcenter-3),
 						step=step,
-						offset=QPoint(0, -rad2),
+						offset=QPointF(0, -rad2),
 						dim = False,
 						arrow_size=arrow_size/3*2)
 
 				paintool.draw_text_centered(
 					painter,
-					QPoint((wpnts[i] + wpnts[i+1])/2, hcenter-8-rad2),
+					QPointF((wpnts[i] + wpnts[i+1])/2, hcenter-8-rad2),
 					paintool.greek(self.sectforce()[i].FrT),
 					font=self.font
 				)
@@ -379,22 +379,22 @@ class PaintWidget(paintwdg.PaintWidget):
 
 
 
-		painter.drawRect(QRect(
-			QPoint(left+prefix, hcenter-hsect/2),
-			QPoint(right-prefix, hcenter+hsect/2),
+		painter.drawRect(QRectF(
+			QPointF(left+prefix, hcenter-hsect/2),
+			QPointF(right-prefix, hcenter+hsect/2),
 		))
 
 		#dimlines
 		for i in range(len(self.bsections())-1):
 			paintool.dimlines(painter, 
-				QPoint(wpnts[i], hcenter), 
-				QPoint(wpnts[i+1], hcenter), 
+				QPointF(wpnts[i], hcenter), 
+				QPointF(wpnts[i+1], hcenter), 
 				hcenter+80)
 			text = util.text_prepare_ltext(self.sections()[i].l)
 			if self.shemetype.postfix.get()[0]:
 				text += self.shemetype.postfix.get()[1]
 			paintool.draw_text_centered(painter, 
-				QPoint((wpnts[i]+wpnts[i+1])/2, 
+				QPointF((wpnts[i]+wpnts[i+1])/2, 
 					hcenter+80-5), text, self.font)
 
 		self.draw_terminator(pos=wpnts[0], angle=math.pi, type=self.shemetype.left_node.get())	
@@ -406,7 +406,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				ihoff = 8 if i == 0 or i == len(self.bsections()) - 1 else 0
 				paintool.draw_sharnir_1dim(
 					painter, 
-					pnt=QPoint(wpnts[i], hcenter + hoff), 
+					pnt=QPointF(wpnts[i], hcenter + hoff), 
 					angle=math.pi/2, 
 					rad=5.5, 
 					termrad=25+ihoff, 
@@ -418,7 +418,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				ihoff = 8 if i == 0 or i == len(self.bsections()) - 1 else 0
 				paintool.draw_sharnir_2dim(
 					painter, 
-					pnt=QPoint(wpnts[i], hcenter + hoff), 
+					pnt=QPointF(wpnts[i], hcenter + hoff), 
 					angle=math.pi/2, 
 					rad=5.5, 
 					termrad=25+ihoff, 

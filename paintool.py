@@ -32,8 +32,8 @@ def rotate(angle, pnt):
 #		(basepoint.x() - arrow_size, basepoint.y() - arrow_head_size), 
 #		(basepoint.x() - arrow_size, basepoint.y() + arrow_head_size)
 #	]
-#	qpoints = [QPointF(x, y) for (x, y) in points]
-#	polygon = QPolygonF(qpoints)
+#	QPointFs = [QPointF(x, y) for (x, y) in points]
+#	polygon = QPolygonF(QPointFs)
 #
 #	painter.drawConvexPolygon(polygon)
 #
@@ -48,8 +48,8 @@ def rotate(angle, pnt):
 #		(basepoint.x() + arrow_size, basepoint.y() - arrow_head_size), 
 #		(basepoint.x() + arrow_size, basepoint.y() + arrow_head_size)
 #	]
-#	qpoints = [QPointF(x, y) for (x, y) in points]
-#	polygon = QPolygonF(qpoints)
+#	QPointFs = [QPointF(x, y) for (x, y) in points]
+#	polygon = QPolygonF(QPointFs)
 #
 #	painter.drawConvexPolygon(polygon)
 
@@ -108,8 +108,8 @@ def angled_arrow_points_top(x, y, a, s):
 
 
 def paint_arrow(painter, points, pen=None, brush=None):
-	qpoints = [QPointF(x, y) for (x, y) in points]
-	polygon = QPolygonF(qpoints)
+	QPointFs = [QPointF(x, y) for (x, y) in points]
+	polygon = QPolygonF(QPointFs)
 
 	if pen is not None:
 		painter.setPen(pen)
@@ -248,8 +248,8 @@ def moment_arrows(painter, pnt, rad, inverse = False, arrow_size=12):
 			(pnt+QPointF(rad*math.cos(rangle),-rad*math.sin(rangle))), 
 			(pnt+QPointF(-rad*math.cos(rangle),+rad*math.sin(rangle))))
 
-		painter.drawArc(QRect(x, y, x2-x, y2-y), angle*16, arc_angle*16)
-		painter.drawArc(QRect(x, y, x2-x, y2-y), angle*16 + 180*16, arc_angle*16)
+		painter.drawArc(QRectF(x, y, x2-x, y2-y), angle*16, arc_angle*16)
+		painter.drawArc(QRectF(x, y, x2-x, y2-y), angle*16 + 180*16, arc_angle*16)
 
 		angled_arrow_head_top(painter, 
 			pnt+QPointF(
@@ -270,8 +270,8 @@ def moment_arrows(painter, pnt, rad, inverse = False, arrow_size=12):
 			(pnt+QPointF(-rad*math.cos(rangle),-rad*math.sin(rangle))))
 
 		
-		painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -arc_angle*16)
-		painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16 - 180*16, -arc_angle*16)
+		painter.drawArc(QRectF(x, y, x2-x, y2-y), -angle*16, -arc_angle*16)
+		painter.drawArc(QRectF(x, y, x2-x, y2-y), -angle*16 - 180*16, -arc_angle*16)
 		
 		angled_arrow_head_top(painter, 
 			pnt+QPointF(
@@ -295,7 +295,7 @@ def circular_arrow(painter, pnt, rad, angle, angle2, arrow_size):
 	angle = rad2deg(angle)
 	angle2 = rad2deg(angle2)
 
-	painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -(angle2 - angle)*16)
+	painter.drawArc(QRectF(x, y, x2-x, y2-y), -angle*16, -(angle2 - angle)*16)
 
 	angled_arrow_head_top(painter, 
 		pnt+QPointF(
@@ -314,7 +314,7 @@ def circular_arrow2(painter, pnt, rad, angle, angle2, arrow_size):
 	angle = rad2deg(angle)
 	angle2 = rad2deg(angle2)
 
-	painter.drawArc(QRect(x, y, x2-x, y2-y), -angle*16, -(angle2 - angle)*16)
+	painter.drawArc(QRectF(x, y, x2-x, y2-y), int(-angle*16), int(-(angle2 - angle)*16))
 
 	if angle > angle2:
 		aangle = - rangle2 + deg(90) - deg(10)
@@ -410,7 +410,7 @@ def zadelka(painter, xl, xr, yu, yd, left_border, right_border):
 	pen = QPen(Qt.NoPen)
 	painter.setBrush(brush)
 	painter.setPen(pen)
-	painter.drawRect(QRect(xl, yu, xr-xl, yd-yu))
+	painter.drawRect(QRectF(xl, yu, xr-xl, yd-yu))
 	painter.setBrush(oldbrush)
 	painter.setPen(oldpen)
 
@@ -442,8 +442,8 @@ def zadelka_sharnir(painter, pnt, angle, w, h, s):
 		pnt + rotate(angle, QPointF(h, w))
 	]
 
-	qpoints = [QPointF(pnt.x(), pnt.y()) for pnt in points]
-	polygon = QPolygonF(qpoints)
+	QPointFs = [QPointF(pnt.x(), pnt.y()) for pnt in points]
+	polygon = QPolygonF(QPointFs)
 	painter.drawConvexPolygon(polygon)
 
 	pen = QPen()
@@ -452,7 +452,7 @@ def zadelka_sharnir(painter, pnt, angle, w, h, s):
 	brush.setColor(Qt.white)
 	painter.setPen(pen)
 	painter.setBrush(brush)
-	painter.drawLine(qpoints[0], qpoints[1])
+	painter.drawLine(QPointFs[0], QPointFs[1])
 
 	painter.drawEllipse(radrect(pnt, s))
 	
@@ -479,8 +479,8 @@ def zadelka_sharnir_type2(painter, pnt, angle, w, h, s):
 		pnt + rotate(angle, QPointF(-h2-h, w))
 	]
 
-	qpoints = [QPointF(pnt.x(), pnt.y()) for pnt in points]
-	polygon = QPolygonF(qpoints)
+	QPointFs = [QPointF(pnt.x(), pnt.y()) for pnt in points]
+	polygon = QPolygonF(QPointFs)
 	painter.drawConvexPolygon(polygon)
 
 	pen = QPen()
@@ -489,7 +489,7 @@ def zadelka_sharnir_type2(painter, pnt, angle, w, h, s):
 	brush.setColor(Qt.white)
 	painter.setPen(pen)
 	painter.setBrush(brush)
-	painter.drawLine(qpoints[0], qpoints[1])
+	painter.drawLine(QPointFs[0], QPointFs[1])
 	painter.drawLine(pnt, up)
 	painter.drawLine(pnt, dp)
 
@@ -516,7 +516,7 @@ def point_ellipse(painter, el):
 
 	brush = QBrush(Qt.SolidPattern)
 	painter.setBrush(brush)
-	painter.drawEllipse(QRect(x+w/2+0.5-s/2, y+h/2-s/2+0.5, s+0.5, s+0.5))
+	painter.drawEllipse(QRectF(x+w/2+0.5-s/2, y+h/2-s/2+0.5, s+0.5, s+0.5))
 
 def crest_ellipse(painter, el):
 	x = el.x()
@@ -535,7 +535,7 @@ def crest_ellipse(painter, el):
 	painter.drawLine(QPointF(x+w/2-c+0.5, y+h/2-c+0.5), QPointF(x+w/2+c+0.5, y+h/2+c+0.5))
 	painter.drawLine(QPointF(x+w/2-c+0.5, y+h/2+c+0.5), QPointF(x+w/2+c+0.5, y+h/2-c+0.5))
 
-	#painter.drawEllipse(QRect(x+w/2-s/2, y+h/2-s/2, s, s))
+	#painter.drawEllipse(QRectF(x+w/2-s/2, y+h/2-s/2, s, s))
 
 def point_circ(painter, pnt, rad):
 	point_ellipse(painter, QRectF(pnt-QPointF(rad/2,rad/2), pnt+QPointF(rad/2,rad/2)))
@@ -869,7 +869,7 @@ def draw_sharnir_1dim_remastered(painter, pnt, angle, rad, termrad, termx, termy
 		center_off*math.cos(angle), 
 		center_off*math.sin(angle)) + pnt
 
-	circrect = QRect(cpnt.x()-rad, cpnt.y()-rad, 2*rad , 2*rad)
+	circrect = QRectF(cpnt.x()-rad, cpnt.y()-rad, 2*rad , 2*rad)
 	bpnt = QPointF(
 		termrad*math.cos(angle), 
 		termrad*math.sin(angle)) + pnt
@@ -930,11 +930,11 @@ def draw_kamera(painter, lu, rd, t):
 	painter.setBrush(Qt.BDiagPattern)
 	painter.setPen(Qt.NoPen)
 
-	painter.drawRect(QRect(lu, rd))
+	painter.drawRect(QRectF(lu, rd))
 
 	painter.setPen(pen)
 	painter.setBrush(Qt.white)
-	painter.drawRect(QRect(lu + QPointF(t,t), rd+QPointF(-t,-t)))
+	painter.drawRect(QRectF(lu + QPointF(t,t), rd+QPointF(-t,-t)))
 
 	painter.setBrush(Qt.white)
 	painter.setPen(pen)
@@ -950,11 +950,11 @@ def draw_inkamera(painter, lu, rd, t):
 	painter.setBrush(Qt.BDiagPattern)
 	#painter.setPen(Qt.NoPen)
 
-	painter.drawRect(QRect(lu, rd))
+	painter.drawRect(QRectF(lu, rd))
 
 	painter.setPen(pen)
 	painter.setBrush(Qt.white)
-	painter.drawRect(QRect(lu + QPointF(t,t), rd+QPointF(-t,-t)))
+	painter.drawRect(QRectF(lu + QPointF(t,t), rd+QPointF(-t,-t)))
 
 	painter.setBrush(Qt.white)
 	painter.setPen(pen)

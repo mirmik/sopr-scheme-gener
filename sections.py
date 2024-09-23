@@ -110,7 +110,7 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 		wlen = hlen = w 
 
 		section_width = w + 120
-		center = QPoint(right - 20 - 10 - w, hcenter)
+		center = QPointF(right - 20 - 10 - w, hcenter)
 		painter.setPen(wdg.pen)
 		painter.setBrush(QBrush(Qt.BDiagPattern))
 		
@@ -119,24 +119,24 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 			h_text = self.h.get()[0]
 			
 			painter.drawRect(
-				QRect(center - QPoint(w,h), center + QPoint(w,h)))
+				QRectF(center - QPointF(w,h), center + QPointF(w,h)))
 
 			paintool.draw_dimlines( # вертикальная
 				painter = painter,
-				apnt = center+QPoint(-w,h),
-				bpnt = center+QPoint(-w,-h),
-				offset = QPoint(-18,0),
-				textoff = QPoint(-10, 0),
+				apnt = center+QPointF(-w,h),
+				bpnt = center+QPointF(-w,-h),
+				offset = QPointF(-18,0),
+				textoff = QPointF(-10, 0),
 				text = h_text,
 				arrow_size = arrow_size / 3 * 2
 			)
 
 			paintool.draw_dimlines( # горизонтальная
 				painter = painter,
-				apnt = center+QPoint(w,h),
-				bpnt = center+QPoint(-w,h),
-				offset = QPoint(0,30),
-				textoff = QPoint(0, -11),
+				apnt = center+QPointF(w,h),
+				bpnt = center+QPointF(-w,h),
+				offset = QPointF(0,30),
+				textoff = QPointF(0, -11),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -144,56 +144,56 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 
 		elif self.outer_type.get() == "Квадрат":
 			painter.drawRect(
-				QRect(center - QPoint(w,w), center + QPoint(w,w)))
+				QRectF(center - QPointF(w,w), center + QPointF(w,w)))
 
 			paintool.draw_dimlines( # горизонтальная
 				painter = painter,
-				apnt = center+QPoint(w,w),
-				bpnt = center+QPoint(-w,w),
-				offset = QPoint(0,30),
-				textoff = QPoint(0, -11),
+				apnt = center+QPointF(w,w),
+				bpnt = center+QPointF(-w,w),
+				offset = QPointF(0,30),
+				textoff = QPointF(0, -11),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
 
 		elif self.outer_type.get() == "Квадрат повёрнутый 45 град":
 			painter.drawPolygon(
-				QPolygon([
-					center+QPoint(-w, 0),
-					center+QPoint(0, w),
-					center+QPoint(w, 0),
-					center+QPoint(0, -w),
+				QPolygonF([
+					center+QPointF(-w, 0),
+					center+QPointF(0, w),
+					center+QPointF(w, 0),
+					center+QPointF(0, -w),
 				])
 			)
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center+QPoint(0,-w),
-				bpnt = center+QPoint(-w,0),
-				offset = QPoint(-15, -15),
-				textoff = QPoint(-10, -10),
+				apnt = center+QPointF(0,-w),
+				bpnt = center+QPointF(-w,0),
+				offset = QPointF(-15, -15),
+				textoff = QPointF(-10, -10),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center+QPoint(0,w),
-				bpnt = center+QPoint(-w,0),
-				offset = QPoint(-15, 15),
-				textoff = QPoint(-10, 10),
+				apnt = center+QPointF(0,w),
+				bpnt = center+QPointF(-w,0),
+				offset = QPointF(-15, 15),
+				textoff = QPointF(-10, 10),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
 
 		elif self.outer_type.get() == "Круг":
 			painter.drawEllipse(
-				QRect(center - QPoint(w,w), center + QPoint(w,w)))
+				QRectF(center - QPointF(w,w), center + QPointF(w,w)))
 
 			paintool.draw_dimlines( # горизонтальная
 				painter = painter,
-				apnt = center+QPoint(w,0),
-				bpnt = center+QPoint(-w,0),
-				offset = QPoint(0,23+w),
-				textoff = QPoint(0, -7),
+				apnt = center+QPointF(w,0),
+				bpnt = center+QPointF(-w,0),
+				offset = QPointF(0,23+w),
+				textoff = QPointF(0, -7),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -202,78 +202,78 @@ class MainSection0(taskconf_menu.TaskConfMenu):
 		painter.setBrush(Qt.white)
 		if self.inner_type.get() == "Квадрат":
 			painter.drawRect(
-				QRect(center - QPoint(iw,iw), center + QPoint(iw,iw)))
+				QRectF(center - QPointF(iw,iw), center + QPointF(iw,iw)))
 
 			paintool.draw_dimlines( # горизонтальная
 				painter = painter,
-				apnt = center+QPoint(iw,iw),
-				bpnt = center+QPoint(iw,-iw),
-				offset = QPoint(w-iw+15, 0),
-				textoff = QPoint(8, 0),
+				apnt = center+QPointF(iw,iw),
+				bpnt = center+QPointF(iw,-iw),
+				offset = QPointF(w-iw+15, 0),
+				textoff = QPointF(8, 0),
 				text = iw_text,
 				arrow_size = arrow_size / 3 * 2
 			)
 
 		elif self.inner_type.get() == "Квадрат повёрнутый 45 град":
 			painter.drawPolygon(
-				QPolygon([
-					center+QPoint(-iw, 0),
-					center+QPoint(0, iw),
-					center+QPoint(iw, 0),
-					center+QPoint(0, -iw),
+				QPolygonF([
+					center+QPointF(-iw, 0),
+					center+QPointF(0, iw),
+					center+QPointF(iw, 0),
+					center+QPointF(0, -iw),
 				])
 			)
 			if self.outer_type.get() != "Квадрат повёрнутый 45 град": 
 				paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(0,iw),
-					bpnt = center+QPoint(iw,0),
-					offset = QPoint(10, 10),
-					textoff = QPoint(10, 10),
+					apnt = center+QPointF(0,iw),
+					bpnt = center+QPointF(iw,0),
+					offset = QPointF(10, 10),
+					textoff = QPointF(10, 10),
 					text = iw_text,
 					arrow_size = arrow_size / 3 * 2
 				)
 				paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(0,-iw),
-					bpnt = center+QPoint(iw,0),
-					offset = QPoint(10, -10),
-					textoff = QPoint(10, -10),
+					apnt = center+QPointF(0,-iw),
+					bpnt = center+QPointF(iw,0),
+					offset = QPointF(10, -10),
+					textoff = QPointF(10, -10),
 					text = iw_text,
 					arrow_size = arrow_size / 3 * 2
 				)
 			else:
-				c1=(QPoint(0,w)+QPoint(w,0))/2 - (QPoint(0,iw)+QPoint(iw,0))/2
-				c2=(QPoint(0,-w)+QPoint(w,0))/2 - (QPoint(0,-iw)+QPoint(iw,0))/2
+				c1=(QPointF(0,w)+QPointF(w,0))/2 - (QPointF(0,iw)+QPointF(iw,0))/2
+				c2=(QPointF(0,-w)+QPointF(w,0))/2 - (QPointF(0,-iw)+QPointF(iw,0))/2
 				paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(0,iw),
-					bpnt = center+QPoint(iw,0),
-					offset = c1 + QPoint(15, 15),
-					textoff = QPoint(10, 10),
+					apnt = center+QPointF(0,iw),
+					bpnt = center+QPointF(iw,0),
+					offset = c1 + QPointF(15, 15),
+					textoff = QPointF(10, 10),
 					text = iw_text,
 					arrow_size = arrow_size / 3 * 2
 				)
 				paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(0,-iw),
-					bpnt = center+QPoint(iw,0),
-					offset = c2 + QPoint(15, -15),
-					textoff = QPoint(10, -10),
+					apnt = center+QPointF(0,-iw),
+					bpnt = center+QPointF(iw,0),
+					offset = c2 + QPointF(15, -15),
+					textoff = QPointF(10, -10),
 					text = iw_text,
 					arrow_size = arrow_size / 3 * 2
 				)
 	
 		elif self.inner_type.get() == "Круг":
 			painter.drawEllipse(
-				QRect(center - QPoint(iw,iw), center + QPoint(iw,iw)))
+				QRectF(center - QPointF(iw,iw), center + QPointF(iw,iw)))
 
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center+QPoint(+ math.cos(math.pi/4) * iw, + math.sin(math.pi/4) * iw),
-				bpnt = center+QPoint(- math.cos(math.pi/4) * iw, - math.sin(math.pi/4) * iw),
-				offset = QPoint(0,0),
-				textoff = QPoint(8,-8),
+				apnt = center+QPointF(+ math.cos(math.pi/4) * iw, + math.sin(math.pi/4) * iw),
+				bpnt = center+QPointF(- math.cos(math.pi/4) * iw, - math.sin(math.pi/4) * iw),
+				offset = QPointF(0,0),
+				textoff = QPointF(8,-8),
 				text = iw_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -319,30 +319,30 @@ class HRect(taskconf_menu.TaskConfMenu):
 		h1_text = self.h1.get()[0]
 		w1_text = self.w1.get()[0]
 		section_width = w + 120
-		center = QPoint(right - 20 - 10 - w, hcenter)
+		center = QPointF(right - 20 - 10 - w, hcenter)
 		painter.setPen(wdg.pen)
 		painter.setBrush(QBrush(Qt.BDiagPattern))
 		
 		if self.orient.get() is False:
 			painter.drawPolygon(
-				QPolygon([
-					center+QPoint(-w, h),
-					center+QPoint(-w+w1*2, h),
+				QPolygonF([
+					center+QPointF(-w, h),
+					center+QPointF(-w+w1*2, h),
 
-					center+QPoint(-w+w1*2, h1),
-					center+QPoint( w-w1*2, h1),
+					center+QPointF(-w+w1*2, h1),
+					center+QPointF( w-w1*2, h1),
 
-					center+QPoint(w-w1*2, h),
-					center+QPoint(w, h),
+					center+QPointF(w-w1*2, h),
+					center+QPointF(w, h),
 
-					center+QPoint(w, -h),
-					center+QPoint(w-w1*2, -h),
+					center+QPointF(w, -h),
+					center+QPointF(w-w1*2, -h),
 
-					center+QPoint( w-w1*2, -h1),
-					center+QPoint(-w+w1*2, -h1),
+					center+QPointF( w-w1*2, -h1),
+					center+QPointF(-w+w1*2, -h1),
 					
-					center+QPoint(-w+w1*2, -h),
-					center+QPoint(-w, -h),
+					center+QPointF(-w+w1*2, -h),
+					center+QPointF(-w, -h),
 				])
 			)
 
@@ -353,30 +353,30 @@ class HRect(taskconf_menu.TaskConfMenu):
 		
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(-w,-h),
-					bpnt = center+QPoint(-w, h),
-					offset = QPoint(-20, 0),
-					textoff = QPoint(-10, 0),
+					apnt = center+QPointF(-w,-h),
+					bpnt = center+QPointF(-w, h),
+					offset = QPointF(-20, 0),
+					textoff = QPointF(-10, 0),
 					text = h_text,
 					arrow_size = arrow_size / 3 * 2
 				)
 				
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint( w,h),
-					bpnt = center+QPoint(-w,h),
-					offset = QPoint(0, 25),
-					textoff = QPoint(0, -10),
+					apnt = center+QPointF( w,h),
+					bpnt = center+QPointF(-w,h),
+					offset = QPointF(0, 25),
+					textoff = QPointF(0, -10),
 					text = w_text,
 					arrow_size = arrow_size / 3 * 2
 				)
 
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(-w,-h),
-					bpnt = center+QPoint(-w+w1*2,-h),
-					offset = QPoint(0, -20),
-					textoff = QPoint(0, -10),
+					apnt = center+QPointF(-w,-h),
+					bpnt = center+QPointF(-w+w1*2,-h),
+					offset = QPointF(0, -20),
+					textoff = QPointF(0, -10),
 					text = w1_text,
 					arrow_size = arrow_size / 3 * 2,
 					splashed=True
@@ -384,10 +384,10 @@ class HRect(taskconf_menu.TaskConfMenu):
 
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(w-w1*2,-h),
-					bpnt = center+QPoint(w,-h),
-					offset = QPoint(0, -20),
-					textoff = QPoint(0, -10),
+					apnt = center+QPointF(w-w1*2,-h),
+					bpnt = center+QPointF(w,-h),
+					offset = QPointF(0, -20),
+					textoff = QPointF(0, -10),
 					text = w1_text,
 					arrow_size = arrow_size / 3 * 2,
 					splashed=True
@@ -395,10 +395,10 @@ class HRect(taskconf_menu.TaskConfMenu):
 
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(0,-h1),
-					bpnt = center+QPoint(0, h1),
-					offset = QPoint(w+20, 0),
-					textoff = QPoint(10, 0),
+					apnt = center+QPointF(0,-h1),
+					bpnt = center+QPointF(0, h1),
+					offset = QPointF(w+20, 0),
+					textoff = QPointF(10, 0),
 					text = h1_text,
 					arrow_size = arrow_size / 3 * 2,
 					splashed=True
@@ -406,24 +406,24 @@ class HRect(taskconf_menu.TaskConfMenu):
 			
 		else:
 			painter.drawPolygon(
-				QPolygon([
-					center+QPoint(w, -h),
-					center+QPoint(w, -h+w1*2),
+				QPolygonF([
+					center+QPointF(w, -h),
+					center+QPointF(w, -h+w1*2),
 
-					center+QPoint(h1, -h+w1*2),
-					center+QPoint(h1, h-w1*2),
+					center+QPointF(h1, -h+w1*2),
+					center+QPointF(h1, h-w1*2),
 
-					center+QPoint(w, h-w1*2),
-					center+QPoint(w, h),
+					center+QPointF(w, h-w1*2),
+					center+QPointF(w, h),
 
-					center+QPoint(-w, h),
-					center+QPoint(-w, h-w1*2),
+					center+QPointF(-w, h),
+					center+QPointF(-w, h-w1*2),
 
-					center+QPoint(-h1, h-w1*2),
-					center+QPoint(-h1, -h+w1*2),
+					center+QPointF(-h1, h-w1*2),
+					center+QPointF(-h1, -h+w1*2),
 					
-					center+QPoint(-w, -h+w1*2),
-					center+QPoint(-w, -h),
+					center+QPointF(-w, -h+w1*2),
+					center+QPointF(-w, -h),
 				])
 			)
 	
@@ -434,30 +434,30 @@ class HRect(taskconf_menu.TaskConfMenu):
 
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(-w,-h),
-					bpnt = center+QPoint(-w, h),
-					offset = QPoint(-20, 0),
-					textoff = QPoint(-10, 0),
+					apnt = center+QPointF(-w,-h),
+					bpnt = center+QPointF(-w, h),
+					offset = QPointF(-20, 0),
+					textoff = QPointF(-10, 0),
 					text = h_text,
 					arrow_size = arrow_size / 3 * 2
 				)
 				
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint( w,h),
-					bpnt = center+QPoint(-w,h),
-					offset = QPoint(0, 25),
-					textoff = QPoint(0, -10),
+					apnt = center+QPointF( w,h),
+					bpnt = center+QPointF(-w,h),
+					offset = QPointF(0, 25),
+					textoff = QPointF(0, -10),
 					text = w_text,
 					arrow_size = arrow_size / 3 * 2
 				)
 
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(w,h),
-					bpnt = center+QPoint(w,h-w1*2),
-					offset = QPoint(20,0),
-					textoff = QPoint(10,0),
+					apnt = center+QPointF(w,h),
+					bpnt = center+QPointF(w,h-w1*2),
+					offset = QPointF(20,0),
+					textoff = QPointF(10,0),
 					text = w1_text,
 					arrow_size = arrow_size / 3 * 2,
 					splashed=True
@@ -465,10 +465,10 @@ class HRect(taskconf_menu.TaskConfMenu):
 
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(w,-h+w1*2),
-					bpnt = center+QPoint(w,-h),
-					offset = QPoint(20,0),
-					textoff = QPoint(10,0),
+					apnt = center+QPointF(w,-h+w1*2),
+					bpnt = center+QPointF(w,-h),
+					offset = QPointF(20,0),
+					textoff = QPointF(10,0),
 					text = w1_text,
 					arrow_size = arrow_size / 3 * 2,
 					splashed=True
@@ -476,10 +476,10 @@ class HRect(taskconf_menu.TaskConfMenu):
 
 			paintool.draw_dimlines(
 					painter = painter,
-					apnt = center+QPoint(-h1,0),
-					bpnt = center+QPoint(h1, 0),
-					offset = QPoint(0, -20-h),
-					textoff = QPoint(0, -10),
+					apnt = center+QPointF(-h1,0),
+					bpnt = center+QPointF(h1, 0),
+					offset = QPointF(0, -20-h),
+					textoff = QPointF(0, -10),
 					text = h1_text,
 					arrow_size = arrow_size / 3 * 2,
 					splashed=True
@@ -529,45 +529,45 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		if self.s.get()[0] and not s_edge:
 			s=(h-hh)/2
 
-		center = QPoint(right - 20 - 10 - w, hcenter)
+		center = QPointF(right - 20 - 10 - w, hcenter)
 		section_width = w + 120
 		painter.setPen(wdg.pen)
 		painter.setBrush(QBrush(Qt.BDiagPattern))
 		
 		painter.drawRect(
-			QRect(center - QPoint(w,h), center + QPoint(w,h)))
+			QRectF(center - QPointF(w,h), center + QPointF(w,h)))
 		
 		painter.setBrush(QBrush(Qt.white))
 		if s_edge and self.edge.get() == "Верх":
 			painter.setPen(Qt.white)
-			painter.drawRect(QRect(center + QPoint(0,h-s*2) - QPoint(hw,hh*2 + 3), center + QPoint(0,h-s*2) + QPoint(hw,0)))
+			painter.drawRect(QRectF(center + QPointF(0,h-s*2) - QPointF(hw,hh*2 + 3), center + QPointF(0,h-s*2) + QPointF(hw,0)))
 			painter.setPen(wdg.pen)
-			painter.drawLine(center + QPoint(-hw, h-s*2 - hh*2), center + QPoint(-hw,h-s*2))
-			painter.drawLine(center + QPoint(hw,h-s*2), center + QPoint(-hw,h-s*2))
-			painter.drawLine(center + QPoint(hw, h-s*2 - hh*2), center + QPoint(hw,h-s*2))
+			painter.drawLine(center + QPointF(-hw, h-s*2 - hh*2), center + QPointF(-hw,h-s*2))
+			painter.drawLine(center + QPointF(hw,h-s*2), center + QPointF(-hw,h-s*2))
+			painter.drawLine(center + QPointF(hw, h-s*2 - hh*2), center + QPointF(hw,h-s*2))
 
 		elif s_edge and self.edge.get() == "Низ":
 			painter.setPen(Qt.white)
-			painter.drawRect(QRect(center + QPoint(0,h) - QPoint(hw,hh*2), center + QPoint(0,h) + QPoint(hw,3)))
+			painter.drawRect(QRectF(center + QPointF(0,h) - QPointF(hw,hh*2), center + QPointF(0,h) + QPointF(hw,3)))
 			painter.setPen(wdg.pen)
-			painter.drawLine(center + QPoint(-hw,h - hh*2), center + QPoint(-hw,h))
-			painter.drawLine(center + QPoint(hw,h- hh*2), center + QPoint(-hw,h- hh*2))
-			painter.drawLine(center + QPoint(hw,h - hh*2), center + QPoint(hw,h))
+			painter.drawLine(center + QPointF(-hw,h - hh*2), center + QPointF(-hw,h))
+			painter.drawLine(center + QPointF(hw,h- hh*2), center + QPointF(-hw,h- hh*2))
+			painter.drawLine(center + QPointF(hw,h - hh*2), center + QPointF(hw,h))
 
 #		painter.setPen(wdg.pen)
 		
 		else:
 			painter.drawRect(
-				QRect(center + QPoint(0,h-s*2) - QPoint(hw,hh*2), center + QPoint(0,h-s*2) + QPoint(hw,0)))
+				QRectF(center + QPointF(0,h-s*2) - QPointF(hw,hh*2), center + QPointF(0,h-s*2) + QPointF(hw,0)))
 
 		painter.setPen(wdg.halfpen)
 
 		paintool.draw_dimlines( # вертикальная
 			painter = painter,
-			apnt = center+QPoint(-w,h),
-			bpnt = center+QPoint(-w,-h),
-			offset = QPoint(-18,0),
-			textoff = QPoint(-10, 0),
+			apnt = center+QPointF(-w,h),
+			bpnt = center+QPointF(-w,-h),
+			offset = QPointF(-18,0),
+			textoff = QPointF(-10, 0),
 			text = h_text,
 			arrow_size = arrow_size / 3 * 2
 		)
@@ -575,10 +575,10 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		if self.edge.get() == "Низ":
 			paintool.draw_dimlines( # горизонтальная
 				painter = painter,
-			apnt = center+QPoint(w,h-s*2-hh*2),
-			bpnt = center+QPoint(-w,h-s*2-hh*2),
-			offset = QPoint(0,-h*2+hh*2+s*2-16),
-			textoff = QPoint(0, -7),
+			apnt = center+QPointF(w,h-s*2-hh*2),
+			bpnt = center+QPointF(-w,h-s*2-hh*2),
+			offset = QPointF(0,-h*2+hh*2+s*2-16),
+			textoff = QPointF(0, -7),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -586,10 +586,10 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		else:
 			paintool.draw_dimlines( # горизонтальная
 				painter = painter,
-				apnt = center+QPoint(w,h),
-				bpnt = center+QPoint(-w,h),
-				offset = QPoint(0,23),
-				textoff = QPoint(0, -7),
+				apnt = center+QPointF(w,h),
+				bpnt = center+QPointF(-w,h),
+				offset = QPointF(0,23),
+				textoff = QPointF(0, -7),
 				text = w_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -597,10 +597,10 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 
 		paintool.draw_dimlines( # вертикальная отв.
 			painter = painter,
-			apnt = center+QPoint(hw,h-s*2-hh*2),
-			bpnt = center+QPoint(hw,h-s*2),
-			offset = QPoint(w-hw + 18,0),
-			textoff = QPoint(10, 0),
+			apnt = center+QPointF(hw,h-s*2-hh*2),
+			bpnt = center+QPointF(hw,h-s*2),
+			offset = QPointF(w-hw + 18,0),
+			textoff = QPointF(10, 0),
 			text = hh_text,
 			arrow_size = arrow_size / 3 * 2
 		)
@@ -608,10 +608,10 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		if self.edge.get() == "Низ":
 			paintool.draw_dimlines( # горизонтальная отв.
 				painter = painter,
-				apnt = center+QPoint(hw,h),
-				bpnt = center+QPoint(-hw,h),
-				offset = QPoint(0,23),
-				textoff = QPoint(0, -7),
+				apnt = center+QPointF(hw,h),
+				bpnt = center+QPointF(-hw,h),
+				offset = QPointF(0,23),
+				textoff = QPointF(0, -7),
 				text = hw_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -619,10 +619,10 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		else:
 			paintool.draw_dimlines( # горизонтальная отв.
 				painter = painter,
-				apnt = center+QPoint(hw,h-s*2-hh*2),
-				bpnt = center+QPoint(-hw,h-s*2-hh*2),
-				offset = QPoint(0,-h*2+hh*2+s*2-16),
-				textoff = QPoint(0, -7),
+				apnt = center+QPointF(hw,h-s*2-hh*2),
+				bpnt = center+QPointF(-hw,h-s*2-hh*2),
+				offset = QPointF(0,-h*2+hh*2+s*2-16),
+				textoff = QPointF(0, -7),
 				text = hw_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -630,10 +630,10 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		if s != (h-hh)/2 and not s_edge:
 			paintool.draw_dimlines(
 				painter = painter,
-				apnt = center+QPoint(hw,h),
-				bpnt = center+QPoint(hw,h-s*2),
-				offset = QPoint(w-hw + 18,0),
-				textoff = QPoint(10, 0),
+				apnt = center+QPointF(hw,h),
+				bpnt = center+QPointF(hw,h-s*2),
+				offset = QPointF(w-hw + 18,0),
+				textoff = QPointF(10, 0),
 				text = s_text,
 				arrow_size = arrow_size / 3 * 2
 			)
@@ -641,8 +641,8 @@ class RectMinusRect(taskconf_menu.TaskConfMenu):
 		painter.setPen(wdg.axpen)
 		#llen = w + 10
 		if s == (h-hh)/2 and not s_edge:
-			painter.drawLine(center + QPoint(-w-10,0), center + QPoint(w+10,0))
-		painter.drawLine(center + QPoint(0,-h-10), center + QPoint(0,h+10))
+			painter.drawLine(center + QPointF(-w-10,0), center + QPointF(w+10,0))
+		painter.drawLine(center + QPointF(0,-h-10), center + QPointF(0,h+10))
 		
 		return section_width
 
@@ -754,36 +754,36 @@ def draw_section(wdg, section_type, right, hcenter,
 	painter.setFont(self.font)
 	
 	if section_type == "Тонкая труба":
-		center = QPoint(right - 20 - 10 - arg0/2, hcenter)
+		center = QPointF(right - 20 - 10 - arg0/2, hcenter)
 		section_width = arg0 + 120
 		dimlines_off = arg0 + 20
 		painter.setPen(self.pen)
 		painter.setBrush(QBrush(Qt.BDiagPattern))
 		painter.drawEllipse(
-			QRect(center - QPoint(arg0,arg0), center + QPoint(arg0,arg0)))
+			QRectF(center - QPointF(arg0,arg0), center + QPointF(arg0,arg0)))
 		painter.setBrush(QBrush(Qt.white))
 		painter.drawEllipse(
-			QRect(center - QPoint(arg1,arg1), center + QPoint(arg1,arg1)))
+			QRectF(center - QPointF(arg1,arg1), center + QPointF(arg1,arg1)))
 		painter.setBrush(QBrush(Qt.NoBrush))
 		painter.setPen(self.axpen)
 		painter.drawEllipse(
-			QRect(center - QPoint((arg1+arg0)/2,(arg0+arg1)/2), center + QPoint((arg1+arg0)/2,(arg0+arg1)/2)))
+			QRectF(center - QPointF((arg1+arg0)/2,(arg0+arg1)/2), center + QPointF((arg1+arg0)/2,(arg0+arg1)/2)))
 		painter.setPen(self.halfpen)
 		paintool.draw_dimlines(
 			painter = painter,
-			apnt = center-QPoint(0,(arg1+arg0)/2),
-			bpnt = center+QPoint(0,(arg1+arg0)/2),
-			offset = QPoint(-dimlines_off,0),
-			textoff = QPoint(-10, 0) - QPoint(QFontMetrics(self.font).width(txt0)/2, 0),
+			apnt = center-QPointF(0,(arg1+arg0)/2),
+			bpnt = center+QPointF(0,(arg1+arg0)/2),
+			offset = QPointF(-dimlines_off,0),
+			textoff = QPointF(-10, 0) - QPointF(QFontMetrics(self.font).width(txt0)/2, 0),
 			text = txt0,
 			arrow_size = arrow_size / 3 * 2
 		)
 		paintool.draw_dimlines(
 			painter = painter,
-			apnt = center+QPoint(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
-			bpnt = center+QPoint(+ math.cos(math.pi/4) * arg0, + math.sin(math.pi/4) * arg0),
-			offset = QPoint(0,0),
-			textoff = QPoint(+ math.cos(math.pi/4) * (arg0-arg1) + 15, + math.sin(math.pi/4) * (arg0-arg1)),
+			apnt = center+QPointF(+ math.cos(math.pi/4) * arg1, + math.sin(math.pi/4) * arg1),
+			bpnt = center+QPointF(+ math.cos(math.pi/4) * arg0, + math.sin(math.pi/4) * arg0),
+			offset = QPointF(0,0),
+			textoff = QPointF(+ math.cos(math.pi/4) * (arg0-arg1) + 15, + math.sin(math.pi/4) * (arg0-arg1)),
 			text = txt1,
 			arrow_size = arrow_size / 3 * 2,
 			splashed=True,
@@ -791,19 +791,19 @@ def draw_section(wdg, section_type, right, hcenter,
 		)
 		painter.setPen(self.axpen)
 		llen = arg0 + 10
-		painter.drawLine(center + QPoint(-llen,0), center + QPoint(llen,0))
-		painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+		painter.drawLine(center + QPointF(-llen,0), center + QPointF(llen,0))
+		painter.drawLine(center + QPointF(0,-llen), center + QPointF(0,llen))
 
 	elif section_type == "Треугольник":
-		center = QPoint(right - 20 - 10 - arg0/2, hcenter)
+		center = QPointF(right - 20 - 10 - arg0/2, hcenter)
 		section_width = arg1 + 120
 		painter.setPen(self.pen)
 		painter.setBrush(QBrush(Qt.BDiagPattern))
 		painter.drawPolygon(
-			QPolygon([
-				center+QPoint(-arg1, arg0),
-				center+QPoint(arg1, arg0),
-				center+QPoint(0, -arg0),
+			QPolygonF([
+				center+QPointF(-arg1, arg0),
+				center+QPointF(arg1, arg0),
+				center+QPointF(0, -arg0),
 			])
 		)
 		painter.setBrush(QBrush(Qt.white))
@@ -811,26 +811,26 @@ def draw_section(wdg, section_type, right, hcenter,
 		painter.setPen(self.halfpen)
 		paintool.draw_dimlines(
 			painter = painter,
-			apnt = center+QPoint(0,arg0),
-			bpnt = center+QPoint(0,-arg0),
-			offset = QPoint(-20-arg0,0),
-			textoff = QPoint(-10, 0),
+			apnt = center+QPointF(0,arg0),
+			bpnt = center+QPointF(0,-arg0),
+			offset = QPointF(-20-arg0,0),
+			textoff = QPointF(-10, 0),
 			text = txt0,
 			arrow_size = arrow_size / 3 * 2
 		)
 		paintool.draw_dimlines(
 			painter = painter,
-			apnt = center+QPoint(arg1,arg0),
-			bpnt = center+QPoint(-arg1,arg0),
-			offset = QPoint(0,25),
-			textoff = QPoint(0, -6),
+			apnt = center+QPointF(arg1,arg0),
+			bpnt = center+QPointF(-arg1,arg0),
+			offset = QPointF(0,25),
+			textoff = QPointF(0, -6),
 			text = txt1,
 			arrow_size = arrow_size / 3 * 2
 		)
 		painter.setPen(self.axpen)
 		llen = arg0 + 10
-		painter.drawLine(center + QPoint(-llen,-arg0+4/3*arg0), center + QPoint(llen,-arg0+4/3*arg0))
-		painter.drawLine(center + QPoint(0,-llen), center + QPoint(0,llen))
+		painter.drawLine(center + QPointF(-llen,-arg0+4/3*arg0), center + QPointF(llen,-arg0+4/3*arg0))
+		painter.drawLine(center + QPointF(0,-llen), center + QPointF(0,llen))
 
 	else:
 		print("Unresolved section type:", section_type)

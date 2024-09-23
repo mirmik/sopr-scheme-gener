@@ -277,14 +277,14 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		ret = []
 		for a in aa:
 			for b in bb:
-				ret.append(QPoint(a,b))
+				ret.append(QPointF(a,b))
 
 		return ret
 		
 
 	def circle(self, p, rad=2, color=Qt.green):
 		self.painter.setBrush(color)
-		self.painter.drawEllipse(QRect(p-QPoint(rad,rad),p+QPoint(rad,rad)))
+		self.painter.drawEllipse(QRectF(p-QPointF(rad,rad),p+QPointF(rad,rad)))
 		self.painter.setBrush(Qt.black)
 
 	def draw_grid(self, center, base_length):
@@ -325,7 +325,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		width = self.width()
 		height = self.height()
 
-		center = QPoint(width/2, self.hcenter)
+		center = QPointF(width/2, self.hcenter)
 
 		font_size = self.shemetype.font_size.get()
 		lwidth = self.shemetype.line_width.get()
@@ -392,10 +392,10 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 			raw_coordes.append(((xstrt,ystrt), (xfini,yfini)))
 
 			coordes.append((
-				QPoint(
+				QPointF(
 					xstrt * base_length + center.x() + xshift, 
 					- ystrt * base_length + center.y() + yshift), 
-				QPoint(
+				QPointF(
 					xfini * base_length + center.x() + xshift, 
 					- yfini * base_length + center.y() + yshift)))
 

@@ -242,7 +242,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.painter.setPen(Qt.NoPen)
 		self.painter.setBrush(brush)
 		self.painter.drawPolygon(
-			QPolygon([
+			QPolygonF([
 				c0pnt, c1pnt, c2pnt, c3pnt
 			])
 		)
@@ -285,13 +285,13 @@ class PaintWidget(paintwdg.PaintWidget):
 			x,y,z = x[0], x[1], x[2]
 		if self.axonom:
 			p = self.trans_matrix * numpy.array([[x],[y],[-z],[1]])
-			return QPoint(float(p[0]), float(p[2]))
+			return QPointF(float(p[0]), float(p[2]))
 		else:
 			if self.axonom_deg:
-				return QPoint(self.base_x-y*self.AXDEG+x, self.base_y+y*self.AXDEG-z)
+				return QPointF(self.base_x-y*self.AXDEG+x, self.base_y+y*self.AXDEG-z)
 
 			p = self.trans_matrix * numpy.array([[0],[y],[0],[1]])
-			return QPoint(float(p[0])+x, float(p[2])-z)
+			return QPointF(float(p[0])+x, float(p[2])-z)
 
 	def drawConsole(self):
 		L = self.L
@@ -306,7 +306,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.painter.setPen(self.pen)
 
 		self.painter.setBrush(QColor(220,220,220))		
-		self.painter.drawPolygon(QPolygon([
+		self.painter.drawPolygon(QPolygonF([
 			self.trans(w,L,-w), self.trans(w,L,w), self.trans(w,0,w), self.trans(w,0,-w), 
 		]))
 		self.painter.setBrush(Qt.white)
@@ -341,12 +341,12 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.painter.drawLine(self.trans(w2,L2,-w2), self.trans(w2,L,-w2))
 
 		self.painter.setBrush(Qt.white)
-		self.painter.drawPolygon(QPolygon([
+		self.painter.drawPolygon(QPolygonF([
 			self.trans(-w2,L2,w2), self.trans(w2,L2,w2), self.trans(w2,L,w2), self.trans(-w2,L,w2), 
 		]))
 
 		self.painter.setBrush(QColor(220,220,220))
-		self.painter.drawPolygon(QPolygon([
+		self.painter.drawPolygon(QPolygonF([
 			self.trans(w2,L2,-w2), self.trans(w2,L2,w2), self.trans(w2,L,w2), self.trans(w2,L,-w2), 
 		]))
 
@@ -426,7 +426,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		
 
 
-		off = QPoint(0,offdown)
+		off = QPointF(0,offdown)
 		self.painter.setPen(self.halfpen)
 		for i in range(len(self.sections())):
 			paintool.draw_dimlines(
@@ -434,7 +434,7 @@ class PaintWidget(paintwdg.PaintWidget):
 				apnt = trans(0,coord(i),0), 
 				bpnt = trans(0,coord(i+1),0), 
 				offset = off, 
-				textoff = QPoint(0,0), 
+				textoff = QPointF(0,0), 
 				text = "", 
 				arrow_size=10, 
 				splashed=False, 

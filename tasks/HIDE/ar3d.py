@@ -195,13 +195,13 @@ class PaintWidget(paintwdg.PaintWidget):
 	def trans(self,x,y,z):
 		if self.axonom:
 			p = self.trans_matrix * numpy.array([[x],[y],[-z],[1]])
-			return QPoint(p[0], p[2])
+			return QPointF(p[0], p[2])
 		else:
 			if self.axonom_deg:
-				return QPoint(self.base_x-y*self.AXDEG+x, self.base_y+y*self.AXDEG-z)
+				return QPointF(self.base_x-y*self.AXDEG+x, self.base_y+y*self.AXDEG-z)
 
 			p = self.trans_matrix * numpy.array([[0],[y],[0],[1]])
-			return QPoint(p[0]+x, p[2]-z)
+			return QPointF(p[0]+x, p[2]-z)
 
 	def paintEventImplementation(self, ev):
 		bsects = self.bsections()
@@ -260,14 +260,14 @@ class PaintWidget(paintwdg.PaintWidget):
 
 			return L + lkoeff * l
 
-		off = QPoint(0,offdown)
+		off = QPointF(0,offdown)
 		for i in range(len(self.sections())):
 			paintool.draw_dimlines(
 				painter=self.painter, 
 				apnt = trans(0,coord(i),0), 
 				bpnt = trans(0,coord(i+1),0), 
 				offset = off, 
-				textoff = QPoint(0,0), 
+				textoff = QPointF(0,0), 
 				text = "", 
 				arrow_size=10, 
 				splashed=False, 
@@ -389,7 +389,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.painter.setPen(self.pen)
 
 		self.painter.setBrush(QColor(220,220,220))		
-		self.painter.drawPolygon(QPolygon([
+		self.painter.drawPolygon(QPolygonF([
 			trans(w,L,-w), trans(w,L,w), trans(w,0,w), trans(w,0,-w), 
 		]))
 		self.painter.setBrush(Qt.white)
@@ -431,12 +431,12 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.painter.drawLine(self.trans(w2,L2,-w2), self.trans(w2,L,-w2))
 
 		self.painter.setBrush(Qt.white)
-		self.painter.drawPolygon(QPolygon([
+		self.painter.drawPolygon(QPolygonF([
 			trans(-w2,L2,w2), trans(w2,L2,w2), trans(w2,L,w2), trans(-w2,L,w2), 
 		]))
 
 		self.painter.setBrush(QColor(220,220,220))
-		self.painter.drawPolygon(QPolygon([
+		self.painter.drawPolygon(QPolygonF([
 			trans(w2,L2,-w2), trans(w2,L2,w2), trans(w2,L,w2), trans(w2,L,-w2), 
 		]))
 
