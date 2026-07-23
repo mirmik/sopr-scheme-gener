@@ -8,9 +8,11 @@ from PyQt5.QtGui import (
 	QColor,
 	QFont,
 	QFontMetrics,
+	QPainterPath,
 	QPainter,
 	QPen,
 	QPolygonF,
+	QTransform,
 )
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 
@@ -63,6 +65,28 @@ class _GraphicsTextItem(QGraphicsItem):
 
 	def boundingRect(self):
 		item = self.item
+		values = dict(item.metadata)
+		if values.get("kind") == "legacy-text":
+			offset = values.get("offset", "none")
+			if offset == "left":
+				left = item.position.x - self.measurement.width
+			elif offset == "right":
+				left = item.position.x
+			else:
+				left = item.position.x - self.measurement.width / 2
+			rect = QRectF(
+				left,
+				item.position.y - self.measurement.height / 2,
+				self.measurement.width + 5,
+				self.measurement.height,
+			)
+			if item.rotation_degrees:
+				transform = QTransform()
+				transform.translate(rect.center().x(), rect.center().y())
+				transform.rotate(-item.rotation_degrees)
+				transform.translate(-rect.center().x(), -rect.center().y())
+				return transform.mapRect(rect)
+			return rect
 		if item.anchor == TextAnchor.CENTER:
 			return QRectF(
 				item.position.x - self.measurement.width / 2,
@@ -80,6 +104,28 @@ class _GraphicsTextItem(QGraphicsItem):
 	def paint(self, painter, option, widget=None):
 		painter.setPen(QPen(_color(self.item.style.color)))
 		painter.setFont(_font(self.item.style))
+		values = dict(self.item.metadata)
+		if values.get("kind") == "legacy-text":
+			box = self.boundingRect()
+			if values.get("clean"):
+				painter.setPen(Qt.NoPen)
+				painter.drawRect(box)
+				painter.setPen(QPen(_color(self.item.style.color)))
+			if self.item.rotation_degrees:
+				width = self.measurement.width
+				height = self.measurement.height
+				spoint = QPointF(
+					self.item.position.x + height / 2,
+					self.item.position.y - width / 2,
+				)
+				painter.translate(spoint)
+				painter.rotate(-self.item.rotation_degrees)
+				painter.drawText(QPointF(-width, -height / 4), self.item.value)
+				painter.rotate(self.item.rotation_degrees)
+				painter.translate(-spoint)
+			else:
+				painter.drawText(box, self.item.value)
+			return
 		if self.item.anchor == TextAnchor.CENTER:
 			painter.drawText(self.boundingRect(), self.item.value)
 		else:
@@ -182,8 +228,9 @@ class QtSceneInteraction:
 class QtGraphicsSceneRenderer:
 	"""Compatibility renderer for documents whose raster is a Qt scene contract."""
 
-	def __init__(self, text_metrics=None):
+	def __init__(self, text_metrics=None, one_to_one=False):
 		self.text_metrics = text_metrics or QtTextMetrics()
+		self.one_to_one = one_to_one
 
 	def render(self, scene, painter):
 		if not isinstance(scene, Scene):
@@ -201,7 +248,19 @@ class QtGraphicsSceneRenderer:
 				scene.viewport.height,
 			)
 		)
-		graphics_scene.render(painter)
+		if self.one_to_one:
+			graphics_scene.render(
+				painter,
+				QRectF(0, 0, scene.viewport.width, scene.viewport.height),
+				QRectF(
+					scene.viewport.x,
+					scene.viewport.y,
+					scene.viewport.width,
+					scene.viewport.height,
+				),
+			)
+		else:
+			graphics_scene.render(painter)
 
 	def _add(self, item, graphics_scene, offset_x=0.0, offset_y=0.0):
 		if isinstance(item, Group):
@@ -218,6 +277,14 @@ class QtGraphicsSceneRenderer:
 					offset_y + item.offset.y,
 				)
 			return
+		if isinstance(item, Text) and ("kind", "qgraphics-text") in item.metadata:
+			graphics_item = graphics_scene.addText(item.value, _font(item.style))
+			graphics_item.setDefaultTextColor(_color(item.style.color))
+			graphics_item.setPos(
+				offset_x + item.position.x,
+				offset_y + item.position.y,
+			)
+			return
 		if isinstance(item, Line):
 			graphics_item = graphics_scene.addLine(
 				item.start.x,
@@ -232,6 +299,12 @@ class QtGraphicsSceneRenderer:
 				_pen(item.stroke) if item.stroke is not None else QPen(Qt.NoPen),
 				_brush(item.fill),
 			)
+		elif isinstance(item, Polyline):
+			path = QPainterPath()
+			path.moveTo(item.points[0].x, item.points[0].y)
+			for point in item.points[1:]:
+				path.lineTo(point.x, point.y)
+			graphics_item = graphics_scene.addPath(path, _pen(item.stroke))
 		elif isinstance(item, Rectangle):
 			graphics_item = graphics_scene.addRect(
 				QRectF(
@@ -243,6 +316,28 @@ class QtGraphicsSceneRenderer:
 				_pen(item.stroke) if item.stroke is not None else QPen(Qt.NoPen),
 				_brush(item.fill),
 			)
+		elif isinstance(item, Ellipse):
+			graphics_item = graphics_scene.addEllipse(
+				QRectF(
+					item.bounds.x,
+					item.bounds.y,
+					item.bounds.width,
+					item.bounds.height,
+				),
+				_pen(item.stroke) if item.stroke is not None else QPen(Qt.NoPen),
+				_brush(item.fill),
+			)
+		elif isinstance(item, Arc):
+			path = QPainterPath()
+			rect = QRectF(
+				item.bounds.x,
+				item.bounds.y,
+				item.bounds.width,
+				item.bounds.height,
+			)
+			path.arcMoveTo(rect, -item.start_degrees)
+			path.arcTo(rect, -item.start_degrees, -item.span_degrees)
+			graphics_item = graphics_scene.addPath(path, _pen(item.stroke))
 		elif isinstance(item, Text):
 			graphics_item = _GraphicsTextItem(item, self.text_metrics)
 			graphics_scene.addItem(graphics_item)
