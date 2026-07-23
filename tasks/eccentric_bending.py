@@ -1,3 +1,5 @@
+"""Qt widget adapter for the eccentric-bending task."""
+
 import common
 import paintwdg
 import paintool

@@ -1,3 +1,5 @@
+"""Qt widget adapter for the second rod-system task."""
+
 import math
 
 import common

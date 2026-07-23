@@ -1,3 +1,5 @@
+"""Qt widget adapter for the stress-cube task."""
+
 import common
 import paintwdg
 import paintool

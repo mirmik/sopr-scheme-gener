@@ -1,3 +1,5 @@
+"""Qt widget adapter for the axial-torsion task."""
+
 import common
 import paintwdg
 import paintool

@@ -151,7 +151,7 @@ def test_rod_system_1_has_no_legacy_subject_painting_path():
 	layout_source = (
 		root / "sopr_scheme_gener" / "layouts" / "rod_system_1.py"
 	).read_text(encoding="utf-8")
-	widget_source = (root / "tasks" / "sharn_sterhen.py").read_text(
+	widget_source = (root / "tasks" / "rod_system_1.py").read_text(
 		encoding="utf-8"
 	)
 

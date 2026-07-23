@@ -131,7 +131,7 @@ def test_oblique_bending_widget_has_no_subject_legacy_painting():
 	layout = (
 		root / "sopr_scheme_gener" / "layouts" / "oblique_bending.py"
 	).read_text(encoding="utf-8")
-	widget = (root / "tasks" / "ar3d2.py").read_text(encoding="utf-8")
+	widget = (root / "tasks" / "oblique_bending.py").read_text(encoding="utf-8")
 
 	assert "PyQt" not in layout
 	assert "QPainter" not in layout

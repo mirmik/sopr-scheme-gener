@@ -1,3 +1,5 @@
+"""Qt widget adapter for the oblique-bending task."""
+
 import common
 import paintwdg
 import paintool

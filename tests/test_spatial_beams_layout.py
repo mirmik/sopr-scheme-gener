@@ -134,7 +134,7 @@ def test_spatial_beams_widget_has_no_subject_legacy_painting():
 	layout = (
 		root / "sopr_scheme_gener" / "layouts" / "spatial_beams.py"
 	).read_text(encoding="utf-8")
-	widget = (root / "tasks" / "balki3d.py").read_text(encoding="utf-8")
+	widget = (root / "tasks" / "spatial_beams.py").read_text(encoding="utf-8")
 
 	assert "PyQt" not in layout
 	assert "QPainter" not in layout

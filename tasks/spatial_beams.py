@@ -1,3 +1,5 @@
+"""Qt widget adapter for the spatial-beams task."""
+
 import functools
 
 import numpy

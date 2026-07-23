@@ -1,3 +1,5 @@
+"""Qt widget adapter for the first rod-system task."""
+
 import common
 import paintwdg
 

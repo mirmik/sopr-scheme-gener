@@ -83,7 +83,7 @@ def test_shafts_widget_has_no_subject_legacy_painting():
 	layout = (
 		root / "sopr_scheme_gener" / "layouts" / "shafts_pipes.py"
 	).read_text(encoding="utf-8")
-	widget = (root / "tasks" / "vali.py").read_text(encoding="utf-8")
+	widget = (root / "tasks" / "shafts_pipes.py").read_text(encoding="utf-8")
 
 	assert "PyQt" not in layout
 	assert "QPainter" not in layout

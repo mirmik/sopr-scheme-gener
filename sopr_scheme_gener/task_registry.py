@@ -24,17 +24,47 @@ class TaskSpec:
 
 
 TASK_SPECS = (
-	TaskSpec("axial-torsion", "Растяжение/сжатие/кручение стержня", "tasks.task0", "ShemeTypeT0"),
-	TaskSpec("beams", "Балки", "tasks.balki", "ShemeType"),
-	TaskSpec("rod-system-1", "Стержневая система (Тип 1)", "tasks.sharn_sterhen", "ShemeTypeT2"),
-	TaskSpec("rod-system-2", "Стержневая система (Тип 2)", "tasks.star", "ShemeTypeT1"),
-	TaskSpec("plate", "Пластина", "tasks.plastina", "ShemeTypeT3"),
-	TaskSpec("frames", "Рамы", "tasks.fermes", "ShemeTypeT4"),
-	TaskSpec("oblique-bending", "Косой изгиб", "tasks.ar3d2", "ShemeType"),
-	TaskSpec("eccentric-bending", "Внецентренный изгиб", "tasks.kosoi", "ShemeType"),
-	TaskSpec("stress-cube", "Напряжения", "tasks.cube", "ShemeType"),
-	TaskSpec("shafts-pipes", "Валы и трубки", "tasks.vali", "ShemeType"),
-	TaskSpec("spatial-beams", "Пространственные балки", "tasks.balki3d", "ShemeType"),
+	TaskSpec(
+		"axial-torsion",
+		"Растяжение/сжатие/кручение стержня",
+		"tasks.axial_torsion",
+		"ShemeTypeT0",
+	),
+	TaskSpec("beams", "Балки", "tasks.beams", "ShemeType"),
+	TaskSpec(
+		"rod-system-1",
+		"Стержневая система (Тип 1)",
+		"tasks.rod_system_1",
+		"ShemeTypeT2",
+	),
+	TaskSpec(
+		"rod-system-2",
+		"Стержневая система (Тип 2)",
+		"tasks.rod_system_2",
+		"ShemeTypeT1",
+	),
+	TaskSpec("plate", "Пластина", "tasks.plate", "ShemeTypeT3"),
+	TaskSpec("frames", "Рамы", "tasks.frames", "ShemeTypeT4"),
+	TaskSpec(
+		"oblique-bending",
+		"Косой изгиб",
+		"tasks.oblique_bending",
+		"ShemeType",
+	),
+	TaskSpec(
+		"eccentric-bending",
+		"Внецентренный изгиб",
+		"tasks.eccentric_bending",
+		"ShemeType",
+	),
+	TaskSpec("stress-cube", "Напряжения", "tasks.stress_cube", "ShemeType"),
+	TaskSpec("shafts-pipes", "Валы и трубки", "tasks.shafts_pipes", "ShemeType"),
+	TaskSpec(
+		"spatial-beams",
+		"Пространственные балки",
+		"tasks.spatial_beams",
+		"ShemeType",
+	),
 )
 
 

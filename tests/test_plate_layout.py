@@ -102,7 +102,7 @@ def test_plate_layout_and_widget_have_no_legacy_painting_path():
 	layout_source = (
 		root / "sopr_scheme_gener" / "layouts" / "plate.py"
 	).read_text(encoding="utf-8")
-	widget_source = (root / "tasks" / "plastina.py").read_text(encoding="utf-8")
+	widget_source = (root / "tasks" / "plate.py").read_text(encoding="utf-8")
 
 	assert "PyQt" not in layout_source
 	assert "QPainter" not in layout_source

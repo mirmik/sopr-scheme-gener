@@ -1,3 +1,5 @@
+"""Qt widget adapter for the beams task."""
+
 import common
 import paintwdg
 

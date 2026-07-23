@@ -1,3 +1,5 @@
+"""Qt widget adapter for the shafts-pipes task."""
+
 import common
 import paintwdg
 import paintool

@@ -1,3 +1,5 @@
+"""Qt widget adapter for the frames task."""
+
 import common
 import paintwdg
 import paintool

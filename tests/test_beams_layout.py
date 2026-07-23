@@ -147,7 +147,7 @@ def test_beam_layout_source_does_not_import_qt_or_legacy_painting():
 
 def test_beams_widget_has_no_legacy_subject_painting_path():
 	source = (
-		Path(__file__).resolve().parents[1] / "tasks" / "balki.py"
+		Path(__file__).resolve().parents[1] / "tasks" / "beams.py"
 	).read_text(encoding="utf-8")
 
 	for forbidden in (

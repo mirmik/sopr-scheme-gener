@@ -148,7 +148,9 @@ def test_rod_system_2_has_no_legacy_subject_painting_path():
 	layout_source = (
 		root / "sopr_scheme_gener" / "layouts" / "rod_system_2.py"
 	).read_text(encoding="utf-8")
-	widget_source = (root / "tasks" / "star.py").read_text(encoding="utf-8")
+	widget_source = (root / "tasks" / "rod_system_2.py").read_text(
+		encoding="utf-8"
+	)
 
 	assert "PyQt" not in layout_source
 	assert "QPainter" not in layout_source

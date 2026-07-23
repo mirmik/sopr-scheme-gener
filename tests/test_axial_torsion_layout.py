@@ -181,7 +181,9 @@ def test_axial_torsion_layout_and_widget_have_no_legacy_painting_path():
 	layout_source = (
 		root / "sopr_scheme_gener" / "layouts" / "axial_torsion.py"
 	).read_text(encoding="utf-8")
-	widget_source = (root / "tasks" / "task0.py").read_text(encoding="utf-8")
+	widget_source = (root / "tasks" / "axial_torsion.py").read_text(
+		encoding="utf-8"
+	)
 
 	assert "PyQt" not in layout_source
 	assert "QPainter" not in layout_source
