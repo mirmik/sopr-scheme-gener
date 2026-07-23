@@ -352,11 +352,14 @@ class Group:
 	offset: Point = Point(0.0, 0.0)
 	object_id: Optional[str] = None
 	metadata: Metadata = ()
+	antialias: Optional[bool] = None
 
 	def __post_init__(self):
 		children = _tuple(self.children, "children")
 		if any(not isinstance(child, SCENE_OBJECT_TYPES) for child in children):
 			raise TypeError("Group children must be scene objects")
+		if self.antialias is not None and not isinstance(self.antialias, bool):
+			raise TypeError("antialias must be a bool or None")
 		object.__setattr__(self, "children", children)
 		_validate_object_fields(self)
 

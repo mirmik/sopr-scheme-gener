@@ -3,6 +3,9 @@ from pathlib import Path
 import pytest
 
 from sopr_scheme_gener.context import DocumentController, EventJournal
+from sopr_scheme_gener.legacy import LegacyAdapter
+
+import paintwdg
 
 
 class FakeScheme:
@@ -112,3 +115,13 @@ def test_only_legacy_adapter_accesses_common_globals():
 		if "import common" in source or "from common" in source or "common." in source:
 			offenders.append(path.name)
 	assert offenders == []
+
+
+def test_legacy_adapter_resets_render_error_mode_for_each_runtime():
+	adapter = LegacyAdapter()
+
+	adapter.configure(object(), exit_on_render_error=True)
+	assert paintwdg.EXIT_ON_EXCEPT is True
+
+	adapter.configure(object(), exit_on_render_error=False)
+	assert paintwdg.EXIT_ON_EXCEPT is False

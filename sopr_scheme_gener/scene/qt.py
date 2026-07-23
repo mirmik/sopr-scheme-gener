@@ -346,6 +346,8 @@ class QtPainterRenderer:
 		if isinstance(item, Group):
 			painter.save()
 			try:
+				if item.antialias is not None:
+					painter.setRenderHint(QPainter.Antialiasing, item.antialias)
 				painter.translate(item.offset.x, item.offset.y)
 				for child in item.children:
 					self._render_object(child, painter)

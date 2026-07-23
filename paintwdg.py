@@ -12,9 +12,9 @@ import paintool
 EXIT_ON_EXCEPT = False
 ERROR_REPORTER = None
 
-def set_EXIT_ON_ERROR():
+def set_EXIT_ON_ERROR(enabled=True):
 	global EXIT_ON_EXCEPT
-	EXIT_ON_EXCEPT = True
+	EXIT_ON_EXCEPT = bool(enabled)
 
 def set_ERROR_REPORTER(reporter):
 	global ERROR_REPORTER

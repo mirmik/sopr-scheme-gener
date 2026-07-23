@@ -196,6 +196,13 @@ Task model -> Layout builder -> Scene objects -> Renderer -> QPainter
 добавлены только общие растровые свойства: forward-diagonal `Fill` и
 `Polygon.convex`, необходимый для точного Qt `drawConvexPolygon`.
 
+`rod-system-1` также переведён на отдельный чистый layout builder. Его Scene
+покрывает секционные размеры и подписи, положительные и отрицательные стержни,
+зазоры, локальные и парные силы, промежуточные и концевые опоры. Скрытый
+legacy-побочный эффект перезапуска `QPainter` выражен явным необязательным
+`Group.antialias`: это сохраняет побитовый baseline, не связывая предметную
+геометрию с Qt.
+
 Побитовое наследие `stress-cube` требует старых правил Qt для границ
 `QGraphicsItem` и масштабирования сцены. Они локализованы в
 `QtGraphicsSceneRenderer`; layout и тесты геометрии Qt не импортируют.
@@ -229,8 +236,8 @@ Task model -> Layout builder -> Scene objects -> Renderer -> QPainter
 
 Самые полезные первые шаги:
 
-1. Перенести родственные `rod-system-1` и `rod-system-2` следующим семейством,
-   сохраняя отдельные layout builders.
+1. Перенести `rod-system-2`, сохранив отдельный layout builder и используя
+   только подтверждённо общие части уже перенесённого `rod-system-1`.
 2. Затем перенести остальные процедурные 2D-типы.
 3. После этого перенести `vali` и `balki3d`, используя опыт compatibility
    adapter из `stress-cube`.

@@ -75,6 +75,9 @@ def test_geometry_style_and_primitive_validation():
 	).convex
 	with pytest.raises(TypeError, match="bounds must be a Rect"):
 		Rectangle("not-a-rect")
+	assert Group((), antialias=False).antialias is False
+	with pytest.raises(TypeError, match="antialias"):
+		Group((), antialias="off")
 
 
 def test_minimal_scene_contains_only_generic_primitives():

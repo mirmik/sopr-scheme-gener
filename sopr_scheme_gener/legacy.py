@@ -10,8 +10,7 @@ class LegacyAdapter:
 	def configure(self, app, debug=False, exit_on_render_error=False):
 		common.DEBUG = debug
 		common.APP = app
-		if exit_on_render_error:
-			paintwdg.set_EXIT_ON_ERROR()
+		paintwdg.set_EXIT_ON_ERROR(exit_on_render_error)
 
 	def set_error_reporter(self, reporter):
 		paintwdg.set_ERROR_REPORTER(reporter)
