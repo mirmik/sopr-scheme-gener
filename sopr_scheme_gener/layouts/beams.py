@@ -4,7 +4,6 @@ import math
 from dataclasses import dataclass
 
 from sopr_scheme_gener.layouts.beam_sections import (
-	SUPPORTED_SECTION_TYPES,
 	BeamSectionSpec,
 	beam_section_width,
 	build_beam_section,
@@ -51,31 +50,6 @@ def _value(record, name, default=None):
 	if isinstance(record, dict):
 		return record.get(name, default)
 	return getattr(record, name, default)
-
-
-def supports_scene_layout(task, settings, section_type="Нет", extra_text=""):
-	"""Return whether the current vertical slice can replace legacy rendering."""
-	if section_type not in SUPPORTED_SECTION_TYPES:
-		return False
-	if settings.left_node not in ("Нет", "Шарнир", "Заделка"):
-		return False
-	if settings.right_node not in ("Нет", "Шарнир", "Заделка"):
-		return False
-	for node in task["betsect"]:
-		if _value(node, "F", "Нет") not in (
-			"Нет",
-			"+",
-			"-",
-			"влево",
-			"вправо",
-		):
-			return False
-		if _value(node, "M", "Нет") not in ("Нет", "+", "-"):
-			return False
-	return all(
-		_value(node, "sharn", "Нет") in ("Нет", "1", "2")
-		for node in task["betsect"]
-	)
 
 
 def _length_text(length):
