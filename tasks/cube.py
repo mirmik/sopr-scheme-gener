@@ -7,13 +7,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from projector import Projector
-import math
-
 import taskconf_menu
 import tablewidget
-from items.arrow import *
-from items.text import *
+from sopr_scheme_gener.layouts.stress_cube import (
+	StressCubeLayoutBuilder,
+	StressCubeLayoutSettings,
+)
+from sopr_scheme_gener.scene.qt import QtGraphicsSceneRenderer, QtTextMetrics
 
 class ShemeType(common.SchemeType):
 	def __init__(self):
@@ -180,156 +180,49 @@ class PaintWidget(paintwdg.PaintWidget):
 
 
 	def scene_bound(self):
-		return (self.scene.itemsBoundingRect().width(),
-			self.scene.itemsBoundingRect().height())
-
-	def drawCube(self, i, off=0):
-		def deg(x): return x / 180.0 * math.pi
-		proj = Projector()
-		proj.set_yaw(deg(self.shemetype.zrot.get()))
-		proj.set_pitch(-deg(self.shemetype.xrot.get()))
-		proj.set_zmul(self.shemetype.zmul.get())
-		proj.set_iso_projection(not self.shemetype.axonom.get())
-
-		if i == 1:
-			proj.set_mov(off,0)
-
-		P = self.shemetype.rebro.get()
-		red = QPen()
-		green = QPen()
-		blue = QPen()
-
-		red.setColor(QColor(255,0,0))
-		green.setColor(QColor(0,255,0))
-		blue.setColor(QColor(0,0,255))
-
-		self.scene.addLine(QLineF(proj(+P, +P, +P), proj(-P, +P, +P)), self.pen)
-		self.scene.addLine(QLineF(proj(+P, +P, +P), proj(+P, -P, +P)), self.pen)
-		self.scene.addLine(QLineF(proj(+P, +P, +P), proj(+P, +P, -P)), self.pen)
-		self.scene.addLine(QLineF(proj(+P, +P, -P), proj(-P, +P, -P)), self.pen)
-		self.scene.addLine(QLineF(proj(+P, +P, -P), proj(+P, -P, -P)), self.pen)
-		self.scene.addLine(QLineF(proj(-P, +P, -P), proj(-P, +P, +P)), self.pen)
-		self.scene.addLine(QLineF(proj(+P, -P, -P), proj(+P, -P, +P)), self.pen)
-		self.scene.addLine(QLineF(proj(-P, -P, +P), proj(-P, +P, +P)), self.pen)
-		self.scene.addLine(QLineF(proj(-P, -P, +P), proj(+P, -P, +P)), self.pen)
-
-		#axes:
-		self.scene.addItem(ArrowItem(proj(+P, -P, -P), proj(+2*P, -P, -P), arrow_size=(15,3), pen=self.halfpen, brush=Qt.black))
-		self.scene.addItem(ArrowItem(proj(-P, +P, -P), proj(-P, +2*P, -P), arrow_size=(15,3), pen=self.halfpen, brush=Qt.black))
-		self.scene.addItem(ArrowItem(proj(-P, -P, +P), proj(-P, -P, +2*P), arrow_size=(15,3), pen=self.halfpen, brush=Qt.black))
-		self.scene.addItem(TextItem("x", font=self.font, center=proj(+2*P, -P, -P)+QPointF(0,-10), pen=self.pen))
-		self.scene.addItem(TextItem("z", font=self.font, center=proj(-P, +2*P, -P)+QPointF(-8,0), pen=self.pen))
-		self.scene.addItem(TextItem("y", font=self.font, center=proj(-P, -P, +2*P)+QPointF(-8,0), pen=self.pen))
-
-		#forces:
-		qx = self.shemetype.task["sections"][i].qx
-		qy = self.shemetype.task["sections"][i].qy
-		qz = self.shemetype.task["sections"][i].qz
-		mx = self.shemetype.task["sections"][i].mx
-		my = self.shemetype.task["sections"][i].my
-		mz = self.shemetype.task["sections"][i].mz
-
-		qx_pnt = proj(2.5*P,0,0)
-		qy_pnt = proj(0,0,2.5*P)
-		qz_pnt = proj(0,2.5*P,0)
-		
-		if qx!="нет": self.scene.addItem(ArrowItem(proj(P,0,0), qx_pnt, arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=qx=="-"))
-		if qy!="нет": self.scene.addItem(ArrowItem(proj(0,0,P), qy_pnt, arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=qy=="-"))
-		if qz!="нет": self.scene.addItem(ArrowItem(proj(0,P,0), qz_pnt, arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=qz=="-"))
-
-		M = 3/4
-		if mz!="нет":
-			reverse = mz == "-"
-			self.scene.addItem(ArrowItem(proj(-P*M,0,P), proj(P*M,0,P), arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=reverse))
-			self.scene.addItem(ArrowItem(proj(P,0,-P*M), proj(P,0,P*M), arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=reverse))
-
-		if my!="нет":
-			reverse = my == "-"
-			self.scene.addItem(ArrowItem(proj(-P*M,P,0), proj(P*M,P,0), arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=reverse))
-			self.scene.addItem(ArrowItem(proj(P,-P*M,0), proj(P,P*M,0), arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=reverse))
-
-		if mx!="нет":
-			reverse = mx == "-"
-			self.scene.addItem(ArrowItem(proj(0,-P*M,P), proj(0,P*M,P), arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=reverse))
-			self.scene.addItem(ArrowItem(proj(0,P,-P*M), proj(0,P,P*M), arrow_size=(15,5), pen=self.pen, brush=Qt.black, reverse=reverse))
-
-		#labels:
-		if i == 0:
-			def do_label(i, pnt=QPointF(0,0), hint=None):
-				text = self.shemetype.task["labels"][i].text
-				x = self.shemetype.task["labels"][i].x
-				y = self.shemetype.task["labels"][i].y
-				item = TextItem(paintool.greek(text), font=self.font, center=pnt+QPointF(x,y), pen=self.pen)
-				self.scene.addItem(item)
-				self.hovers[hint] = item
-				item.hint = hint
-	
-			section = self.shemetype.task["sections"][0]
-			if section.qx!="нет": do_label(0, qx_pnt, hint="qx")
-			if section.qy!="нет": do_label(1, qy_pnt, hint="qy")
-			if section.qz!="нет": do_label(2, qz_pnt, hint="qz")
-			if section.mx!="нет": do_label(3, proj(0,0,P), hint="mx")
-			if section.my!="нет": do_label(4, proj(0,P,0), hint="my")
-			if section.mz!="нет": do_label(5, proj(P,0,0), hint="mz")
-
-		if i == 1:
-			def do_label(i, pnt=QPointF(0,0), hint=None):
-				text = self.shemetype.task["labels"][i].text2
-				x = self.shemetype.task["labels"][i].x2
-				y = self.shemetype.task["labels"][i].y2
-				item = TextItem(text, font=self.font, center=pnt+QPointF(x,y), pen=self.pen)
-				self.scene.addItem(item)
-				self.hovers[hint] = item
-				item.hint = hint
-	
-			section = self.shemetype.task["sections"][1]
-			if section.qx!="нет": do_label(0, qx_pnt, hint="qx2")
-			if section.qy!="нет": do_label(1, qy_pnt, hint="qy2")
-			if section.qz!="нет": do_label(2, qz_pnt, hint="qz2")
-			if section.mx!="нет": do_label(3, proj(0,0,P), hint="mx2")
-			if section.my!="нет": do_label(4, proj(0,P,0), hint="my2")
-			if section.mz!="нет": do_label(5, proj(P,0,0), hint="mz2")
+		return (self.last_scene.viewport.width, self.last_scene.viewport.height)
 
 	def paintEventImplementation(self, ev):
-		self.scene = QGraphicsScene()
 		self.painter.setRenderHints(QPainter.Antialiasing)
-
-		self.drawCube(0)
-		if self.shemetype.second_cube.get():
-			self.drawCube(1, off=self.scene.itemsBoundingRect().width())
-
-		for k, h in self.hovers.items():
-			if self.selected_item == k:
-				green70 = QColor(0,255,0)
-				green70.setAlphaF(0.7)
-				self.scene.addRect(h.boundingRect(), brush=green70)
-
-		rect = self.scene.itemsBoundingRect()
-		addtext = paintool.greek(self.shemetype.texteditor.toPlainText())
-		n = len(addtext.splitlines())
-		for i, l in enumerate(addtext.splitlines()):
-			t = self.scene.addText(l, self.font)
-			t.setPos(
-				rect.x(), 
-				rect.height() + rect.y() + QFontMetrics(self.font).height()*i
-			)
-
-		WBORDER = self.shemetype.wborder.get()
-		HBORDER = self.shemetype.hborder.get()
-		#self.BORDER = BORDER
-		rect = self.scene.itemsBoundingRect()
-		br = QColor(0,0,0)
-		br.setAlphaF(0)
-		p = QPen()
-		p.setColor(br)
-		self.scene.addRect(QRectF(rect.x()-WBORDER, rect.y()-HBORDER, rect.width()+WBORDER*2, rect.height()+HBORDER*2), pen = p, brush=br)
-		#self.scene.addEllipse(QRectF(self.track_point - QPointF(3,3), self.track_point + QPointF(3,3)))
-		#self.rect = self.scene.itemsBoundingRect()
-		self.offset = QPointF(rect.x()-WBORDER, rect.y()-HBORDER)
-		#self.scene.setSceneRect(rect.x() - 1*BORDER, rect.y() - 1*BORDER, rect.width() + 2*BORDER, rect.height() + 2*BORDER)
-		self.scene.render(self.painter)
-
-		#if self.scene_bound() != self.last_size:
+		selected_id = ""
+		if self.selected_item:
+			cube_index = 1 if self.selected_item.endswith("2") else 0
+			name = self.selected_item.rstrip("2")
+			selected_id = "cube/{}/label/{}".format(cube_index, name)
+		settings = StressCubeLayoutSettings(
+			second_cube=self.shemetype.second_cube.get(),
+			axonom=self.shemetype.axonom.get(),
+			yaw_degrees=self.shemetype.zrot.get(),
+			pitch_degrees=self.shemetype.xrot.get(),
+			z_scale=self.shemetype.zmul.get(),
+			edge=self.shemetype.rebro.get(),
+			horizontal_border=self.shemetype.wborder.get(),
+			vertical_border=self.shemetype.hborder.get(),
+			line_width=self.shemetype.line_width.get(),
+			font_size=self.shemetype.font_size.get(),
+			note=self.shemetype.texteditor.toPlainText(),
+			selected_label_id=selected_id,
+		)
+		layout = StressCubeLayoutBuilder().build(
+			self.shemetype.task,
+			settings,
+			text_metrics=QtTextMetrics(),
+			text_transform=paintool.greek,
+		)
+		scene = layout.scene
+		self.last_scene = scene
+		self.hovers = {
+			("{}{}".format(name, "2" if cube_index else "")): bounds
+			for object_id, bounds in layout.label_bounds
+			for cube_index, name in [
+				(int(object_id.split("/")[1]), object_id.split("/")[-1])
+			]
+		}
+		self.offset = QPointF(
+			layout.interaction_offset.x,
+			layout.interaction_offset.y,
+		)
+		QtGraphicsSceneRenderer().render(scene, self.painter)
 		self.resize_after_render(*self.scene_bound())
 
 	def mousePressEvent(self, ev):
@@ -360,7 +253,10 @@ class PaintWidget(paintwdg.PaintWidget):
 		if not self.mouse_pressed:
 			self.selected_item = None
 			for k, h in self.hovers.items():
-				if h.boundingRect().contains(self.track_point):
+				if (
+					h.x <= self.track_point.x() <= h.right
+					and h.y <= self.track_point.y() <= h.bottom
+				):
 					self.selected_item = k
 					break
 
@@ -368,4 +264,3 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.repaint()
 
 		
-

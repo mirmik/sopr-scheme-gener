@@ -12,6 +12,7 @@ from PyQt5.QtGui import (
 	QPen,
 	QPolygonF,
 )
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 
 from .metrics import TextMeasurement
 from .model import (
@@ -27,6 +28,63 @@ from .model import (
 	Text,
 	TextAnchor,
 )
+
+
+class _GraphicsArrowItem(QGraphicsItem):
+	def __init__(self, line, head):
+		super().__init__()
+		self.line = line
+		self.head = head
+
+	def boundingRect(self):
+		left = min(self.line.start.x, self.line.end.x) - 5
+		top = min(self.line.start.y, self.line.end.y) - 5
+		right = max(self.line.start.x, self.line.end.x) + 5
+		bottom = max(self.line.start.y, self.line.end.y) + 5
+		return QRectF(left, top, right - left, bottom - top)
+
+	def paint(self, painter, option, widget=None):
+		painter.setPen(_pen(self.line.stroke))
+		painter.setBrush(_brush(self.head.fill))
+		painter.drawLine(
+			QPointF(self.line.start.x, self.line.start.y),
+			QPointF(self.line.end.x, self.line.end.y),
+		)
+		painter.drawPolygon(_polygon(self.head.points))
+
+
+class _GraphicsTextItem(QGraphicsItem):
+	def __init__(self, item, text_metrics):
+		super().__init__()
+		self.item = item
+		self.measurement = text_metrics.measure(item.value, item.style)
+
+	def boundingRect(self):
+		item = self.item
+		if item.anchor == TextAnchor.CENTER:
+			return QRectF(
+				item.position.x - self.measurement.width / 2,
+				item.position.y - self.measurement.height / 2,
+				self.measurement.width + 5,
+				self.measurement.height,
+			)
+		return QRectF(
+			item.position.x,
+			item.position.y - self.measurement.ascent,
+			self.measurement.width + 5,
+			self.measurement.height,
+		)
+
+	def paint(self, painter, option, widget=None):
+		painter.setPen(QPen(_color(self.item.style.color)))
+		painter.setFont(_font(self.item.style))
+		if self.item.anchor == TextAnchor.CENTER:
+			painter.drawText(self.boundingRect(), self.item.value)
+		else:
+			painter.drawText(
+				QPointF(self.item.position.x, self.item.position.y),
+				self.item.value,
+			)
 
 
 def _color(value):
@@ -73,6 +131,82 @@ class QtTextMetrics:
 			ascent=metrics.ascent(),
 			descent=metrics.descent(),
 		)
+
+
+class QtGraphicsSceneRenderer:
+	"""Compatibility renderer for documents whose raster is a Qt scene contract."""
+
+	def __init__(self, text_metrics=None):
+		self.text_metrics = text_metrics or QtTextMetrics()
+
+	def render(self, scene, painter):
+		if not isinstance(scene, Scene):
+			raise TypeError("scene must be a Scene")
+		if not isinstance(painter, QPainter) or not painter.isActive():
+			raise TypeError("painter must be an active QPainter")
+		graphics_scene = QGraphicsScene()
+		for item in scene.objects:
+			self._add(item, graphics_scene)
+		graphics_scene.setSceneRect(
+			QRectF(
+				scene.viewport.x,
+				scene.viewport.y,
+				scene.viewport.width,
+				scene.viewport.height,
+			)
+		)
+		graphics_scene.render(painter)
+
+	def _add(self, item, graphics_scene, offset_x=0.0, offset_y=0.0):
+		if isinstance(item, Group):
+			if ("kind", "arrow") in item.metadata:
+				graphics_item = _GraphicsArrowItem(item.children[0], item.children[1])
+				graphics_item.setPos(offset_x + item.offset.x, offset_y + item.offset.y)
+				graphics_scene.addItem(graphics_item)
+				return
+			for child in item.children:
+				self._add(
+					child,
+					graphics_scene,
+					offset_x + item.offset.x,
+					offset_y + item.offset.y,
+				)
+			return
+		if isinstance(item, Line):
+			graphics_item = graphics_scene.addLine(
+				item.start.x,
+				item.start.y,
+				item.end.x,
+				item.end.y,
+				_pen(item.stroke),
+			)
+		elif isinstance(item, Polygon):
+			graphics_item = graphics_scene.addPolygon(
+				_polygon(item.points),
+				_pen(item.stroke) if item.stroke is not None else QPen(Qt.NoPen),
+				_brush(item.fill),
+			)
+		elif isinstance(item, Rectangle):
+			graphics_item = graphics_scene.addRect(
+				QRectF(
+					item.bounds.x,
+					item.bounds.y,
+					item.bounds.width,
+					item.bounds.height,
+				),
+				_pen(item.stroke) if item.stroke is not None else QPen(Qt.NoPen),
+				_brush(item.fill),
+			)
+		elif isinstance(item, Text):
+			graphics_item = _GraphicsTextItem(item, self.text_metrics)
+			graphics_scene.addItem(graphics_item)
+		else:
+			raise TypeError(
+				"QtGraphicsSceneRenderer does not support {}".format(
+					type(item).__name__
+				)
+			)
+		graphics_item.setPos(offset_x, offset_y)
 
 
 class QtPainterRenderer:
