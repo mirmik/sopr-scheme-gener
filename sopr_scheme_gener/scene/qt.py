@@ -15,12 +15,14 @@ from PyQt5.QtGui import (
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 
 from .metrics import TextMeasurement
+from .hit import SceneIndex, ViewportMapping
 from .model import (
 	Arc,
 	Arrow,
 	Ellipse,
 	Group,
 	Line,
+	Point,
 	Polygon,
 	Polyline,
 	Rectangle,
@@ -131,6 +133,48 @@ class QtTextMetrics:
 			ascent=metrics.ascent(),
 			descent=metrics.descent(),
 		)
+
+
+class QtSceneInteraction:
+	"""Translate Qt device coordinates and query the shared Scene index."""
+
+	def __init__(
+		self,
+		scene,
+		text_metrics=None,
+		device_width=None,
+		device_height=None,
+		aspect_fit=False,
+	):
+		self.text_metrics = text_metrics or QtTextMetrics()
+		self.index = SceneIndex(scene, self.text_metrics)
+		if aspect_fit:
+			if device_width is None or device_height is None:
+				raise ValueError("device dimensions are required for aspect fit")
+			self.mapping = ViewportMapping.aspect_fit(
+				scene.viewport,
+				device_width,
+				device_height,
+			)
+		else:
+			self.mapping = ViewportMapping.direct(scene.viewport)
+
+	def point(self, qt_point):
+		point = self.mapping.from_device(Point(qt_point.x(), qt_point.y()))
+		return QPointF(point.x, point.y)
+
+	def delta(self, current_qt_point, previous_qt_point):
+		delta = self.mapping.delta_from_device(
+			Point(
+				current_qt_point.x() - previous_qt_point.x(),
+				current_qt_point.y() - previous_qt_point.y(),
+			)
+		)
+		return QPointF(delta.x, delta.y)
+
+	def hit_test(self, qt_point, kinds=None, predicate=None):
+		point = self.mapping.from_device(Point(qt_point.x(), qt_point.y()))
+		return self.index.hit_test(point, kinds=kinds, predicate=predicate)
 
 
 class QtGraphicsSceneRenderer:

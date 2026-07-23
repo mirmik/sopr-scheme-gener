@@ -100,6 +100,7 @@ class PaintWidget(QWidget):
 		self.mouse_pressed = False
 		self.selected_label_id = None
 		self.label_items = {}
+		self.scene_interaction = None
 		super().__init__()
 
 	def enable_common_mouse_events(self):
@@ -285,12 +286,14 @@ class PaintWidget(QWidget):
 		if not self.common_mouse_events_enabled:
 			return
 
-		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
+		if self.scene_interaction is not None:
+			self.track_point = self.scene_interaction.point(ev.pos())
+		else:
+			self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
 
 		create_label = self.Action("Создать метку", self, functools.partial(self.create_label, self.track_point))
 		if ev.button() == Qt.RightButton:
 			if self.selected_label_id:
-				label = self.label_items[self.selected_label_id]
 				menu = QMenu(self)
 				acts = [
 					 self.Action("Редактировать текст", self, functools.partial(self.edit_text)),
@@ -317,12 +320,16 @@ class PaintWidget(QWidget):
 		self.update()
 
 	def delete_label(self):
-		 self.shemetype.task["labels"].remove(self.label_items[self.selected_label_id].label)
+		label = self.selected_label_record()
+		if label is not None:
+			self.shemetype.task["labels"].remove(label)
+			self.selected_label_id = None
 
 	def edit_text(self):
 		text, ok = QInputDialog.getText(self, 'Текст', 'Введите текст:')
-		if (ok):
-			self.label_items[self.selected_label_id].label.text = text
+		label = self.selected_label_record()
+		if ok and label is not None:
+			label.text = text
 		self.update()
 
 	def create_label(self, pos):
@@ -331,7 +338,24 @@ class PaintWidget(QWidget):
 
 	def clone_label(self, pos):
 		pos = pos - self.labels_center
-		self.shemetype.task["labels"].append(self.shemetype.confwidget.label(self.label_items[self.selected_label_id].label.text, ((pos.x() + 30)/self.labels_width_scale, pos.y())))
+		label = self.selected_label_record()
+		if label is not None:
+			self.shemetype.task["labels"].append(self.shemetype.confwidget.label(label.text, ((pos.x() + 30)/self.labels_width_scale, pos.y())))
+
+	def selected_label_record(self):
+		if self.selected_label_id is None:
+			return None
+		if self.scene_interaction is not None:
+			entry = self.scene_interaction.index.get(self.selected_label_id)
+			if entry is None:
+				return None
+			index = entry.metadata_value("index")
+			if not isinstance(index, int):
+				return None
+			labels = self.shemetype.task["labels"]
+			return labels[index] if 0 <= index < len(labels) else None
+		item = self.label_items.get(self.selected_label_id)
+		return item.label if item is not None else None
 
 	def mouseReleaseEvent(self, ev):
 		if not self.common_mouse_events_enabled:
@@ -344,24 +368,29 @@ class PaintWidget(QWidget):
 		if not self.common_mouse_events_enabled:
 			return
 
-		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
-		pos = self.track_point
+		if self.scene_interaction is not None:
+			self.track_point = self.scene_interaction.point(ev.pos())
+		else:
+			self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
 		diff = self.track_point - self.last_point
 
 		if not self.mouse_pressed:
-			self.selected_label_id = None
-			for k, h in self.label_items.items():
-				if h.boundingRect().contains(self.track_point):
-					self.selected_label_id = k
-					self.hovered_sect = None
-					self.hovered_node = None
-					break
+			if self.scene_interaction is not None:
+				hit = self.scene_interaction.hit_test(ev.pos(), kinds=("label",))
+				self.selected_label_id = hit.object_id if hit is not None else None
+			else:
+				self.selected_label_id = None
+				for k, h in self.label_items.items():
+					if h.boundingRect().contains(self.track_point):
+						self.selected_label_id = k
+						self.hovered_sect = None
+						self.hovered_node = None
+						break
 		else:
 			if self.selected_label_id:
-				item = self.label_items[self.selected_label_id]
-				label = item.label
-
-				label.move2(QPointF(diff.x()/self.labels_width_scale, diff.y()))
+				label = self.selected_label_record()
+				if label is not None:
+					label.move2(QPointF(diff.x()/self.labels_width_scale, diff.y()))
 
 		self.last_point = self.track_point 
 		self.repaint()

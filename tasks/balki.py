@@ -10,7 +10,12 @@ from sopr_scheme_gener.layouts.beams import (
 	BeamLayoutSettings,
 )
 from sopr_scheme_gener.layouts.beam_sections import BeamSectionSpec, beam_section_width
-from sopr_scheme_gener.scene.qt import QtPainterRenderer, QtTextMetrics
+from sopr_scheme_gener.scene import Color, Fill, Rectangle, Scene, Stroke, metadata
+from sopr_scheme_gener.scene.qt import (
+	QtPainterRenderer,
+	QtSceneInteraction,
+	QtTextMetrics,
+)
 
 from PyQt5 import *
 from PyQt5.QtCore import *
@@ -184,24 +189,6 @@ class PaintWidget(paintwdg.PaintWidget):
 		super().__init__()
 		self.enable_common_mouse_events()
 
-	def prepare_scene_labels(self):
-		self.label_items = {}
-		for label in self.shemetype.task["labels"]:
-			position = (
-				label.pos[0] * self.labels_width_scale + self.labels_center.x(),
-				label.pos[1] + self.labels_center.y(),
-			)
-			item = paintwdg.TextItem(
-				paintool.greek(label.text),
-				self.font,
-				QPointF(*position),
-				self.pen,
-			)
-			item.label = label
-			self.label_items[id(label)] = item
-			if self.selected_label_id == id(label):
-				self.common_scene.addRect(item.boundingRect(), brush=Qt.green)
-
 	def beam_section_spec(self):
 		if not self.shemetype.section_enable.get():
 			return BeamSectionSpec()
@@ -296,10 +283,32 @@ class PaintWidget(paintwdg.PaintWidget):
 			text_transform=paintool.greek,
 			text_metrics=QtTextMetrics(),
 		)
-		self.last_scene = scene
 		section_width = beam_section_width(section_spec)
 		body_right = width - 20 - section_width
 		self.labels_center = QPointF((20 + body_right) / 2, self.hcenter)
 		self.labels_width_scale = width - 40 - section_width
-		self.prepare_scene_labels()
+		self.scene_interaction = QtSceneInteraction(
+			scene,
+			text_metrics=QtTextMetrics(),
+		)
+		if self.selected_label_id:
+			bounds = self.scene_interaction.index.bounds(self.selected_label_id)
+			if bounds is None:
+				self.selected_label_id = None
+			else:
+				scene = Scene(
+					scene.viewport,
+					scene.objects + (
+						Rectangle(
+							bounds,
+							stroke=Stroke(),
+							fill=Fill(Color(0, 255, 0)),
+							object_id=self.selected_label_id + "/hover",
+							metadata=metadata(kind="hover"),
+						),
+					),
+					content_bounds=scene.content_bounds,
+					background=scene.background,
+				)
+		self.last_scene = scene
 		QtPainterRenderer().render(scene, self.painter)

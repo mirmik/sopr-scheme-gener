@@ -13,7 +13,19 @@ from sopr_scheme_gener.layouts.stress_cube import (
 	StressCubeLayoutBuilder,
 	StressCubeLayoutSettings,
 )
-from sopr_scheme_gener.scene.qt import QtGraphicsSceneRenderer, QtTextMetrics
+from sopr_scheme_gener.scene import (
+	Color,
+	Fill,
+	Rectangle,
+	Scene,
+	Stroke,
+	metadata,
+)
+from sopr_scheme_gener.scene.qt import (
+	QtGraphicsSceneRenderer,
+	QtSceneInteraction,
+	QtTextMetrics,
+)
 
 class ShemeType(common.SchemeType):
 	def __init__(self):
@@ -167,14 +179,15 @@ class ConfWidget(common.ConfWidget):
 		return {}
 
 class PaintWidget(paintwdg.PaintWidget):
+	LABEL_NAMES = ("qx", "qy", "qz", "mx", "my", "mz")
+
 	def __init__(self):
 		super().__init__()
 		self.no_text_render = True
-		self.hovers = {}
 		self.setMouseTracking(True)
 		self.track_point = QPointF(0,0)
 		self.mouse_pressed = False
-		self.selected_item = None
+		self.selected_object_id = None
 		self.last_point = QPointF(0,0)
 		self.no_resize = True
 
@@ -184,11 +197,6 @@ class PaintWidget(paintwdg.PaintWidget):
 
 	def paintEventImplementation(self, ev):
 		self.painter.setRenderHints(QPainter.Antialiasing)
-		selected_id = ""
-		if self.selected_item:
-			cube_index = 1 if self.selected_item.endswith("2") else 0
-			name = self.selected_item.rstrip("2")
-			selected_id = "cube/{}/label/{}".format(cube_index, name)
 		settings = StressCubeLayoutSettings(
 			second_cube=self.shemetype.second_cube.get(),
 			axonom=self.shemetype.axonom.get(),
@@ -201,27 +209,40 @@ class PaintWidget(paintwdg.PaintWidget):
 			line_width=self.shemetype.line_width.get(),
 			font_size=self.shemetype.font_size.get(),
 			note=self.shemetype.texteditor.toPlainText(),
-			selected_label_id=selected_id,
 		)
-		layout = StressCubeLayoutBuilder().build(
+		scene = StressCubeLayoutBuilder().build(
 			self.shemetype.task,
 			settings,
 			text_metrics=QtTextMetrics(),
 			text_transform=paintool.greek,
 		)
-		scene = layout.scene
-		self.last_scene = scene
-		self.hovers = {
-			("{}{}".format(name, "2" if cube_index else "")): bounds
-			for object_id, bounds in layout.label_bounds
-			for cube_index, name in [
-				(int(object_id.split("/")[1]), object_id.split("/")[-1])
-			]
-		}
-		self.offset = QPointF(
-			layout.interaction_offset.x,
-			layout.interaction_offset.y,
+		self.scene_interaction = QtSceneInteraction(
+			scene,
+			text_metrics=QtTextMetrics(),
+			device_width=self.width(),
+			device_height=self.height(),
+			aspect_fit=True,
 		)
+		if self.selected_object_id:
+			bounds = self.scene_interaction.index.bounds(self.selected_object_id)
+			if bounds is None:
+				self.selected_object_id = None
+			else:
+				scene = Scene(
+					scene.viewport,
+					scene.objects + (
+						Rectangle(
+							bounds,
+							stroke=Stroke(),
+							fill=Fill(Color(0, 255, 0, 179)),
+							object_id=self.selected_object_id + "/hover",
+							metadata=metadata(kind="hover"),
+						),
+					),
+					content_bounds=scene.content_bounds,
+					background=scene.background,
+				)
+		self.last_scene = scene
 		QtGraphicsSceneRenderer().render(scene, self.painter)
 		self.resize_after_render(*self.scene_bound())
 
@@ -232,33 +253,25 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.mouse_pressed = False
 
 	def mouseMoveEvent(self, ev):
-		self.track_point = QPointF(ev.pos().x(), ev.pos().y()) + self.offset
+		if not hasattr(self, "scene_interaction"):
+			return
+		self.track_point = self.scene_interaction.point(ev.pos())
 
 		diff = self.track_point - self.last_point
-		if self.mouse_pressed and self.selected_item:
-			if self.selected_item == "qx" : self.shemetype.task["labels"][0].move(diff)
-			if self.selected_item == "qy" : self.shemetype.task["labels"][1].move(diff)
-			if self.selected_item == "qz" : self.shemetype.task["labels"][2].move(diff)
-			if self.selected_item == "mx" : self.shemetype.task["labels"][3].move(diff)
-			if self.selected_item == "my" : self.shemetype.task["labels"][4].move(diff)
-			if self.selected_item == "mz" : self.shemetype.task["labels"][5].move(diff)
-			if self.selected_item == "qx2" : self.shemetype.task["labels"][0].move2(diff)
-			if self.selected_item == "qy2" : self.shemetype.task["labels"][1].move2(diff)
-			if self.selected_item == "qz2" : self.shemetype.task["labels"][2].move2(diff)
-			if self.selected_item == "mx2" : self.shemetype.task["labels"][3].move2(diff)
-			if self.selected_item == "my2" : self.shemetype.task["labels"][4].move2(diff)
-			if self.selected_item == "mz2" : self.shemetype.task["labels"][5].move2(diff)
+		if self.mouse_pressed and self.selected_object_id:
+			parts = self.selected_object_id.split("/")
+			cube_index = int(parts[1])
+			label_index = self.LABEL_NAMES.index(parts[-1])
+			label = self.shemetype.task["labels"][label_index]
+			if cube_index == 0:
+				label.move(diff)
+			else:
+				label.move2(diff)
 			self.shemetype.confwidget.table2.updateTable()
 
 		if not self.mouse_pressed:
-			self.selected_item = None
-			for k, h in self.hovers.items():
-				if (
-					h.x <= self.track_point.x() <= h.right
-					and h.y <= self.track_point.y() <= h.bottom
-				):
-					self.selected_item = k
-					break
+			hit = self.scene_interaction.hit_test(ev.pos(), kinds=("label",))
+			self.selected_object_id = hit.object_id if hit is not None else None
 
 		self.last_point = self.track_point 
 		self.repaint()

@@ -7,7 +7,7 @@ from sopr_scheme_gener.layouts.stress_cube import (
 	StressCubeLayoutBuilder,
 	StressCubeLayoutSettings,
 )
-from sopr_scheme_gener.scene import Group, Rectangle, Text, TextMeasurement
+from sopr_scheme_gener.scene import Group, SceneIndex, Text, TextMeasurement
 
 
 class FixedTextMetrics:
@@ -59,40 +59,39 @@ def test_projection_preserves_historical_isometric_mapping():
 
 
 def test_layout_exposes_stable_objects_and_interaction_bounds_without_qt():
-	layout = StressCubeLayoutBuilder().build(
+	scene = StressCubeLayoutBuilder().build(
 		_task(second=True),
 		StressCubeLayoutSettings(
 			second_cube=True,
 			note="line 1\nline 2",
-			selected_label_id="cube/1/label/mz",
 		),
 		text_metrics=FixedTextMetrics(),
 		text_transform=str.upper,
 	)
-	ids = {item.object_id for item in layout.scene.walk() if item.object_id}
-	label_bounds = dict(layout.label_bounds)
+	index = SceneIndex(scene, FixedTextMetrics())
+	ids = {item.object_id for item in scene.walk() if item.object_id}
+	label_ids = {
+		entry.object_id
+		for entry in index.entries
+		if entry.metadata_value("kind") == "label"
+	}
 
 	assert "cube/0" in ids
 	assert "cube/1" in ids
 	assert "cube/0/stress/qx" in ids
 	assert "cube/1/moment/mz/1" in ids
 	assert "cube/1/label/mz" in ids
-	assert "cube/1/label/mz/hover" in ids
-	assert set(label_bounds) == {
+	assert label_ids == {
 		"cube/{}/label/{}".format(cube, name)
 		for cube in (0, 1)
 		for name in ("qx", "qy", "qz", "mx", "my", "mz")
 	}
-	assert layout.scene.viewport.width > layout.scene.content_bounds.width
-	assert layout.scene.viewport.height >= layout.scene.content_bounds.height
-	assert layout.interaction_offset.x == pytest.approx(
-		layout.scene.viewport.x + 0.5
-	)
-	assert sum(isinstance(item, Text) for item in layout.scene.walk()) == 20
-	assert sum(isinstance(item, Rectangle) for item in layout.scene.walk()) == 1
+	assert scene.viewport.width > scene.content_bounds.width
+	assert scene.viewport.height >= scene.content_bounds.height
+	assert sum(isinstance(item, Text) for item in scene.walk()) == 20
 	assert all(
 		not isinstance(item, Group) or isinstance(item.children, tuple)
-		for item in layout.scene.walk()
+		for item in scene.walk()
 	)
 
 

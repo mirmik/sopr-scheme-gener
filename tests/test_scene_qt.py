@@ -2,6 +2,7 @@ import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PyQt5.QtCore import QPointF
 from PyQt5.QtGui import QImage, QPainter
 from PyQt5.QtWidgets import QApplication
 
@@ -23,8 +24,13 @@ from sopr_scheme_gener.scene import (
 	Text,
 	TextAnchor,
 	TextStyle,
+	metadata,
 )
-from sopr_scheme_gener.scene.qt import QtPainterRenderer, QtTextMetrics
+from sopr_scheme_gener.scene.qt import (
+	QtPainterRenderer,
+	QtSceneInteraction,
+	QtTextMetrics,
+)
 
 
 def _smoke_scene():
@@ -113,3 +119,30 @@ def test_qt_text_metrics_returns_positive_dimensions():
 	assert measurement.width > 0
 	assert measurement.height > 0
 	assert measurement.ascent > measurement.descent >= 0
+
+
+def test_qt_interaction_adapter_maps_device_points_and_hits_scene_objects():
+	_app = QApplication.instance() or QApplication(["scene-interaction-test"])
+	scene = Scene(
+		Rect(-10, -20, 200, 100),
+		(
+			Rectangle(
+				Rect(10, 10, 20, 20),
+				object_id="label/0",
+				metadata=metadata(kind="label"),
+			),
+		),
+	)
+	interaction = QtSceneInteraction(
+		scene,
+		device_width=100,
+		device_height=100,
+		aspect_fit=True,
+	)
+
+	assert interaction.point(QPointF(10, 15)) == QPointF(10, 10)
+	assert (
+		interaction.hit_test(QPointF(10, 15), kinds=("label",)).object_id
+		== "label/0"
+	)
+	assert interaction.delta(QPointF(15, 5), QPointF(10, 15)) == QPointF(10, -20)

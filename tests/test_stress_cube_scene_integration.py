@@ -56,20 +56,17 @@ def test_stress_cube_scene_renders_full_feature_matrix():
 		assert "cube/0/label/qx" in ids
 		assert "cube/1/label/mz" in ids
 		assert "note/0" in ids
-		assert set(context.canvas.hovers) == {
-			"qx",
-			"qy",
-			"qz",
-			"mx",
-			"my",
-			"mz",
-			"qx2",
-			"qy2",
-			"qz2",
-			"mx2",
-			"my2",
-			"mz2",
+		label_ids = {
+			entry.object_id
+			for entry in context.canvas.scene_interaction.index.entries
+			if entry.metadata_value("kind") == "label"
 		}
+		assert label_ids == {
+			"cube/{}/label/{}".format(cube, name)
+			for cube in (0, 1)
+			for name in ("qx", "qy", "qz", "mx", "my", "mz")
+		}
+		assert not hasattr(context.canvas, "hovers")
 		assert not hasattr(context.canvas, "scene")
 	finally:
 		context.window.close()

@@ -1,6 +1,7 @@
 """Public Qt-independent Scene API."""
 
 from .metrics import TextMeasurement, TextMetrics
+from .hit import HitEntry, SceneIndex, ViewportMapping, object_bounds
 from .model import (
 	BLACK,
 	TRANSPARENT,
@@ -37,6 +38,7 @@ __all__ = [
 	"Color",
 	"Fill",
 	"Group",
+	"HitEntry",
 	"Ellipse",
 	"Line",
 	"Metadata",
@@ -46,6 +48,7 @@ __all__ = [
 	"Rect",
 	"Rectangle",
 	"Scene",
+	"SceneIndex",
 	"SceneObject",
 	"Stroke",
 	"Text",
@@ -53,6 +56,8 @@ __all__ = [
 	"TextMeasurement",
 	"TextMetrics",
 	"TextStyle",
+	"ViewportMapping",
 	"metadata",
+	"object_bounds",
 	"walk",
 ]

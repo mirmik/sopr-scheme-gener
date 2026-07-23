@@ -116,7 +116,7 @@ def test_scene_core_source_does_not_import_qt():
 		/ "sopr_scheme_gener"
 		/ "scene"
 	)
-	for name in ("__init__.py", "model.py", "metrics.py"):
+	for name in ("__init__.py", "model.py", "metrics.py", "hit.py"):
 		source = (scene_dir / name).read_text(encoding="utf-8")
 		assert "PyQt" not in source
 		assert "QPainter" not in source

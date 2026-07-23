@@ -5,14 +5,12 @@ from dataclasses import dataclass
 
 from sopr_scheme_gener.scene import (
 	BLACK,
-	Color,
 	Fill,
 	Group,
 	Line,
 	Point,
 	Polygon,
 	Rect,
-	Rectangle,
 	Scene,
 	Stroke,
 	Text,
@@ -35,14 +33,6 @@ class StressCubeLayoutSettings:
 	line_width: float = 2.0
 	font_size: float = 12.0
 	note: str = ""
-	selected_label_id: str = ""
-
-
-@dataclass(frozen=True)
-class StressCubeLayout:
-	scene: Scene
-	label_bounds: tuple
-	interaction_offset: Point
 
 
 class Projection:
@@ -168,7 +158,6 @@ class _Cube:
 		self.style = TextStyle(point_size=settings.font_size, italic=True)
 		self.objects = []
 		self.bounds = None
-		self.label_bounds = {}
 
 	def add_line(self, start, end, object_id):
 		self.objects.append(Line(start, end, stroke=self.main, object_id=object_id))
@@ -201,8 +190,6 @@ class _Cube:
 		self.objects.append(item)
 		bounds = _legacy_text_bounds(center, value, self.style, self.text_metrics)
 		self.bounds = _union(self.bounds, bounds)
-		if kind == "label":
-			self.label_bounds[object_id] = bounds
 
 	def build(self):
 		p = self.settings.edge
@@ -346,7 +333,6 @@ class StressCubeLayoutBuilder:
 		first = _Cube(settings, task, 0, 0, text_metrics, text_transform)
 		objects = [first.build()]
 		bounds = first.bounds
-		label_bounds = dict(first.label_bounds)
 
 		if settings.second_cube:
 			if len(task["sections"]) < 2:
@@ -361,19 +347,6 @@ class StressCubeLayoutBuilder:
 			)
 			objects.append(second.build())
 			bounds = bounds.union(second.bounds)
-			label_bounds.update(second.label_bounds)
-
-		for object_id, label_bounds_value in label_bounds.items():
-			if object_id == settings.selected_label_id:
-				objects.append(
-					Rectangle(
-						label_bounds_value,
-						stroke=Stroke(),
-						fill=Fill(Color(0, 255, 0, 179)),
-						object_id=object_id + "/hover",
-						metadata=metadata(kind="hover"),
-					)
-				)
 
 		style = TextStyle(point_size=settings.font_size, italic=True)
 		note_top = bounds.bottom
@@ -405,9 +378,8 @@ class StressCubeLayoutBuilder:
 		# The old transparent QGraphicsRectItem contributed half of its
 		# cosmetic pen width to sceneBoundingRect.
 		viewport = _expanded(border_rect, 0.5)
-		scene = Scene(viewport=viewport, content_bounds=bounds, objects=objects)
-		return StressCubeLayout(
-			scene=scene,
-			label_bounds=tuple(sorted(label_bounds.items())),
-			interaction_offset=Point(border_rect.x, border_rect.y),
+		return Scene(
+			viewport=viewport,
+			content_bounds=bounds,
+			objects=objects,
 		)

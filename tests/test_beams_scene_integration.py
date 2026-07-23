@@ -131,7 +131,8 @@ def test_all_beams_scene_features_render():
 		context.app.processEvents()
 
 		assert _image_bytes(_render_scene(context.canvas))
-		assert len(context.canvas.label_items) == 1
+		assert context.canvas.label_items == {}
+		assert context.canvas.scene_interaction.index.get("label/0") is not None
 		assert any(
 			item.object_id == "label/0"
 			for item in context.canvas.last_scene.walk()
