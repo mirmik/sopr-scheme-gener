@@ -193,6 +193,24 @@ class PaintWidget(paintwdg.PaintWidget):
 			ret += sect.l
 		return ret
 
+	def prepare_scene_labels(self):
+		self.label_items = {}
+		for label in self.shemetype.task["labels"]:
+			position = (
+				label.pos[0] * self.labels_width_scale + self.labels_center.x(),
+				label.pos[1] + self.labels_center.y(),
+			)
+			item = paintwdg.TextItem(
+				paintool.greek(label.text),
+				self.font,
+				QPointF(*position),
+				self.pen,
+			)
+			item.label = label
+			self.label_items[id(label)] = item
+			if self.selected_label_id == id(label):
+				self.common_scene.addRect(item.boundingRect(), brush=Qt.green)
+
 	def draw_terminator(self, pos, angle, type):
 		#Рисуем терминатор:
 		if type == "Нет":
@@ -469,6 +487,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.last_scene = scene
 			self.labels_center = QPointF(width / 2, self.hcenter)
 			self.labels_width_scale = width - 40
+			self.prepare_scene_labels()
 			QtPainterRenderer().render(scene, self.painter)
 			return
 

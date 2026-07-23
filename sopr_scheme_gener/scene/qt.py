@@ -205,6 +205,8 @@ class QtPainterRenderer:
 			QPointF(item.start.x, item.start.y),
 			QPointF(base_x, base_y),
 		)
+		if item.head_stroke is not None:
+			painter.setPen(_pen(item.head_stroke))
 		painter.drawConvexPolygon(head)
 
 	def _render_text(self, item, painter):
@@ -215,6 +217,8 @@ class QtPainterRenderer:
 			y += measurement.ascent
 		elif item.anchor == TextAnchor.BASELINE_CENTER:
 			x -= measurement.width / 2
+		elif item.anchor == TextAnchor.BASELINE_RIGHT:
+			x -= measurement.width
 		elif item.anchor == TextAnchor.CENTER:
 			x -= measurement.width / 2
 			y += (measurement.ascent - measurement.descent) / 2

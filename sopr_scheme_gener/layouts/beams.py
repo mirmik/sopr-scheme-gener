@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from sopr_scheme_gener.scene import (
 	BLACK,
 	WHITE,
+	Arc,
 	Arrow,
 	Ellipse,
 	Fill,
@@ -47,14 +48,22 @@ def _value(record, name, default=None):
 
 def supports_scene_layout(task, settings, section_type="Нет", extra_text=""):
 	"""Return whether the current vertical slice can replace legacy rendering."""
-	if section_type != "Нет" or extra_text or task.get("labels"):
+	if section_type != "Нет":
 		return False
-	if settings.left_node != "Нет" or settings.right_node != "Нет":
+	if settings.left_node not in ("Нет", "Шарнир", "Заделка"):
+		return False
+	if settings.right_node not in ("Нет", "Шарнир", "Заделка"):
 		return False
 	for node in task["betsect"]:
-		if _value(node, "F", "Нет") != "Нет" or _value(node, "M", "Нет") != "Нет":
+		if _value(node, "F", "Нет") not in (
+			"Нет",
+			"+",
+			"-",
+			"влево",
+			"вправо",
+		):
 			return False
-		if _value(node, "sectname", ""):
+		if _value(node, "M", "Нет") not in ("Нет", "+", "-"):
 			return False
 	return all(
 		_value(node, "sharn", "Нет") in ("Нет", "1", "2")
@@ -68,11 +77,12 @@ def _length_text(length):
 	return "{:.3}l".format(length)
 
 
-def _arrow(start, end, stroke, size, object_id):
+def _arrow(start, end, stroke, size, object_id, head_stroke=None):
 	return Arrow(
 		start,
 		end,
 		stroke=stroke,
+		head_stroke=head_stroke,
 		head_length=size,
 		head_width=size * 2 / 3,
 		object_id=object_id,
@@ -97,6 +107,66 @@ def _dimension_arrow(start, end, stroke, size):
 				fill=Fill(BLACK),
 			),
 		)
+	)
+
+
+def _arrow_head(tip, angle, stroke, size):
+	return Polygon(
+		(
+			tip,
+			Point(
+				tip.x - size * math.cos(angle) + size / 3 * math.sin(angle),
+				tip.y + size * math.sin(angle) + size / 3 * math.cos(angle),
+			),
+			Point(
+				tip.x - size * math.cos(angle) - size / 3 * math.sin(angle),
+				tip.y + size * math.sin(angle) - size / 3 * math.cos(angle),
+			),
+		),
+		stroke=stroke,
+		fill=Fill(BLACK),
+	)
+
+
+def _moment(center, direction, radius, arrow_size, stroke, index):
+	if direction == "+":
+		line_angle = -(math.pi * 60 / 180)
+		tip_angle = -(math.pi * 120 / 180)
+		head_angle = -tip_angle + math.pi / 2 - math.pi * 10 / 180
+	else:
+		line_angle = -(math.pi * 120 / 180)
+		tip_angle = -(math.pi * 60 / 180)
+		head_angle = -tip_angle - math.pi / 2 + math.pi * 10 / 180
+	line_degrees = line_angle * 180 / math.pi
+	tip_degrees = tip_angle * 180 / math.pi
+	arc_start = -line_degrees
+	arc_span = -(tip_degrees - line_degrees)
+	line_end = Point(
+		center.x + radius * math.cos(line_angle),
+		center.y + radius * math.sin(line_angle),
+	)
+	tip = Point(
+		center.x + radius * math.cos(tip_angle),
+		center.y + radius * math.sin(tip_angle),
+	)
+	return Group(
+		(
+			Line(center, line_end, stroke=stroke),
+			Arc(
+				Rect(
+					center.x - radius,
+					center.y - radius,
+					radius * 2,
+					radius * 2,
+				),
+				arc_start,
+				arc_span,
+				stroke=stroke,
+			),
+			_arrow_head(tip, head_angle, stroke, arrow_size),
+		),
+		object_id="moment/{}".format(index),
+		metadata=metadata(kind="moment", index=index, direction=direction),
 	)
 
 
@@ -126,13 +196,19 @@ def _terminator(center, angle, termx, termy, main, object_id):
 	)
 
 
-def _support_one(center, termrad, main, double, index):
+def _support_one(center, angle, termrad, main, double, index, object_id=None):
 	radius = 5.5
-	base = Point(center.x, center.y + termrad)
-	second_circle = Point(center.x, center.y + termrad - radius)
+	base = Point(
+		center.x + termrad * math.cos(angle),
+		center.y + termrad * math.sin(angle),
+	)
+	second_circle = Point(
+		center.x + (termrad - radius) * math.cos(angle),
+		center.y + (termrad - radius) * math.sin(angle),
+	)
 	children = [
 		Line(center, base, stroke=double),
-		*_terminator(base, math.pi / 2, 20, 10, main, None),
+		*_terminator(base, angle, 20, 10, main, None),
 		Ellipse(
 			Rect(center.x - radius, center.y - radius, radius * 2 + 1, radius * 2 + 1),
 			stroke=main,
@@ -151,7 +227,7 @@ def _support_one(center, termrad, main, double, index):
 	]
 	return Group(
 		children,
-		object_id="support/{}".format(index),
+		object_id=object_id or "support/{}".format(index),
 		metadata=metadata(kind="support", index=index, support_type="1"),
 	)
 
@@ -214,6 +290,159 @@ class BeamLayoutBuilder:
 		load_step = 10.0
 		load_arrow_size = settings.arrow_size * 2 / 3
 		beam_top = settings.hcenter - settings.base_section_height / 2
+
+		current_stroke = main
+		for index, node in enumerate(nodes):
+			x = points[index]
+			moment_direction = _value(node, "M", "Нет")
+			force_direction = _value(node, "F", "Нет")
+			has_moment = moment_direction != "Нет"
+			if has_moment:
+				objects.append(
+					_moment(
+						Point(x, settings.hcenter),
+						moment_direction,
+						60,
+						settings.arrow_size,
+						half,
+						index,
+					)
+				)
+				current_stroke = half
+
+			if force_direction in ("+", "-"):
+				half_height = settings.base_section_height / 2
+				if has_moment:
+					top = Point(x, settings.hcenter + half_height)
+					bottom = Point(x, settings.hcenter + 60 + half_height)
+				else:
+					top = Point(x, settings.hcenter - 60 - half_height)
+					bottom = Point(x, settings.hcenter - half_height)
+				start, end = (
+					(bottom, top) if force_direction == "+" else (top, bottom)
+				)
+				objects.append(
+					_arrow(
+						start,
+						end,
+						current_stroke,
+						settings.arrow_size,
+						"force/{}".format(index),
+						head_stroke=half,
+					)
+				)
+			elif force_direction in ("влево", "вправо"):
+				center = Point(x, settings.hcenter)
+				sign = -1 if force_direction == "влево" else 1
+				if index == 0:
+					left_point = Point(x - 40, settings.hcenter)
+					start, end = (
+						(center, left_point)
+						if sign < 0
+						else (left_point, center)
+					)
+					children = (
+						_arrow(
+							start,
+							end,
+							current_stroke,
+							settings.arrow_size,
+							None,
+							head_stroke=half,
+						),
+					)
+				elif index == len(nodes) - 1:
+					right_point = Point(x + 40, settings.hcenter)
+					start, end = (
+						(right_point, center)
+						if sign < 0
+						else (center, right_point)
+					)
+					children = (
+						_arrow(
+							start,
+							end,
+							current_stroke,
+							settings.arrow_size,
+							None,
+							head_stroke=half,
+						),
+					)
+				else:
+					upper = Point(x, settings.hcenter - 25)
+					lower = Point(x, settings.hcenter + 25)
+					offset = Point(sign * 30, 0)
+					children = (
+						_arrow(
+							lower,
+							lower.translated(offset),
+							current_stroke,
+							settings.arrow_size,
+							None,
+							head_stroke=half,
+						),
+						_arrow(
+							upper,
+							upper.translated(offset),
+							half,
+							settings.arrow_size,
+							None,
+							head_stroke=half,
+						),
+						Line(lower, upper, stroke=half),
+					)
+				objects.append(
+					Group(
+						children,
+						object_id="force/{}".format(index),
+						metadata=metadata(
+							kind="force",
+							index=index,
+							direction=force_direction,
+						),
+					)
+				)
+				current_stroke = half
+
+			if has_moment:
+				objects.append(
+					Text(
+						Point(x, settings.hcenter - 65),
+						text_transform(_value(node, "MT", "")),
+						style=style,
+						anchor=TextAnchor.BASELINE_CENTER,
+						object_id="moment/{}/text".format(index),
+					)
+				)
+			if force_direction != "Нет":
+				if force_direction in ("влево", "вправо"):
+					text_position = Point(x, settings.hcenter - 30)
+				elif has_moment:
+					text_position = Point(x + 10, settings.hcenter + 25)
+				else:
+					text_position = Point(x + 10, settings.hcenter - 60)
+				objects.append(
+					Text(
+						text_position,
+						text_transform(_value(node, "FT", "")),
+						style=style,
+						object_id="force/{}/text".format(index),
+					)
+				)
+
+			section_name = _value(node, "sectname", "")
+			if section_name:
+				offset = 11 if _value(node, "sharn", "") != "" else 5
+				objects.append(
+					Text(
+						Point(x - offset, settings.hcenter + 21),
+						section_name,
+						style=style,
+						anchor=TextAnchor.BASELINE_RIGHT,
+						object_id="node/{}/name".format(index),
+						metadata=metadata(kind="node-name", index=index),
+					)
+				)
 
 		for index, load in enumerate(loads):
 			direction = _value(load, "Fr", "Нет")
@@ -319,6 +548,62 @@ class BeamLayoutBuilder:
 				)
 			)
 
+		if settings.left_node == "Шарнир":
+			objects.append(
+				_support_one(
+					Point(points[0], settings.hcenter),
+					math.pi,
+					25,
+					main,
+					double,
+					0,
+					object_id="endpoint/left",
+				)
+			)
+		elif settings.left_node == "Заделка":
+			objects.append(
+				Group(
+					_terminator(
+						Point(points[0] + 0.5, settings.hcenter),
+						math.pi,
+						25,
+						15,
+						main,
+						None,
+					),
+					object_id="endpoint/left",
+					metadata=metadata(kind="fixed-end", side="left"),
+				)
+			)
+
+		if settings.right_node == "Шарнир":
+			objects.append(
+				_support_one(
+					Point(points[-1], settings.hcenter),
+					0,
+					25,
+					main,
+					double,
+					len(nodes) - 1,
+					object_id="endpoint/right",
+				)
+			)
+		elif settings.right_node == "Заделка":
+			objects.append(
+				Group(
+					_terminator(
+						Point(points[-1] + 0.5, settings.hcenter),
+						0,
+						25,
+						15,
+						main,
+						None,
+					),
+					object_id="endpoint/right",
+					metadata=metadata(kind="fixed-end", side="right"),
+				)
+			)
+
 		for index, node in enumerate(nodes):
 			support_type = _value(node, "sharn", "Нет")
 			if support_type == "Нет":
@@ -327,11 +612,38 @@ class BeamLayoutBuilder:
 			center = Point(points[index], settings.hcenter + (0 if endpoint else 8))
 			termrad = 33 if endpoint else 25
 			if support_type == "1":
-				objects.append(_support_one(center, termrad, main, double, index))
+				objects.append(
+					_support_one(
+						center,
+						math.pi / 2,
+						termrad,
+						main,
+						double,
+						index,
+					)
+				)
 			elif support_type == "2":
 				objects.append(_support_two(center, termrad, main, index))
 			else:
 				raise ValueError("Unsupported support type: {!r}".format(support_type))
+
+		label_center = Point(settings.width / 2, settings.hcenter)
+		label_scale = settings.width - 40
+		for index, label in enumerate(task.get("labels", ())):
+			position = _value(label, "pos")
+			objects.append(
+				Text(
+					Point(
+						label_center.x + float(position[0]) * label_scale,
+						label_center.y + float(position[1]),
+					),
+					text_transform(_value(label, "text", "")),
+					style=style,
+					anchor=TextAnchor.CENTER,
+					object_id="label/{}".format(index),
+					metadata=metadata(kind="label", index=index),
+				)
+			)
 
 		return Scene(
 			viewport=Rect(0, 0, settings.width, settings.height),

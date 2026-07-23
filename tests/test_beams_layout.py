@@ -60,9 +60,49 @@ def test_scene_support_predicate_keeps_unmigrated_features_on_legacy_path():
 
 	with_force = _task()
 	with_force["betsect"][1]["F"] = "+"
-	assert not supports_scene_layout(with_force, settings)
+	assert supports_scene_layout(with_force, settings)
 	assert not supports_scene_layout(_task(), settings, section_type="Прямоугольник")
-	assert not supports_scene_layout(_task(), settings, extra_text="note")
+	assert supports_scene_layout(_task(), settings, extra_text="note")
+	with_label = _task()
+	with_label["labels"] = [{"text": "A", "pos": (0.1, -20)}]
+	assert supports_scene_layout(with_label, settings)
+
+
+def test_beam_layout_covers_local_actions_names_and_endpoint_nodes():
+	task = _task()
+	task["betsect"][0].update({"F": "влево", "FT": "H"})
+	task["betsect"][1].update({"F": "+", "FT": "F", "M": "+", "MT": "M"})
+	task["betsect"][2]["sectname"] = "B"
+	settings = BeamLayoutSettings(
+		width=400,
+		height=250,
+		hcenter=125,
+		left_node="Заделка",
+		right_node="Шарнир",
+	)
+
+	scene = BeamLayoutBuilder().build(task, settings)
+	by_id = {item.object_id: item for item in scene.walk() if item.object_id}
+
+	assert "force/0" in by_id
+	assert "force/1" in by_id
+	assert "moment/1" in by_id
+	assert "moment/1/text" in by_id
+	assert "node/2/name" in by_id
+	assert "endpoint/left" in by_id
+	assert "endpoint/right" in by_id
+
+
+def test_beam_layout_includes_interactive_labels_in_scene():
+	task = _task()
+	task["labels"] = [{"text": "A", "pos": (0.1, -20)}]
+	settings = BeamLayoutSettings(width=400, height=250, hcenter=125)
+
+	scene = BeamLayoutBuilder().build(task, settings)
+	by_id = {item.object_id: item for item in scene.walk() if item.object_id}
+
+	assert by_id["label/0"].position.x == 236
+	assert by_id["label/0"].position.y == 105
 
 
 def test_beam_layout_source_does_not_import_qt_or_legacy_painting():

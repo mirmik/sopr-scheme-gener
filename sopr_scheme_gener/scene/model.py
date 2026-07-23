@@ -174,6 +174,7 @@ class Fill:
 class TextAnchor(str, Enum):
 	BASELINE_LEFT = "baseline-left"
 	BASELINE_CENTER = "baseline-center"
+	BASELINE_RIGHT = "baseline-right"
 	TOP_LEFT = "top-left"
 	CENTER = "center"
 
@@ -308,10 +309,13 @@ class Arrow:
 	stroke: Stroke = Stroke()
 	head_length: float = 10.0
 	head_width: float = 8.0
+	head_stroke: Optional[Stroke] = None
 	object_id: Optional[str] = None
 	metadata: Metadata = ()
 
 	def __post_init__(self):
+		if self.head_stroke is not None and not isinstance(self.head_stroke, Stroke):
+			raise TypeError("head_stroke must be a Stroke or None")
 		for name in ("head_length", "head_width"):
 			_validate_number(getattr(self, name), name)
 			if getattr(self, name) <= 0:
