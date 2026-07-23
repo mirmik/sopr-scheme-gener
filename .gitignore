@@ -109,3 +109,6 @@ venv.bak/
 
 # Committed visual-regression fixtures.
 !tests/baselines/**/*.png
+
+# Machine-local Codex hooks and skills.
+.codex/
