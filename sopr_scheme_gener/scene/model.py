@@ -172,7 +172,7 @@ class Fill:
 	pattern: str = "solid"
 
 	def __post_init__(self):
-		if self.pattern not in ("solid", "backward-diagonal"):
+		if self.pattern not in ("solid", "backward-diagonal", "forward-diagonal"):
 			raise ValueError("Unsupported fill pattern: {!r}".format(self.pattern))
 
 
@@ -234,12 +234,15 @@ class Polygon:
 	fill: Fill = Fill()
 	object_id: Optional[str] = None
 	metadata: Metadata = ()
+	convex: bool = False
 
 	def __post_init__(self):
 		points = _tuple(self.points, "points")
 		if len(points) < 3 or any(not isinstance(point, Point) for point in points):
 			raise ValueError("Polygon requires at least three Point values")
 		object.__setattr__(self, "points", points)
+		if not isinstance(self.convex, bool):
+			raise TypeError("convex must be a bool")
 		_validate_object_fields(self)
 
 

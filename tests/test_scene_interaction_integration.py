@@ -120,3 +120,30 @@ def test_stress_cube_hover_and_drag_use_same_scene_hit_api():
 	finally:
 		context.window.close()
 		context.app.processEvents()
+
+
+def test_plate_hover_and_drag_reuses_scene_interaction():
+	context = create_runtime(
+		build_parser().parse_args(["--type", "plate", "--no-maximize", "--error"])
+	)
+	try:
+		scheme = context.controller.current_scheme
+		label = scheme.confwidget.label("drag", (0.0, -15.0))
+		scheme.task["labels"] = [label]
+		context.app.processEvents()
+		context.canvas.make_image()
+
+		start = _device_center(context.canvas.scene_interaction, "label/0")
+		_hover(context.canvas, start)
+
+		assert context.canvas.selected_label_id == "label/0"
+		assert context.canvas.label_items == {}
+
+		before = label.pos
+		_drag(context.canvas, start, (start[0] + 9, start[1] + 5))
+
+		assert label.pos[0] > before[0]
+		assert label.pos[1] == before[1] + 5
+	finally:
+		context.window.close()
+		context.app.processEvents()

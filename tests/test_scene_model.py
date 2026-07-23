@@ -68,6 +68,11 @@ def test_geometry_style_and_primitive_validation():
 		Color(256, 0, 0)
 	with pytest.raises(ValueError, match="Unsupported fill pattern"):
 		Fill(pattern="dots")
+	assert Fill(pattern="forward-diagonal").pattern == "forward-diagonal"
+	assert Polygon(
+		[Point(0, 0), Point(1, 0), Point(0, 1)],
+		convex=True,
+	).convex
 	with pytest.raises(TypeError, match="bounds must be a Rect"):
 		Rectangle("not-a-rect")
 

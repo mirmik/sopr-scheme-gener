@@ -121,6 +121,8 @@ def _brush(fill):
 	brush = QBrush(_color(fill.color))
 	if fill.pattern == "backward-diagonal":
 		brush.setStyle(Qt.BDiagPattern)
+	elif fill.pattern == "forward-diagonal":
+		brush.setStyle(Qt.FDiagPattern)
 	return brush
 
 
@@ -292,7 +294,10 @@ class QtPainterRenderer:
 		if isinstance(item, Polygon):
 			painter.setPen(_pen(item.stroke) if item.stroke is not None else Qt.NoPen)
 			painter.setBrush(_brush(item.fill))
-			painter.drawPolygon(_polygon(item.points))
+			if item.convex:
+				painter.drawConvexPolygon(_polygon(item.points))
+			else:
+				painter.drawPolygon(_polygon(item.points))
 			return
 		if isinstance(item, Rectangle):
 			painter.setPen(_pen(item.stroke) if item.stroke is not None else Qt.NoPen)
