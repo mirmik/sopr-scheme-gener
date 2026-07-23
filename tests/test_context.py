@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from sopr_scheme_gener.context import DocumentController
+from sopr_scheme_gener.context import DocumentController, EventJournal
 
 
 class FakeScheme:
@@ -59,7 +59,11 @@ class FakeView:
 
 def make_controller():
 	legacy = FakeLegacy()
-	context = type("Context", (), {"legacy": legacy})()
+	context = type(
+		"Context",
+		(),
+		{"legacy": legacy, "events": EventJournal()},
+	)()
 	specs = (
 		FakeSpec("first", "Первый", FakeScheme((400, 250))),
 		FakeSpec("second", "Второй", FakeScheme((500, 300))),

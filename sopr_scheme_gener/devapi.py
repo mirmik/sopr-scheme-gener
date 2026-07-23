@@ -11,10 +11,20 @@ import socketserver
 import sys
 import tempfile
 import threading
+import time
 import traceback
 from types import SimpleNamespace
 
-from PyQt5.QtCore import QByteArray, QBuffer, QEventLoop, QIODevice, QObject, Qt, pyqtSignal
+from PyQt5.QtCore import (
+	QByteArray,
+	QBuffer,
+	QEventLoop,
+	QIODevice,
+	QObject,
+	QTimer,
+	Qt,
+	pyqtSignal,
+)
 from PyQt5.QtWidgets import QWidget
 
 
@@ -46,21 +56,31 @@ class ErrorCollector:
 	def __init__(self, limit=100):
 		self.limit = limit
 		self._entries = []
+		self._sequence = 0
 		self._lock = threading.Lock()
 
 	def add(self, source, message, details=None):
-		entry = {
-			"source": source,
-			"message": message,
-			"details": details,
-		}
 		with self._lock:
+			self._sequence += 1
+			entry = {
+				"sequence": self._sequence,
+				"time": time.time(),
+				"source": source,
+				"message": message,
+				"details": details,
+			}
 			self._entries.append(entry)
 			del self._entries[:-self.limit]
+			return dict(entry)
 
-	def entries(self):
+	def entries(self, since=0, limit=100):
 		with self._lock:
-			return list(self._entries)
+			result = [entry for entry in self._entries if entry["sequence"] > since]
+			return [dict(entry) for entry in result[-limit:]]
+
+	def clear(self):
+		with self._lock:
+			self._entries.clear()
 
 
 class _BridgeRequest:
@@ -80,6 +100,8 @@ class DevBridge(QObject):
 		self.context = context
 		self.allow_unsafe_exec = allow_unsafe_exec
 		self.errors = ErrorCollector()
+		self.context.legacy.set_error_reporter(self.errors.add)
+		self.context.events.record("devapi.bridge.created")
 		self.requested.connect(self._handle_request, Qt.QueuedConnection)
 
 	def submit(self, method, params, timeout=DEFAULT_TIMEOUT):
@@ -141,7 +163,15 @@ class DevBridge(QObject):
 			"widgets.tree": self._widgets_tree,
 			"objects.list": self._objects_list,
 			"object.get": self._object_get,
+			"document.snapshot": self._document_snapshot,
+			"document.get": self._document_get,
+			"document.set": self._document_set,
+			"document.patch": self._document_patch,
+			"scenario.run": self._scenario_run,
+			"events.list": self._events_list,
+			"events.clear": self._events_clear,
 			"errors.list": self._errors_list,
+			"errors.clear": self._errors_clear,
 			"python.exec": self._python_exec,
 		}
 		try:
@@ -194,6 +224,67 @@ class DevBridge(QObject):
 			"id": spec.identifier,
 			"title": spec.title,
 		}
+
+	def _document_snapshot(self):
+		return self.context.document.snapshot()
+
+	def _document_get(self, path=""):
+		return {
+			"path": path,
+			"value": self.context.document.get(path),
+		}
+
+	def _document_set(self, path, value):
+		value = self.context.document.set(path, value)
+		self._wait_idle()
+		return {"path": path, "value": value}
+
+	def _document_patch(self, changes):
+		result = self.context.document.patch(changes)
+		self._wait_idle()
+		return result
+
+	def _scenario_run(
+		self,
+		selector=None,
+		changes=None,
+		wait_ms=0,
+		screenshot_target=None,
+		include_document=True,
+	):
+		result = {}
+		if selector is not None:
+			result["task"] = self._task_select(selector)
+		if changes:
+			result["patch"] = self.context.document.patch(changes)
+		self._wait_duration(wait_ms)
+		if include_document:
+			result["document"] = self.context.document.snapshot()
+		if screenshot_target is not None:
+			result["screenshot"] = self._screenshot(screenshot_target)
+		self.context.events.record(
+			"scenario.completed",
+			{
+				"selector": selector,
+				"change_count": len(changes or []),
+				"wait_ms": wait_ms,
+				"screenshot_target": screenshot_target,
+			},
+		)
+		return result
+
+	def _wait_duration(self, wait_ms=0):
+		if not isinstance(wait_ms, int) or isinstance(wait_ms, bool):
+			raise TypeError("wait_ms must be an integer")
+		if wait_ms < 0 or wait_ms > 10000:
+			raise ValueError("wait_ms must be between 0 and 10000")
+		self._wait_idle()
+		if wait_ms:
+			loop = QEventLoop()
+			QTimer.singleShot(wait_ms, loop.quit)
+			loop.exec()
+			self._wait_idle()
+		return {"status": "idle", "wait_ms": wait_ms}
 
 	def _wait_idle(self, max_time_ms=100):
 		app = self.context.app
@@ -296,8 +387,19 @@ class DevBridge(QObject):
 			result["properties"] = properties
 		return result
 
-	def _errors_list(self):
-		return self.errors.entries()
+	def _errors_list(self, since=0, limit=100):
+		return self.errors.entries(since=since, limit=limit)
+
+	def _errors_clear(self):
+		self.errors.clear()
+		return {"status": "cleared"}
+
+	def _events_list(self, since=0, limit=100):
+		return self.context.events.entries(since=since, limit=limit)
+
+	def _events_clear(self):
+		self.context.events.clear()
+		return {"status": "cleared"}
 
 	def _python_exec(self, code):
 		if not self.allow_unsafe_exec:

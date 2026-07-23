@@ -1,9 +1,42 @@
 """Application ownership and document-selection coordination."""
 
 from dataclasses import dataclass, field
+import threading
+import time
 
+from .document import StructuredDocument
 from .legacy import LegacyAdapter
 from .task_registry import TASK_SPECS
+
+
+class EventJournal:
+	def __init__(self, limit=500):
+		self.limit = limit
+		self._entries = []
+		self._sequence = 0
+		self._lock = threading.Lock()
+
+	def record(self, event, data=None):
+		with self._lock:
+			self._sequence += 1
+			entry = {
+				"sequence": self._sequence,
+				"time": time.time(),
+				"event": event,
+				"data": data or {},
+			}
+			self._entries.append(entry)
+			del self._entries[:-self.limit]
+			return dict(entry)
+
+	def entries(self, since=0, limit=100):
+		with self._lock:
+			result = [entry for entry in self._entries if entry["sequence"] > since]
+			return [dict(entry) for entry in result[-limit:]]
+
+	def clear(self):
+		with self._lock:
+			self._entries.clear()
 
 
 class DocumentController:
@@ -78,6 +111,14 @@ class DocumentController:
 		self.context.legacy.activate_scheme(scheme)
 		self.context.legacy.resize_canvas(*scheme.get_size())
 		self.view.set_selected_index(index)
+		self.context.events.record(
+			"task.selected",
+			{
+				"index": index,
+				"id": self.current_spec.identifier,
+				"title": self.current_spec.title,
+			},
+		)
 		return self.current_spec
 
 	def select_by_title(self, title):
@@ -89,6 +130,7 @@ class DocumentController:
 		self.current_index = -1
 		self.view.display_empty()
 		self.view.set_selected_index(-1)
+		self.context.events.record("task.cleared")
 
 
 @dataclass
@@ -99,10 +141,12 @@ class AppContext:
 	window: object = None
 	central: object = None
 	dev_server: object = None
+	events: EventJournal = field(default_factory=EventJournal)
 
 	def __post_init__(self):
 		self.task_specs = tuple(self.task_specs)
 		self.controller = DocumentController(self, self.task_specs)
+		self.document = StructuredDocument(self)
 
 	def attach_window(self, window):
 		if self.window is not None and self.window is not window:

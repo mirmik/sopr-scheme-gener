@@ -39,6 +39,8 @@ soprctl info
 soprctl tasks
 soprctl select beams
 soprctl screenshot /tmp/beams.png
+soprctl doc-get /task/sections/0/l
+soprctl doc-set /task/sections/0/l 2.5
 ```
 
 По умолчанию сервер слушает только `127.0.0.1:8765` и создаёт защищённый
@@ -47,6 +49,10 @@ soprctl screenshot /tmp/beams.png
 передайте соответствующие параметры. Протокол не шифрует трафик, поэтому
 удалённое подключение следует пропускать только через доверенную сеть, VPN или
 SSH-туннель.
+
+Структурное API документа, пакетные изменения, сценарии со снимком и журналы
+событий/ошибок описаны в [docs/DEV_API.md](docs/DEV_API.md). Эти операции не
+требуют разрешения на выполнение Python-кода.
 
 Доверенные Python-сценарии включаются отдельно:
 

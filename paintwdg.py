@@ -10,10 +10,15 @@ import functools
 import paintool
 
 EXIT_ON_EXCEPT = False
+ERROR_REPORTER = None
 
 def set_EXIT_ON_ERROR():
 	global EXIT_ON_EXCEPT
 	EXIT_ON_EXCEPT = True
+
+def set_ERROR_REPORTER(reporter):
+	global ERROR_REPORTER
+	ERROR_REPORTER = reporter
 
 class PaintWidgetSetter(QWidget):
 	def __init__(self, container):
@@ -232,6 +237,12 @@ class PaintWidget(QWidget):
 				exit(0)
 
 			txt = traceback.format_exc()
+			if ERROR_REPORTER is not None:
+				ERROR_REPORTER("render", str(ex), txt)
+				if hasattr(self, "painter") and self.painter.isActive():
+					self.painter.end()
+				return
+
 			msg = QMessageBox()
 			msg.setText("Возникла ошибка при отрисовке задачи:")
 			msg.setInformativeText(txt)

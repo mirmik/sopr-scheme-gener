@@ -13,6 +13,9 @@ class LegacyAdapter:
 		if exit_on_render_error:
 			paintwdg.set_EXIT_ON_ERROR()
 
+	def set_error_reporter(self, reporter):
+		paintwdg.set_ERROR_REPORTER(reporter)
+
 	def create_common_settings(self):
 		return common.ConfView()
 

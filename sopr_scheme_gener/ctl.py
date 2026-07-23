@@ -57,6 +57,19 @@ def _selector(value):
 	return int(value) if value.lstrip("-").isdigit() else value
 
 
+def _json_value(value):
+	try:
+		return json.loads(value)
+	except json.JSONDecodeError:
+		return value
+
+
+def _json_source(args):
+	if args.json_text is not None:
+		return json.loads(args.json_text)
+	return json.loads(args.file.read_text(encoding="utf-8"))
+
+
 def build_parser():
 	parser = argparse.ArgumentParser(prog="soprctl")
 	parser.add_argument("--host")
@@ -91,7 +104,35 @@ def build_parser():
 	get_object.add_argument("name")
 	get_object.add_argument("attribute", nargs="?")
 
-	subparsers.add_parser("errors")
+	subparsers.add_parser("document")
+
+	doc_get = subparsers.add_parser("doc-get")
+	doc_get.add_argument("path", nargs="?", default="")
+
+	doc_set = subparsers.add_parser("doc-set")
+	doc_set.add_argument("path")
+	doc_set.add_argument("value", type=_json_value)
+
+	patch = subparsers.add_parser("patch")
+	patch_source = patch.add_mutually_exclusive_group(required=True)
+	patch_source.add_argument("--json", dest="json_text")
+	patch_source.add_argument("--file", type=Path)
+
+	scenario = subparsers.add_parser("scenario")
+	scenario_source = scenario.add_mutually_exclusive_group(required=True)
+	scenario_source.add_argument("--json", dest="json_text")
+	scenario_source.add_argument("--file", type=Path)
+	scenario.add_argument("--screenshot-output", type=Path)
+
+	events = subparsers.add_parser("events")
+	events.add_argument("--since", type=int, default=0)
+	events.add_argument("--limit", type=int, default=100)
+	events.add_argument("--clear", action="store_true")
+
+	errors = subparsers.add_parser("errors")
+	errors.add_argument("--since", type=int, default=0)
+	errors.add_argument("--limit", type=int, default=100)
+	errors.add_argument("--clear", action="store_true")
 
 	execute = subparsers.add_parser("exec")
 	source = execute.add_mutually_exclusive_group(required=True)
@@ -128,8 +169,46 @@ def run_command(args):
 		if args.attribute is not None:
 			params["attribute"] = args.attribute
 		return request(args, "object.get", params)
+	if args.command == "document":
+		return request(args, "document.snapshot")
+	if args.command == "doc-get":
+		return request(args, "document.get", {"path": args.path})
+	if args.command == "doc-set":
+		return request(
+			args,
+			"document.set",
+			{"path": args.path, "value": args.value},
+		)
+	if args.command == "patch":
+		changes = _json_source(args)
+		return request(args, "document.patch", {"changes": changes})
+	if args.command == "scenario":
+		scenario = _json_source(args)
+		result = request(args, "scenario.run", scenario)
+		screenshot = result.get("screenshot")
+		if screenshot is not None and args.screenshot_output is not None:
+			args.screenshot_output.parent.mkdir(parents=True, exist_ok=True)
+			args.screenshot_output.write_bytes(
+				base64.b64decode(screenshot.pop("png_base64"))
+			)
+			screenshot["output"] = str(args.screenshot_output)
+		return result
+	if args.command == "events":
+		if args.clear:
+			return request(args, "events.clear")
+		return request(
+			args,
+			"events.list",
+			{"since": args.since, "limit": args.limit},
+		)
 	if args.command == "errors":
-		return request(args, "errors.list")
+		if args.clear:
+			return request(args, "errors.clear")
+		return request(
+			args,
+			"errors.list",
+			{"since": args.since, "limit": args.limit},
+		)
 	if args.command == "exec":
 		code = args.code if args.code is not None else args.file.read_text(encoding="utf-8")
 		return request(args, "python.exec", {"code": code})
