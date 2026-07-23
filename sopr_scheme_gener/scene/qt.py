@@ -46,7 +46,9 @@ def _font(style):
 def _pen(stroke):
 	pen = QPen(_color(stroke.color))
 	pen.setWidthF(stroke.width)
-	if stroke.dash:
+	if stroke.line_style == "dash-dot":
+		pen.setStyle(Qt.DashDotLine)
+	elif stroke.dash:
 		pen.setDashPattern(list(stroke.dash))
 	return pen
 

@@ -148,6 +148,7 @@ class Stroke:
 	color: Color = BLACK
 	width: float = 1.0
 	dash: Tuple[float, ...] = ()
+	line_style: str = "solid"
 
 	def __post_init__(self):
 		_validate_number(self.width, "stroke width")
@@ -159,6 +160,10 @@ class Stroke:
 			if value <= 0:
 				raise ValueError("dash values must be positive")
 		object.__setattr__(self, "dash", dash)
+		if self.line_style not in ("solid", "dash-dot"):
+			raise ValueError("Unsupported line style: {!r}".format(self.line_style))
+		if dash and self.line_style != "solid":
+			raise ValueError("dash and line_style cannot be combined")
 
 
 @dataclass(frozen=True)

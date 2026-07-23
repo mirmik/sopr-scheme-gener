@@ -3,6 +3,12 @@
 import math
 from dataclasses import dataclass
 
+from sopr_scheme_gener.layouts.beam_sections import (
+	SUPPORTED_SECTION_TYPES,
+	BeamSectionSpec,
+	beam_section_width,
+	build_beam_section,
+)
 from sopr_scheme_gener.scene import (
 	BLACK,
 	WHITE,
@@ -38,6 +44,7 @@ class BeamLayoutSettings:
 	right_node: str = "Нет"
 	postfix_enabled: bool = False
 	postfix: str = ""
+	section: BeamSectionSpec = BeamSectionSpec()
 
 
 def _value(record, name, default=None):
@@ -48,7 +55,7 @@ def _value(record, name, default=None):
 
 def supports_scene_layout(task, settings, section_type="Нет", extra_text=""):
 	"""Return whether the current vertical slice can replace legacy rendering."""
-	if section_type != "Нет":
+	if section_type not in SUPPORTED_SECTION_TYPES:
 		return False
 	if settings.left_node not in ("Нет", "Шарнир", "Заделка"):
 		return False
@@ -257,7 +264,7 @@ def _support_two(center, termrad, main, index):
 
 
 class BeamLayoutBuilder:
-	def build(self, task, settings, text_transform=None):
+	def build(self, task, settings, text_transform=None, text_metrics=None):
 		text_transform = text_transform or (lambda text: text)
 		sections = task["sections"]
 		nodes = task["betsect"]
@@ -270,13 +277,19 @@ class BeamLayoutBuilder:
 		main = Stroke(width=settings.line_width)
 		half = Stroke(width=max(1, int(settings.line_width / 2)))
 		double = Stroke(width=max(1, int(settings.line_width * 2)))
+		axis = Stroke(
+			width=max(1, int(settings.line_width / 2)),
+			line_style="dash-dot",
+		)
 		style = TextStyle(point_size=settings.font_size, italic=True)
 
 		left = 20.0
 		right = settings.width - 20.0
+		cross_section_width = beam_section_width(settings.section)
+		body_right = right - cross_section_width
 		prefix = 30.0
 		beam_left = left + prefix
-		beam_right = right - prefix
+		beam_right = body_right - prefix
 		total = sum(float(_value(section, "l")) for section in sections)
 		if total <= 0:
 			raise ValueError("total beam length must be positive")
@@ -285,7 +298,22 @@ class BeamLayoutBuilder:
 		for section in sections:
 			points.append(points[-1] + float(_value(section, "l")) * scale)
 
-		objects = []
+		if settings.section.section_type != "Нет" and text_metrics is None:
+			raise ValueError("text_metrics is required for cross-section layout")
+		objects = list(
+			build_beam_section(
+				settings.section,
+				right,
+				settings.hcenter,
+				settings.arrow_size,
+				main,
+				half,
+				axis,
+				style,
+				text_metrics,
+				text_transform,
+			)
+		)
 		load_height = 30.0
 		load_step = 10.0
 		load_arrow_size = settings.arrow_size * 2 / 3
@@ -627,8 +655,8 @@ class BeamLayoutBuilder:
 			else:
 				raise ValueError("Unsupported support type: {!r}".format(support_type))
 
-		label_center = Point(settings.width / 2, settings.hcenter)
-		label_scale = settings.width - 40
+		label_center = Point((20 + body_right) / 2, settings.hcenter)
+		label_scale = settings.width - 40 - cross_section_width
 		for index, label in enumerate(task.get("labels", ())):
 			position = _value(label, "pos")
 			objects.append(

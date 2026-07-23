@@ -13,7 +13,8 @@ from sopr_scheme_gener.layouts.beams import (
 	BeamLayoutSettings,
 	supports_scene_layout,
 )
-from sopr_scheme_gener.scene.qt import QtPainterRenderer
+from sopr_scheme_gener.layouts.beam_sections import BeamSectionSpec, beam_section_width
+from sopr_scheme_gener.scene.qt import QtPainterRenderer, QtTextMetrics
 
 from PyQt5 import *
 from PyQt5.QtCore import *
@@ -210,6 +211,24 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.label_items[id(label)] = item
 			if self.selected_label_id == id(label):
 				self.common_scene.addRect(item.boundingRect(), brush=Qt.green)
+
+	def beam_section_spec(self):
+		if not self.shemetype.section_enable.get():
+			return BeamSectionSpec()
+		container = self.shemetype.section_container
+		section_type = container.section_type.get()
+		if section_type not in ("Тонкая труба", "Треугольник"):
+			return BeamSectionSpec(section_type=section_type)
+		base = container.base_section_widget
+		return BeamSectionSpec(
+			section_type=section_type,
+			arg0=base.arg0.get(),
+			arg1=base.arg1.get(),
+			arg2=base.arg2.get(),
+			text0=base.txt0.get(),
+			text1=base.txt1.get(),
+			text2=base.txt2.get(),
+		)
 
 	def draw_terminator(self, pos, angle, type):
 		#Рисуем терминатор:
@@ -463,6 +482,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		width = size.width()
 		height = size.height()
 
+		section_spec = self.beam_section_spec()
 		scene_settings = BeamLayoutSettings(
 			width=width,
 			height=height,
@@ -475,18 +495,26 @@ class PaintWidget(paintwdg.PaintWidget):
 			right_node=self.shemetype.right_node.get(),
 			postfix_enabled=self.shemetype.postfix.get()[0],
 			postfix=self.shemetype.postfix.get()[1],
+			section=section_spec,
 		)
-		section_type = self.shemetype.section_container.section_type.get()
 		extra_text = self.shemetype.texteditor.toPlainText()
-		if supports_scene_layout(task, scene_settings, section_type, extra_text):
+		if supports_scene_layout(
+			task,
+			scene_settings,
+			section_spec.section_type,
+			extra_text,
+		):
 			scene = BeamLayoutBuilder().build(
 				task,
 				scene_settings,
 				text_transform=paintool.greek,
+				text_metrics=QtTextMetrics(),
 			)
 			self.last_scene = scene
-			self.labels_center = QPointF(width / 2, self.hcenter)
-			self.labels_width_scale = width - 40
+			section_width = beam_section_width(section_spec)
+			body_right = width - 20 - section_width
+			self.labels_center = QPointF((20 + body_right) / 2, self.hcenter)
+			self.labels_width_scale = width - 40 - section_width
 			self.prepare_scene_labels()
 			QtPainterRenderer().render(scene, self.painter)
 			return

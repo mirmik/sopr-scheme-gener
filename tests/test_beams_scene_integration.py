@@ -142,6 +142,14 @@ def test_migrated_beams_features_match_legacy_pixels(monkeypatch):
 			item.object_id == "label/0"
 			for item in context.canvas.last_scene.walk()
 		)
+
+		task["labels"] = []
+		for section_type in ("Тонкая труба", "Треугольник"):
+			scheme.section_container.section_type.set(section_type)
+			context.app.processEvents()
+
+			legacy, scene = _legacy_and_scene_images(context.canvas, monkeypatch)
+			assert _image_bytes(scene) == _image_bytes(legacy)
 	finally:
 		context.window.close()
 		context.app.processEvents()

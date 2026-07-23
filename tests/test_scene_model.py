@@ -62,6 +62,8 @@ def test_geometry_style_and_primitive_validation():
 		Arrow(Point(0, 0), Point(0, 0))
 	with pytest.raises(ValueError, match="dash values"):
 		Stroke(dash=(2, 0))
+	with pytest.raises(ValueError, match="Unsupported line style"):
+		Stroke(line_style="dots")
 	with pytest.raises(ValueError, match="0 to 255"):
 		Color(256, 0, 0)
 	with pytest.raises(ValueError, match="Unsupported fill pattern"):

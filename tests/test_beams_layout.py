@@ -5,7 +5,14 @@ from sopr_scheme_gener.layouts.beams import (
 	BeamLayoutSettings,
 	supports_scene_layout,
 )
-from sopr_scheme_gener.scene import Group, Rect, Rectangle, Text
+from sopr_scheme_gener.layouts.beam_sections import BeamSectionSpec
+from sopr_scheme_gener.scene import (
+	Group,
+	Rect,
+	Rectangle,
+	Text,
+	TextMeasurement,
+)
 
 
 def _task():
@@ -103,6 +110,39 @@ def test_beam_layout_includes_interactive_labels_in_scene():
 
 	assert by_id["label/0"].position.x == 236
 	assert by_id["label/0"].position.y == 105
+
+
+def test_beam_layout_reserves_space_for_a_qt_independent_cross_section():
+	class FixedMetrics:
+		def measure(self, text, style):
+			return TextMeasurement(
+				width=len(text) * 8,
+				height=18,
+				ascent=13,
+				descent=5,
+			)
+
+	settings = BeamLayoutSettings(
+		width=400,
+		height=250,
+		hcenter=125,
+		section=BeamSectionSpec(
+			section_type="Тонкая труба",
+			arg0=60,
+			arg1=50,
+			text0="D",
+			text1="d",
+		),
+	)
+	scene = BeamLayoutBuilder().build(
+		_task(),
+		settings,
+		text_metrics=FixedMetrics(),
+	)
+	by_id = {item.object_id: item for item in scene.walk() if item.object_id}
+
+	assert isinstance(by_id["section/cross-section"], Group)
+	assert by_id["beam/body"].bounds == Rect(50, 122, 120, 6)
 
 
 def test_beam_layout_source_does_not_import_qt_or_legacy_painting():
