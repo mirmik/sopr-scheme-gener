@@ -23,6 +23,7 @@ dev = [
 [project.scripts]
 sopr-scheme-gener = "sopr_scheme_gener.app:main"
 soprctl = "sopr_scheme_gener.ctl:main"
+sopr-baseline = "sopr_scheme_gener.baselines:main"
 
 [tool.setuptools]
 py-modules = [

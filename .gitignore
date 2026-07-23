@@ -106,3 +106,6 @@ venv.bak/
 *.exe
 *.png
 *.jpg
+
+# Committed visual-regression fixtures.
+!tests/baselines/**/*.png

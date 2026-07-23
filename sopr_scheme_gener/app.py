@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import *
 import os
 import sys
 import argparse
-import pickle
 
 import collections
 from dataclasses import dataclass
@@ -22,6 +21,7 @@ import paintool
 import hashlib
 
 from .task_registry import TASK_SPECS
+from .legacy_storage import load_trusted_pickle
 
 def getPaintSize():
 	return common.SCHEMETYPE.get_size()
@@ -310,13 +310,13 @@ class MainWindow(QMainWindow):
 
 		if not os.path.exists(marchpath):
 			util.msgbox_error("Не найден файл для загрузки")
+			return
 	
-		lll = None
 		try:
-			lll = pickle.load(open(marchpath, "rb"))
-		except FileNotFoundError as ex:
+			lll = load_trusted_pickle(marchpath)
+		except Exception as ex:
 			util.msgbox_error(str(ex))
-
+			return
 
 		name = lll[0][1]
 
