@@ -15,7 +15,7 @@ import traceback
 from types import SimpleNamespace
 
 from PyQt5.QtCore import QByteArray, QBuffer, QEventLoop, QIODevice, QObject, Qt, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QWidget
 
 
 DEFAULT_HOST = "127.0.0.1"
@@ -75,9 +75,9 @@ class _BridgeRequest:
 class DevBridge(QObject):
 	requested = pyqtSignal(object)
 
-	def __init__(self, runtime, allow_unsafe_exec=False):
+	def __init__(self, context, allow_unsafe_exec=False):
 		super().__init__()
-		self.runtime = runtime
+		self.context = context
 		self.allow_unsafe_exec = allow_unsafe_exec
 		self.errors = ErrorCollector()
 		self.requested.connect(self._handle_request, Qt.QueuedConnection)
@@ -92,21 +92,22 @@ class DevBridge(QObject):
 		return request.result
 
 	def object_registry(self):
-		window = self.runtime.window
-		central = window.cw
+		context = self.context
 		objects = {
-			"app": self.runtime.app,
-			"window": window,
-			"central": central,
-			"task_selector": central.type_list_widget,
-			"canvas_container": central.container_paint,
-			"canvas": central.container_paint.curwidget,
-			"settings_container": central.container_settings,
-			"settings": central.container_settings.curwidget,
-			"common_settings": central.confview,
+			"app": context.app,
+			"context": context,
+			"controller": context.controller,
+			"window": context.window,
+			"central": context.central,
+			"task_selector": context.central.type_list_widget,
+			"canvas_container": context.canvas_container,
+			"canvas": context.canvas,
+			"settings_container": context.settings_container,
+			"settings": context.settings,
+			"common_settings": context.common_settings,
 		}
-		if central.currentno >= 0:
-			objects["task"] = central.current_scheme()
+		if context.controller.current_scheme is not None:
+			objects["task"] = context.controller.current_scheme
 		return objects
 
 	def script_context(self):
@@ -116,7 +117,7 @@ class DevBridge(QObject):
 			objects=objects,
 			screenshot=self._screenshot,
 			wait_idle=self._wait_idle,
-			select_task=self.runtime.window.cw.select_task,
+			select_task=self.context.controller.select,
 		)
 
 	def _handle_request(self, request):
@@ -155,47 +156,47 @@ class DevBridge(QObject):
 	def _app_info(self):
 		current = self._task_current()
 		return {
-			"name": self.runtime.app.applicationName(),
+			"name": self.context.app.applicationName(),
 			"pid": os.getpid(),
-			"task_count": len(self.runtime.window.cw.task_specs),
+			"task_count": len(self.context.controller.task_specs),
 			"current_task": current,
 			"unsafe_exec": self.allow_unsafe_exec,
 		}
 
 	def _tasks_list(self):
-		central = self.runtime.window.cw
+		controller = self.context.controller
 		return [
 			{
 				"index": index,
 				"id": spec.identifier,
 				"title": spec.title,
-				"active": index == central.currentno,
+				"active": index == controller.current_index,
 			}
-			for index, spec in enumerate(central.task_specs)
+			for index, spec in enumerate(controller.task_specs)
 		]
 
 	def _task_current(self):
-		central = self.runtime.window.cw
-		spec = central.current_task_spec()
+		controller = self.context.controller
+		spec = controller.current_spec
 		if spec is None:
 			return None
 		return {
-			"index": central.currentno,
+			"index": controller.current_index,
 			"id": spec.identifier,
 			"title": spec.title,
 		}
 
 	def _task_select(self, selector):
-		spec = self.runtime.window.cw.select_task(selector)
+		spec = self.context.controller.select(selector)
 		self._wait_idle()
 		return {
-			"index": self.runtime.window.cw.currentno,
+			"index": self.context.controller.current_index,
 			"id": spec.identifier,
 			"title": spec.title,
 		}
 
 	def _wait_idle(self, max_time_ms=100):
-		app = QApplication.instance()
+		app = self.context.app
 		app.processEvents(QEventLoop.AllEvents, max_time_ms)
 		app.sendPostedEvents()
 		app.processEvents(QEventLoop.AllEvents, max_time_ms)
@@ -384,7 +385,7 @@ class RunningDevServer:
 
 
 def start_dev_server(
-	runtime,
+	context,
 	host=DEFAULT_HOST,
 	port=DEFAULT_PORT,
 	token=None,
@@ -399,7 +400,7 @@ def start_dev_server(
 			file=sys.stderr,
 			flush=True,
 		)
-	bridge = DevBridge(runtime, allow_unsafe_exec=allow_unsafe_exec)
+	bridge = DevBridge(context, allow_unsafe_exec=allow_unsafe_exec)
 	server = _TCPServer((host, port), _RequestHandler)
 	server.bridge = bridge
 	server.api_token = token

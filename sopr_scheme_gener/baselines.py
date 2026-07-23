@@ -77,7 +77,7 @@ def capture_one(task_id, output, fixture=None):
 		bridge = DevBridge(runtime)
 		if fixture is not None:
 			document = load_trusted_pickle(fixture)
-			runtime.window.cw.current_scheme().deserialize(document)
+			runtime.controller.current_scheme.deserialize(document)
 			bridge.dispatch("wait.idle", {})
 		result = bridge.dispatch("screenshot", {"target": "canvas"})
 		output.parent.mkdir(parents=True, exist_ok=True)

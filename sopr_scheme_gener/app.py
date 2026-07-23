@@ -10,21 +10,16 @@ import sys
 import argparse
 
 import collections
-from dataclasses import dataclass
 
 import util
 
-import common
 import container
-import paintwdg
 import paintool
 import hashlib
 
+from .context import AppContext
 from .task_registry import TASK_SPECS
 from .legacy_storage import load_trusted_pickle
-
-def getPaintSize():
-	return common.SCHEMETYPE.get_size()
 
 class ComboBox(QComboBox):
 	def __init__(self, default):
@@ -45,25 +40,26 @@ class ComboBox(QComboBox):
 		painter.drawControl(QStyle.CE_ComboBoxLabel, option)
 
 class CentralWidget(QWidget):
-	def __init__(self, tp):
+	def __init__(self, context, tp=-1):
 		super().__init__()
 		self.setObjectName("central_widget")
+		self.context = context
+		self.controller = context.controller
+		context.attach_central(self)
 
-		self.confview = common.ConfView()
+		self.confview = context.legacy.create_common_settings()
 		self.confview.setObjectName("common_settings")
-		common.CONFVIEW = self.confview
 
-		self.task_specs = TASK_SPECS
-		self.scheme_types = [spec.create() for spec in self.task_specs]
+		self.scheme_types = self.controller.initialize_tasks(self.confview)
 
 		for s in self.scheme_types:
 			if hasattr(s.confwidget, "serialize_list") is False:
 				util.msgbox_error("Confwidget without serialize_list : " + s.name)
 
 
-		self.stub_widget_0 = common.StubWidget("Окно отображения")
-		self.stub_widget_1 = common.StubWidget("Таблица параметров")
-		self.stub_widget_2 = common.StubWidget("Окно конфигурации")
+		self.stub_widget_0 = context.legacy.create_stub("Окно отображения")
+		self.stub_widget_1 = context.legacy.create_stub("Таблица параметров")
+		self.stub_widget_2 = context.legacy.create_stub("Окно конфигурации")
 
 		self.stub_widget_0.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 		self.stub_widget_1.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -77,8 +73,7 @@ class CentralWidget(QWidget):
 		self.type_list_widget.activated.connect(self.type_scheme_selected)
 
 		self.hsplitter = QSplitter(Qt.Horizontal)
-
-		common.HSPLITTER = self.hsplitter
+		context.legacy.bind_splitter(self.hsplitter)
 
 		self.layout = QVBoxLayout()
 		self.layout.addWidget(self.hsplitter)
@@ -105,7 +100,7 @@ class CentralWidget(QWidget):
 		self.settings_layout_wdg = self.settings_layout_wdg_scr
 
 		self.work_layout = QVBoxLayout()
-		self.work_layout.addWidget(paintwdg.PaintWidgetSetter(self.container_paint))
+		self.work_layout.addWidget(context.legacy.create_paint_widget_setter(self.container_paint))
 		self.work_layout_wdg = QWidget()
 		self.work_layout_wdg.setLayout(self.work_layout)
 
@@ -114,10 +109,11 @@ class CentralWidget(QWidget):
 		self.hsplitter.setStretchFactor(0, 150)
 		self.hsplitter.setStretchFactor(1, 100)
 
-		common.PAINT_CONTAINER = self.container_paint
+		context.legacy.bind_canvas_container(self.container_paint)
 		self.container_paint.setFixedSize(600,400)
 
-		self.set_scheme_type_no(-1)
+		self.controller.bind_view(self)
+		self.controller.clear()
 
 		if tp != -1:
 			self.inited = False
@@ -128,72 +124,63 @@ class CentralWidget(QWidget):
 		self.setLayout(self.layout)
 
 	def current_scheme(self):
-		return self.scheme_types[self.currentno]
+		return self.controller.current_scheme
 
 	def current_task_spec(self):
-		if self.currentno < 0:
-			return None
-		return self.task_specs[self.currentno]
+		return self.controller.current_spec
 
 	def select_task(self, selector):
-		if isinstance(selector, int):
-			index = selector
-		else:
-			index = next(
-				(
-					i for i, spec in enumerate(self.task_specs)
-					if selector in (spec.identifier, spec.title)
-				),
-				None,
-			)
-			if index is None:
-				raise ValueError("Unknown task type: {}".format(selector))
-
-		if index < 0 or index >= len(self.scheme_types):
-			raise ValueError("Task index is out of range: {}".format(index))
-
 		self.type_list_widget.inited = True
-		self.set_scheme_type_no(index)
-		return self.current_task_spec()
+		return self.controller.select(selector)
 
-	def set_scheme_type_no(self, no):    
+	@property
+	def currentno(self):
+		return self.controller.current_index
+
+	@property
+	def task_specs(self):
+		return self.controller.task_specs
+
+	def set_scheme_type_no(self, no):
 		if no == -1:
-			self.currentno = -1
-			self.container_paint.replace(self.stub_widget_0)
-			self.container_settings.replace(self.stub_widget_1)
-
+			self.controller.clear()
 		else:
-			if self.currentno != no:
-				common.SCHEMETYPE = self.scheme_types[no]
-				self.container_settings.replace(self.scheme_types[no].confwidget)
-				self.container_paint.replace(self.scheme_types[no].paintwidget)
-			
-			self.currentno = no
-			common.SCHEMETYPE = self.scheme_types[no]
-			common.PAINT_CONTAINER.resize(*getPaintSize())
+			self.controller.select(no)
 
-		self.type_list_widget.setCurrentIndex(no)
+	def display_empty(self):
+		self.container_paint.replace(self.stub_widget_0)
+		self.container_settings.replace(self.stub_widget_1)
+
+	def display_scheme(self, scheme, changed):
+		if changed:
+			self.container_settings.replace(scheme.confwidget)
+			self.container_paint.replace(scheme.paintwidget)
+
+	def set_selected_index(self, index):
+		self.type_list_widget.setCurrentIndex(index)
 		self.type_list_widget.update()
 			
 	def type_scheme_selected(self, arg):
 		self.type_list_widget.inited = True
-		self.set_scheme_type_no(arg)
+		self.controller.select(arg)
 
 	def showEvent(self, ev):
 		super().showEvent(ev)
 		if self.inited == False:
 			self.inited = True
-			self.type_scheme_selected(self.tp)
+			self.select_task(self.tp)
 
 class MainWindow(QMainWindow):
-	def __init__(self, tp):
+	def __init__(self, context, tp=-1):
 		super().__init__()
 		self.setObjectName("main_window")
+		self.context = context
 
 		self.createActions()
 		self.createMenus()
 
-		self.cw = CentralWidget(tp)
+		self.central = CentralWidget(context, tp)
+		self.cw = self.central
 		self.setCentralWidget(self.cw)
 
 	def action_about(self):
@@ -256,13 +243,13 @@ class MainWindow(QMainWindow):
 			os.mkdir(savepath)
 
 		try:
-			self.cw.current_scheme().paintwidget.save_image(path)
+			self.context.controller.current_scheme.paintwidget.save_image(path)
 		except Exception as ex:
 			util.msgbox_error(str(ex))
 
 		h = self.file_hash(path)
 		marchpath = os.path.join(savepath, os.path.basename(str(h)) + ".dat")
-		self.cw.current_scheme().serialize(marchpath)
+		self.context.controller.current_scheme.serialize(marchpath)
 
 	def load_action(self):
 		filters = "*.png;;*.jpg;;*.*"
@@ -324,26 +311,16 @@ class MainWindow(QMainWindow):
 			util.msgbox_error("wrong name field")
 			return
 
-		translate_dict = {
-			"Косой изгиб (Тип 2)" : "Косой изгиб"
-		}
-
-		for i in range(len(self.cw.scheme_types)):
-			if self.cw.scheme_types[i].name == name:
-				self.cw.set_scheme_type_no(i)
-				print ("set task type", i)
-				break
-			elif self.cw.scheme_types[i].name in translate_dict:
-				self.cw.set_scheme_type_no(translate_dict[self.cw.scheme_types[i].name])
-				break	
-		else:
-			util.msgbox_error("Unresolved task type: {}".format(self.cw.scheme_types[i].name))
+		try:
+			self.context.controller.select_by_title(name)
+		except ValueError:
+			util.msgbox_error("Unresolved task type: {}".format(name))
 			return
 
-		self.cw.current_scheme().deserialize(lll)
+		self.context.controller.current_scheme.deserialize(lll)
 
 	def pre_picture_action(self):
-		self.cw.current_scheme().paintwidget.predraw_dialog()
+		self.context.controller.current_scheme.paintwidget.predraw_dialog()
 
 	def greek_action(self):
 		txt = ""
@@ -405,13 +382,6 @@ class MainWindow(QMainWindow):
 		self.HelpMenu.addAction(self.AboutAction)
 		self.HelpMenu.addAction(self.GreekAction)
 
-@dataclass
-class ApplicationRuntime:
-	app: QApplication
-	window: MainWindow
-	dev_server: object = None
-
-
 def build_parser():
 	parser = argparse.ArgumentParser(prog="sopr-scheme-gener")
 	parser.add_argument("--type", default="-1", help="Task index or stable task identifier")
@@ -432,40 +402,41 @@ def build_parser():
 
 
 def create_runtime(args):
-	common.DEBUG = args.debug
-	if args.error:
-		paintwdg.set_EXIT_ON_ERROR()
-
 	qapp = QApplication.instance() or QApplication([sys.argv[0]])
 	qapp.setApplicationName("sopr-scheme-gener")
-	common.APP = qapp
+	context = AppContext(app=qapp, task_specs=TASK_SPECS)
+	context.legacy.configure(
+		qapp,
+		debug=args.debug,
+		exit_on_render_error=args.error,
+	)
 
-	window = MainWindow(-1)
+	window = MainWindow(context, -1)
+	context.attach_window(window)
 	window.resize(800, 640)
 
 	if str(args.type) != "-1":
 		selector = int(args.type) if str(args.type).lstrip("-").isdigit() else args.type
-		window.cw.select_task(selector)
+		context.controller.select(selector)
 
 	if not args.no_maximize:
 		window.showMaximized()
 	window.show()
 
-	runtime = ApplicationRuntime(app=qapp, window=window)
 	if args.dev_api:
 		from .devapi import start_dev_server
 
-		runtime.dev_server = start_dev_server(
-			runtime,
+		context.dev_server = start_dev_server(
+			context,
 			host=args.dev_host,
 			port=args.dev_port,
 			token=args.dev_token,
 			info_file=args.dev_info_file,
 			allow_unsafe_exec=args.unsafe_dev_exec,
 		)
-		qapp.aboutToQuit.connect(runtime.dev_server.close)
+		qapp.aboutToQuit.connect(context.dev_server.close)
 
-	return runtime
+	return context
 
 
 def main(argv=None):

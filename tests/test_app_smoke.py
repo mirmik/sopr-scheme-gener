@@ -12,6 +12,9 @@ def test_runtime_selects_task_and_renders_canvas():
 	runtime = create_runtime(args)
 	try:
 		bridge = DevBridge(runtime)
+		assert runtime.window.context is runtime
+		assert runtime.central.context is runtime
+		assert runtime.controller.current_scheme.paintwidget is runtime.canvas
 		assert bridge.dispatch("task.current", {})["id"] == "stress-cube"
 		screenshot = bridge.dispatch("screenshot", {"target": "canvas"})
 		assert screenshot["width"] > 0

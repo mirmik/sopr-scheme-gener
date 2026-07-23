@@ -17,6 +17,17 @@ sopr-scheme-gener
 
 Исторический запуск `python sopr-sheme-gener.py` пока также поддерживается.
 
+## Application boundary
+
+Новый application shell использует явный `AppContext`. Выбор текущего типа и
+координация его UI принадлежат `DocumentController`. Старые глобалы
+`common.APP`, `CONFVIEW`, `SCHEMETYPE`, `HSPLITTER` и `PAINT_CONTAINER`
+публикуются только через `LegacyAdapter` в `sopr_scheme_gener/legacy.py`.
+
+Новый package-код не должен обращаться к этим глобалам напрямую. Это правило
+закреплено архитектурным тестом и позволяет постепенно переносить legacy-задачи
+без изменения их текущего рендера.
+
 ## Development API
 
 Приложение может открыть локальный TCP API для автоматизации и живой
