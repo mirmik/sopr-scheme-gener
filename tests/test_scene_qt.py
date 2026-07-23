@@ -6,8 +6,10 @@ from PyQt5.QtGui import QImage, QPainter
 from PyQt5.QtWidgets import QApplication
 
 from sopr_scheme_gener.scene import (
+	Arc,
 	Arrow,
 	Color,
+	Ellipse,
 	Fill,
 	Group,
 	Line,
@@ -15,6 +17,7 @@ from sopr_scheme_gener.scene import (
 	Polygon,
 	Polyline,
 	Rect,
+	Rectangle,
 	Scene,
 	Stroke,
 	Text,
@@ -37,6 +40,12 @@ def _smoke_scene():
 				(Point(5, 30), Point(40, 30), Point(20, 55)),
 				fill=Fill(Color(220, 220, 220)),
 			),
+			Rectangle(
+				Rect(75, 8, 20, 15),
+				fill=Fill(Color(240, 240, 240), pattern="backward-diagonal"),
+			),
+			Ellipse(Rect(105, 8, 20, 15)),
+			Arc(Rect(130, 8, 20, 20), 0, 180),
 			Arrow(
 				Point(55, 45),
 				Point(130, 45),

@@ -2,12 +2,12 @@
 
 import math
 
-from PyQt5.QtCore import QPointF, QRectF
+from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import (
 	QBrush,
 	QColor,
 	QFont,
-	QFontMetricsF,
+	QFontMetrics,
 	QPainter,
 	QPen,
 	QPolygonF,
@@ -15,11 +15,14 @@ from PyQt5.QtGui import (
 
 from .metrics import TextMeasurement
 from .model import (
+	Arc,
 	Arrow,
+	Ellipse,
 	Group,
 	Line,
 	Polygon,
 	Polyline,
+	Rectangle,
 	Scene,
 	Text,
 	TextAnchor,
@@ -52,12 +55,18 @@ def _polygon(points):
 	return QPolygonF([QPointF(point.x, point.y) for point in points])
 
 
+def _brush(fill):
+	brush = QBrush(_color(fill.color))
+	if fill.pattern == "backward-diagonal":
+		brush.setStyle(Qt.BDiagPattern)
+	return brush
+
+
 class QtTextMetrics:
 	def measure(self, text, style):
-		metrics = QFontMetricsF(_font(style))
-		rect = metrics.boundingRect(text)
+		metrics = QFontMetrics(_font(style))
 		return TextMeasurement(
-			width=rect.width(),
+			width=metrics.horizontalAdvance(text),
 			height=metrics.height(),
 			ascent=metrics.ascent(),
 			descent=metrics.descent(),
@@ -101,9 +110,47 @@ class QtPainterRenderer:
 			painter.drawPolyline(_polygon(item.points))
 			return
 		if isinstance(item, Polygon):
-			painter.setPen(_pen(item.stroke))
-			painter.setBrush(QBrush(_color(item.fill.color)))
+			painter.setPen(_pen(item.stroke) if item.stroke is not None else Qt.NoPen)
+			painter.setBrush(_brush(item.fill))
 			painter.drawPolygon(_polygon(item.points))
+			return
+		if isinstance(item, Rectangle):
+			painter.setPen(_pen(item.stroke) if item.stroke is not None else Qt.NoPen)
+			painter.setBrush(_brush(item.fill))
+			painter.drawRect(
+				QRectF(
+					item.bounds.x,
+					item.bounds.y,
+					item.bounds.width,
+					item.bounds.height,
+				)
+			)
+			return
+		if isinstance(item, Ellipse):
+			painter.setPen(_pen(item.stroke) if item.stroke is not None else Qt.NoPen)
+			painter.setBrush(_brush(item.fill))
+			painter.drawEllipse(
+				QRectF(
+					item.bounds.x,
+					item.bounds.y,
+					item.bounds.width,
+					item.bounds.height,
+				)
+			)
+			return
+		if isinstance(item, Arc):
+			painter.setPen(_pen(item.stroke))
+			painter.setBrush(Qt.NoBrush)
+			painter.drawArc(
+				QRectF(
+					item.bounds.x,
+					item.bounds.y,
+					item.bounds.width,
+					item.bounds.height,
+				),
+				int(item.start_degrees * 16),
+				int(item.span_degrees * 16),
+			)
 			return
 		if isinstance(item, Arrow):
 			self._render_arrow(item, painter)
@@ -129,13 +176,27 @@ class QtPainterRenderer:
 		ux, uy = dx / length, dy / length
 		base_x = item.end.x - ux * item.head_length
 		base_y = item.end.y - uy * item.head_length
-		perp_x = -uy * item.head_width / 2
-		perp_y = ux * item.head_width / 2
+		angle = math.atan2(-dy, dx)
+		half_width = item.head_width / 2
 		head = QPolygonF(
 			[
 				QPointF(item.end.x, item.end.y),
-				QPointF(base_x + perp_x, base_y + perp_y),
-				QPointF(base_x - perp_x, base_y - perp_y),
+				QPointF(
+					item.end.x
+					- item.head_length * math.cos(angle)
+					+ half_width * math.sin(angle),
+					item.end.y
+					+ item.head_length * math.sin(angle)
+					+ half_width * math.cos(angle),
+				),
+				QPointF(
+					item.end.x
+					- item.head_length * math.cos(angle)
+					- half_width * math.sin(angle),
+					item.end.y
+					+ item.head_length * math.sin(angle)
+					- half_width * math.cos(angle),
+				),
 			]
 		)
 		painter.setPen(_pen(item.stroke))
@@ -144,7 +205,7 @@ class QtPainterRenderer:
 			QPointF(item.start.x, item.start.y),
 			QPointF(base_x, base_y),
 		)
-		painter.drawPolygon(head)
+		painter.drawConvexPolygon(head)
 
 	def _render_text(self, item, painter):
 		measurement = self.text_metrics.measure(item.value, item.style)
@@ -152,6 +213,8 @@ class QtPainterRenderer:
 		y = item.position.y
 		if item.anchor == TextAnchor.TOP_LEFT:
 			y += measurement.ascent
+		elif item.anchor == TextAnchor.BASELINE_CENTER:
+			x -= measurement.width / 2
 		elif item.anchor == TextAnchor.CENTER:
 			x -= measurement.width / 2
 			y += (measurement.ascent - measurement.descent) / 2

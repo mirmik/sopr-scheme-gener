@@ -1,10 +1,9 @@
 """Immutable, Qt-independent scene values and primitives."""
 
+import math
 from dataclasses import dataclass
 from enum import Enum
-import math
 from typing import Iterable, Iterator, Optional, Tuple, Union
-
 
 Scalar = Union[None, bool, int, float, str]
 Metadata = Tuple[Tuple[str, Scalar], ...]
@@ -131,7 +130,11 @@ class Color:
 	def __post_init__(self):
 		for name in ("red", "green", "blue", "alpha"):
 			value = getattr(self, name)
-			if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 255:
+			if (
+				not isinstance(value, int)
+				or isinstance(value, bool)
+				or not 0 <= value <= 255
+			):
 				raise ValueError("{} must be an integer from 0 to 255".format(name))
 
 
@@ -161,10 +164,16 @@ class Stroke:
 @dataclass(frozen=True)
 class Fill:
 	color: Color = TRANSPARENT
+	pattern: str = "solid"
+
+	def __post_init__(self):
+		if self.pattern not in ("solid", "backward-diagonal"):
+			raise ValueError("Unsupported fill pattern: {!r}".format(self.pattern))
 
 
 class TextAnchor(str, Enum):
 	BASELINE_LEFT = "baseline-left"
+	BASELINE_CENTER = "baseline-center"
 	TOP_LEFT = "top-left"
 	CENTER = "center"
 
@@ -215,7 +224,7 @@ class Polyline:
 @dataclass(frozen=True)
 class Polygon:
 	points: Tuple[Point, ...]
-	stroke: Stroke = Stroke()
+	stroke: Optional[Stroke] = Stroke()
 	fill: Fill = Fill()
 	object_id: Optional[str] = None
 	metadata: Metadata = ()
@@ -225,6 +234,51 @@ class Polygon:
 		if len(points) < 3 or any(not isinstance(point, Point) for point in points):
 			raise ValueError("Polygon requires at least three Point values")
 		object.__setattr__(self, "points", points)
+		_validate_object_fields(self)
+
+
+@dataclass(frozen=True)
+class Rectangle:
+	bounds: Rect
+	stroke: Optional[Stroke] = Stroke()
+	fill: Fill = Fill()
+	object_id: Optional[str] = None
+	metadata: Metadata = ()
+
+	def __post_init__(self):
+		if not isinstance(self.bounds, Rect):
+			raise TypeError("bounds must be a Rect")
+		_validate_object_fields(self)
+
+
+@dataclass(frozen=True)
+class Ellipse:
+	bounds: Rect
+	stroke: Optional[Stroke] = Stroke()
+	fill: Fill = Fill()
+	object_id: Optional[str] = None
+	metadata: Metadata = ()
+
+	def __post_init__(self):
+		if not isinstance(self.bounds, Rect):
+			raise TypeError("bounds must be a Rect")
+		_validate_object_fields(self)
+
+
+@dataclass(frozen=True)
+class Arc:
+	bounds: Rect
+	start_degrees: float
+	span_degrees: float
+	stroke: Stroke = Stroke()
+	object_id: Optional[str] = None
+	metadata: Metadata = ()
+
+	def __post_init__(self):
+		if not isinstance(self.bounds, Rect):
+			raise TypeError("bounds must be a Rect")
+		_validate_number(self.start_degrees, "start_degrees")
+		_validate_number(self.span_degrees, "span_degrees")
 		_validate_object_fields(self)
 
 
@@ -267,7 +321,17 @@ class Arrow:
 		_validate_object_fields(self)
 
 
-SceneObject = Union[Line, Polyline, Polygon, Text, Arrow, "Group"]
+SceneObject = Union[
+	Line,
+	Polyline,
+	Polygon,
+	Rectangle,
+	Ellipse,
+	Arc,
+	Text,
+	Arrow,
+	"Group",
+]
 
 
 @dataclass(frozen=True)
@@ -285,7 +349,17 @@ class Group:
 		_validate_object_fields(self)
 
 
-SCENE_OBJECT_TYPES = (Line, Polyline, Polygon, Text, Arrow, Group)
+SCENE_OBJECT_TYPES = (
+	Line,
+	Polyline,
+	Polygon,
+	Rectangle,
+	Ellipse,
+	Arc,
+	Text,
+	Arrow,
+	Group,
+)
 
 
 @dataclass(frozen=True)

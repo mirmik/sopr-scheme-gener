@@ -8,6 +8,12 @@ import taskconf_menu
 import util
 import tablewidget
 import sections
+from sopr_scheme_gener.layouts.beams import (
+	BeamLayoutBuilder,
+	BeamLayoutSettings,
+	supports_scene_layout,
+)
+from sopr_scheme_gener.scene.qt import QtPainterRenderer
 
 from PyQt5 import *
 from PyQt5.QtCore import *
@@ -438,6 +444,33 @@ class PaintWidget(paintwdg.PaintWidget):
 		size = self.size()
 		width = size.width()
 		height = size.height()
+
+		scene_settings = BeamLayoutSettings(
+			width=width,
+			height=height,
+			hcenter=self.hcenter,
+			line_width=lwidth,
+			font_size=self.shemetype.font_size.get(),
+			base_section_height=self.shemetype.base_section_height.get(),
+			arrow_size=self.shemetype.arrow_size.get(),
+			left_node=self.shemetype.left_node.get(),
+			right_node=self.shemetype.right_node.get(),
+			postfix_enabled=self.shemetype.postfix.get()[0],
+			postfix=self.shemetype.postfix.get()[1],
+		)
+		section_type = self.shemetype.section_container.section_type.get()
+		extra_text = self.shemetype.texteditor.toPlainText()
+		if supports_scene_layout(task, scene_settings, section_type, extra_text):
+			scene = BeamLayoutBuilder().build(
+				task,
+				scene_settings,
+				text_transform=paintool.greek,
+			)
+			self.last_scene = scene
+			self.labels_center = QPointF(width / 2, self.hcenter)
+			self.labels_width_scale = width - 40
+			QtPainterRenderer().render(scene, self.painter)
+			return
 
 		strt_width = 20
 		fini_width = width-20

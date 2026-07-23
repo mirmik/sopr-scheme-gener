@@ -4,8 +4,10 @@ from pathlib import Path
 import pytest
 
 from sopr_scheme_gener.scene import (
+	Arc,
 	Arrow,
 	Color,
+	Ellipse,
 	Fill,
 	Group,
 	Line,
@@ -13,6 +15,7 @@ from sopr_scheme_gener.scene import (
 	Polygon,
 	Polyline,
 	Rect,
+	Rectangle,
 	Scene,
 	Stroke,
 	Text,
@@ -61,6 +64,10 @@ def test_geometry_style_and_primitive_validation():
 		Stroke(dash=(2, 0))
 	with pytest.raises(ValueError, match="0 to 255"):
 		Color(256, 0, 0)
+	with pytest.raises(ValueError, match="Unsupported fill pattern"):
+		Fill(pattern="dots")
+	with pytest.raises(TypeError, match="bounds must be a Rect"):
+		Rectangle("not-a-rect")
 
 
 def test_minimal_scene_contains_only_generic_primitives():
@@ -75,12 +82,15 @@ def test_minimal_scene_contains_only_generic_primitives():
 				(Point(5, 25), Point(25, 25), Point(15, 40)),
 				fill=Fill(Color(220, 220, 220)),
 			),
+			Rectangle(Rect(45, 25, 10, 10)),
+			Ellipse(Rect(60, 25, 10, 10)),
+			Arc(Rect(75, 25, 10, 10), 0, 180),
 			Text(Point(50, 20), "N", style=style, anchor=TextAnchor.CENTER),
 			Arrow(Point(50, 50), Point(100, 50)),
 		),
 	)
 
-	assert len(tuple(scene.walk())) == 5
+	assert len(tuple(scene.walk())) == 8
 	assert scene.content_bounds == Rect(5, 5, 110, 70)
 
 

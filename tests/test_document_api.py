@@ -58,6 +58,12 @@ def test_structured_document_get_set_patch_and_scenario():
 		assert result["task"]["id"] == "beams"
 		assert result["document"]["task"]["sections"][0]["l"] == 2.0
 		assert result["screenshot"]["png_base64"]
+		assert context.canvas.last_scene.viewport.width == context.canvas.width()
+		assert "beam/body" in {
+			item.object_id
+			for item in context.canvas.last_scene.walk()
+			if item.object_id
+		}
 		assert any(
 			entry["event"] == "scenario.completed"
 			for entry in bridge.dispatch("events.list", {})
