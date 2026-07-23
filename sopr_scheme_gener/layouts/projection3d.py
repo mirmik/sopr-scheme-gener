@@ -18,6 +18,7 @@ class Projection3D:
 	axonometric: bool = False
 	forty_five_degrees: bool = False
 	diagonal_scale: float = 0.5
+	diagonal_y_scale: float = 0.5
 
 	@cached_property
 	def _matrix(self):
@@ -74,7 +75,7 @@ class Projection3D:
 		if self.forty_five_degrees:
 			return Point(
 				self.base_x - y * self.diagonal_scale + x,
-				self.base_y + y * self.diagonal_scale - z,
+				self.base_y + y * self.diagonal_y_scale - z,
 			)
 		projected = self._matrix @ numpy.array([[0], [y], [0], [1]])
 		return Point(float(projected[0, 0]) + x, float(projected[2, 0]) - z)
