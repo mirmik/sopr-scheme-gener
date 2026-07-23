@@ -15,7 +15,6 @@ class SectionItem(QGraphicsItem):
         self.width = 140
         
     def boundingRect(self):
-        print(self.wdg.shemetype.section_container)
         if self.wdg.shemetype.section_container.section_type.get() == "Нет":
             return QRectF(0,0,0,0)
         else:

@@ -87,6 +87,7 @@ class PaintPreDialog(QDialog):
 class PaintWidget(QWidget):
 	def __init__(self):
 		self.resize_after_render_data = None
+		self.resize_after_render_queued = False
 		self.no_text_render = False
 		self.no_resize=False
 		self.common_mouse_events_enabled = False
@@ -106,6 +107,19 @@ class PaintWidget(QWidget):
 
 	def resize_after_render(self, x, y):
 		self.resize_after_render_data = (x, y)
+
+	def apply_resize_after_render(self):
+		self.resize_after_render_queued = False
+		size = self.resize_after_render_data
+		self.resize_after_render_data = None
+		if size is None:
+			return
+		if common.PAINT_CONTAINER.curwidget is not self:
+			return
+		width, height = int(size[0]), int(size[1])
+		if self.width() == width and self.height() == height:
+			return
+		common.PAINT_CONTAINER.resize(width, height)
 
 	def resizeEvent(self, ev):
 		self.shemetype.width_getter.set(self.width())
@@ -225,11 +239,9 @@ class PaintWidget(QWidget):
 			self.painter.end()
 	
 			if self.resize_after_render_data is not None:
-				common.PAINT_CONTAINER.resize(
-					self.resize_after_render_data[0],
-					self.resize_after_render_data[1]
-				)
-				self.resize_after_render_data = None
+				if not self.resize_after_render_queued:
+					self.resize_after_render_queued = True
+					QTimer.singleShot(0, self.apply_resize_after_render)
 
 		except Exception as ex:
 			if EXIT_ON_EXCEPT:
