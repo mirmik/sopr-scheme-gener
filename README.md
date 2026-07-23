@@ -17,6 +17,16 @@ sopr-scheme-gener
 
 Исторический запуск `python sopr-sheme-gener.py` пока также поддерживается.
 
+## Документы и экспорт
+
+Команды File → Open/Save работают с версионированными JSON-документами
+`.sopr.json`. Экспорт PNG/JPEG отделён от хранения состояния и больше не
+создаёт скрытый pickle-sidecar. Старые `.dat` открываются только отдельной
+командой импорта доверенного файла с предупреждением.
+
+Структура и модель безопасности описаны в
+[docs/DOCUMENT_FORMAT.md](docs/DOCUMENT_FORMAT.md).
+
 ## Application boundary
 
 Новый application shell использует явный `AppContext`. Выбор текущего типа и

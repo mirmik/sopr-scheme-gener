@@ -15,11 +15,9 @@ import util
 
 import container
 import paintool
-import hashlib
 
 from .context import AppContext
 from .task_registry import TASK_SPECS
-from .legacy_storage import load_trusted_pickle
 
 class ComboBox(QComboBox):
 	def __init__(self, default):
@@ -209,115 +207,83 @@ class MainWindow(QMainWindow):
 		settings = QSettings("sopr-scheme-gener", "sopr-scheme-gener")
 		return settings.value("lastdir", None)
 
-	def file_hash(self, path):
-		with open(path,"rb") as f:
-			h = hashlib.new('sha256')
-			h.update(f.read())
-			return h.hexdigest()
-
-	def make_picture_action(self):
-		filters = "*.png;;*.jpg;;*.*"
-		defaultFilter = "*.png"
-
-		path, ext = QFileDialog.getSaveFileName(
-			self, "Сохранить изображение", 
-			self.get_last_dirpath(), filters, defaultFilter
+	def save_document_action(self):
+		path, _selected_filter = QFileDialog.getSaveFileName(
+			self,
+			"Сохранить документ",
+			self.get_last_dirpath(),
+			"Документ SOPR (*.sopr.json);;JSON (*.json)",
+			"Документ SOPR (*.sopr.json)",
 		)
-
 		if not path:
 			return
+		if not path.lower().endswith(".json"):
+			path += ".sopr.json"
+		self.save_last_dirpath(os.path.dirname(path))
+		try:
+			self.context.storage.save(path)
+		except Exception as ex:
+			util.msgbox_error(str(ex))
 
-		ext = os.path.splitext(ext)[1]
-		if ext == '.*':
-			ext = ".png"
+	def open_document_action(self):
+		path, _selected_filter = QFileDialog.getOpenFileName(
+			self,
+			"Открыть документ",
+			self.get_last_dirpath(),
+			"Документ SOPR (*.sopr.json *.json)",
+		)
+		if not path:
+			return
+		self.save_last_dirpath(os.path.dirname(path))
+		try:
+			self.context.storage.load(path)
+		except Exception as ex:
+			util.msgbox_error(str(ex))
 
-		curext = os.path.splitext(path)[1]
-		if curext == '':
-			path = path + ext
-
-		dir = os.path.dirname(path)
-		self.save_last_dirpath(dir)
-
-		savepath = os.path.join(dir, ".save")
-		if not os.path.exists(savepath):
-			os.mkdir(savepath)
-
+	def export_image_action(self):
+		path, selected_filter = QFileDialog.getSaveFileName(
+			self,
+			"Экспортировать изображение",
+			self.get_last_dirpath(),
+			"PNG (*.png);;JPEG (*.jpg *.jpeg)",
+			"PNG (*.png)",
+		)
+		if not path:
+			return
+		if not os.path.splitext(path)[1]:
+			path += ".jpg" if selected_filter.startswith("JPEG") else ".png"
+		self.save_last_dirpath(os.path.dirname(path))
 		try:
 			self.context.controller.current_scheme.paintwidget.save_image(path)
 		except Exception as ex:
 			util.msgbox_error(str(ex))
 
-		h = self.file_hash(path)
-		marchpath = os.path.join(savepath, os.path.basename(str(h)) + ".dat")
-		self.context.controller.current_scheme.serialize(marchpath)
-
-	def load_action(self):
-		filters = "*.png;;*.jpg;;*.*"
-		defaultFilter = "*.png"
-
-		path, ext = QFileDialog.getOpenFileName(
-			self, "Загрузить схему", 
-			self.get_last_dirpath(), filters, defaultFilter
+	def import_legacy_action(self):
+		path, _selected_filter = QFileDialog.getOpenFileName(
+			self,
+			"Импортировать доверенный старый документ",
+			self.get_last_dirpath(),
+			"Старый документ SOPR (*.dat)",
 		)
-
 		if not path:
 			return
-
-		ext = os.path.splitext(ext)[1]
-		if ext == '.*':
-			ext = ".png"
-
-		curext = os.path.splitext(path)[1]
-		if curext == '':
-			path = path + ext
-
-		dir = os.path.dirname(path)
-		self.save_last_dirpath(dir)
-
-		print("A")
-		if curext == ".dat":
-			savepath = dir
-		else:
-			savepath = os.path.join(dir, ".save")
-
-		h = self.file_hash(path)
-
-		if curext != ".dat":
-			marchpath = os.path.join(savepath, os.path.basename(h) + ".dat")
-		else:
-			marchpath = path
-
-		#print(marchpath)
-		if os.path.exists(marchpath):
-			pass
-		else:
-			marchpath = os.path.join(savepath, os.path.basename(path) + ".dat")
-	
-		print(marchpath)
-
-		if not os.path.exists(marchpath):
-			util.msgbox_error("Не найден файл для загрузки")
+		choice = QMessageBox.warning(
+			self,
+			"Небезопасный старый формат",
+			(
+				"Файлы .dat используют Python pickle и могут выполнять код. "
+				"Продолжайте только для файла из доверенного источника."
+			),
+			QMessageBox.Open | QMessageBox.Cancel,
+			QMessageBox.Cancel,
+		)
+		if choice != QMessageBox.Open:
 			return
-	
+		self.save_last_dirpath(os.path.dirname(path))
 		try:
-			lll = load_trusted_pickle(marchpath)
+			self.context.storage.import_trusted_legacy(path)
 		except Exception as ex:
 			util.msgbox_error(str(ex))
-			return
-
-		name = lll[0][1]
-
-		if lll[0][0] != "name":
-			util.msgbox_error("wrong name field")
-			return
-
-		try:
-			self.context.controller.select_by_title(name)
-		except ValueError:
-			util.msgbox_error("Unresolved task type: {}".format(name))
-			return
-
-		self.context.controller.current_scheme.deserialize(lll)
 
 	def pre_picture_action(self):
 		self.context.controller.current_scheme.paintwidget.predraw_dialog()
@@ -364,8 +330,28 @@ class MainWindow(QMainWindow):
 		return act
 
 	def createActions(self):
-		self.MakePictureAction = self.create_action("Сохранить изображение/схему...", self.make_picture_action, "Сохранение изображение/схему")
-		self.LoadAction = self.create_action("Загрузить схему...", self.load_action, "Загрузить схему")
+		self.OpenDocumentAction = self.create_action(
+			"Открыть документ...",
+			self.open_document_action,
+			"Открыть документ SOPR",
+			"Ctrl+O",
+		)
+		self.SaveDocumentAction = self.create_action(
+			"Сохранить документ...",
+			self.save_document_action,
+			"Сохранить документ SOPR",
+			"Ctrl+S",
+		)
+		self.ExportImageAction = self.create_action(
+			"Экспортировать изображение...",
+			self.export_image_action,
+			"Экспортировать изображение без состояния документа",
+		)
+		self.ImportLegacyAction = self.create_action(
+			"Импортировать старый доверенный .dat...",
+			self.import_legacy_action,
+			"Явно импортировать старый pickle-документ",
+		)
 		self.PrePictureAction = self.create_action("Показать изображение...", self.pre_picture_action, "Показать изображение")
 		self.GreekAction = self.create_action("Греческий и спецсимволы", self.greek_action, "Показать справку по греческому алфавиту и спецсимволам")
 		self.ExitAction = self.create_action("Выход", self.close, "Выход", "Ctrl+Q")
@@ -375,9 +361,13 @@ class MainWindow(QMainWindow):
 		self.FileMenu = self.menuBar().addMenu(self.tr("&File"))   
 		self.HelpMenu = self.menuBar().addMenu(self.tr("&Help"))       
 		
-		self.FileMenu.addAction(self.MakePictureAction)
-		self.FileMenu.addAction(self.LoadAction)
+		self.FileMenu.addAction(self.OpenDocumentAction)
+		self.FileMenu.addAction(self.SaveDocumentAction)
+		self.FileMenu.addSeparator()
+		self.FileMenu.addAction(self.ExportImageAction)
 		self.FileMenu.addAction(self.PrePictureAction)
+		self.FileMenu.addSeparator()
+		self.FileMenu.addAction(self.ImportLegacyAction)
 		self.FileMenu.addAction(self.ExitAction)
 		self.HelpMenu.addAction(self.AboutAction)
 		self.HelpMenu.addAction(self.GreekAction)

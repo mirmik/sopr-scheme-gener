@@ -6,6 +6,7 @@ import time
 
 from .document import StructuredDocument
 from .legacy import LegacyAdapter
+from .storage import DocumentStore
 from .task_registry import TASK_SPECS
 
 
@@ -147,6 +148,7 @@ class AppContext:
 		self.task_specs = tuple(self.task_specs)
 		self.controller = DocumentController(self, self.task_specs)
 		self.document = StructuredDocument(self)
+		self.storage = DocumentStore(self)
 
 	def attach_window(self, window):
 		if self.window is not None and self.window is not window:
