@@ -37,3 +37,25 @@ def test_spatial_beams_feature_scene_renders_and_remains_inspectable():
 		assert index.get("label/0") is not None
 	finally:
 		context.window.close()
+
+
+def test_spatial_beams_context_action_keeps_the_node_selected_at_menu_open():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "spatial-beams", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		node = scheme.task["nodes"][0]
+		menu = context.canvas._forces_menu(node)
+
+		# Opening a popup changes hover state before its deferred QAction runs.
+		context.canvas.hovered_node = None
+		next(
+			action for action in menu.actions() if action.text() == "Сила y1"
+		).trigger()
+
+		assert node.force_y == ((0, -1, 0), (0, -0.1, 0))
+	finally:
+		context.window.close()

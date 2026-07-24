@@ -415,12 +415,15 @@ class PaintWidget(paintwdg.PaintWidget):
 
 	def _show_context_menu(self, ev, scene_point):
 		menu = QMenu(self)
+		node = self.hovered_node
+		section = self.hovered_sect
+		label_id = self.selected_label_id
 		create_label = self.Action(
 			"Создать метку",
 			self,
 			functools.partial(self.create_label, scene_point),
 		)
-		if self.hovered_node is not None:
+		if node is not None:
 			supports = QMenu("Шарниры и заделки", self)
 			for title, kind, first, second in (
 				("Врезанный", "врез", (0, 0, 1), (0, 0, 0)),
@@ -445,19 +448,20 @@ class PaintWidget(paintwdg.PaintWidget):
 						title,
 						self,
 						functools.partial(
-							self.set_sharn_flag, kind, first, second
+							self.set_sharn_flag, node, kind, first, second
 						),
 					)
 				)
 			menu.addMenu(supports)
-			menu.addMenu(self._forces_menu())
-			menu.addMenu(self._moments_menu())
+			menu.addMenu(self._forces_menu(node))
+			menu.addMenu(self._moments_menu(node))
 			menu.addAction(
 				self.Action(
 					"Очистить узел",
 					self,
 					functools.partial(
 						self.set_sharn_flag,
+						node,
 						"нет",
 						(0, 0, 0),
 						(0, 0, 0),
@@ -466,9 +470,13 @@ class PaintWidget(paintwdg.PaintWidget):
 			)
 			menu.addSeparator()
 			menu.addAction(
-				self.Action("Удалить узел и граничащие балки", self, self.delete_node)
+				self.Action(
+					"Удалить узел и граничащие балки",
+					self,
+					functools.partial(self.delete_node, node),
+				)
 			)
-		elif self.hovered_sect is not None:
+		elif section is not None:
 			loads = QMenu("Распределённые силы", self)
 			for title, vector in (
 				("нет", None),
@@ -483,26 +491,46 @@ class PaintWidget(paintwdg.PaintWidget):
 					self.Action(
 						title,
 						self,
-						functools.partial(self.set_distrib_force, vector),
+						functools.partial(
+							self.set_distrib_force, section, vector
+						),
 					)
 				)
 			menu.addMenu(loads)
-			menu.addAction(self.Action("Удалить балку", self, self.delete_sect))
-		elif self.selected_label_id is not None:
-			menu.addAction(self.Action("Редактировать текст", self, self.edit_text))
-			menu.addAction(self.Action("Удалить метку", self, self.delete_label))
+			menu.addAction(
+				self.Action(
+					"Удалить балку",
+					self,
+					functools.partial(self.delete_sect, section),
+				)
+			)
+		elif label_id is not None:
+			menu.addAction(
+				self.Action(
+					"Редактировать текст",
+					self,
+					functools.partial(self.edit_text, label_id),
+				)
+			)
+			menu.addAction(
+				self.Action(
+					"Удалить метку",
+					self,
+					functools.partial(self.delete_label, label_id),
+				)
+			)
 			menu.addAction(
 				self.Action(
 					"Клонировать метку",
 					self,
-					functools.partial(self.clone_label, scene_point),
+					functools.partial(self.clone_label, scene_point, label_id),
 				)
 			)
 		menu.addSeparator()
 		menu.addAction(create_label)
 		menu.popup(self.mapToGlobal(ev.pos()))
 
-	def _forces_menu(self):
+	def _forces_menu(self, node):
 		menu = QMenu("Сосредоточенные силы", self)
 		short = 0.1
 		for axis, vectors in (
@@ -540,7 +568,11 @@ class PaintWidget(paintwdg.PaintWidget):
 						"Сила {}{}".format(axis, index + 1),
 						self,
 						functools.partial(
-							self.set_force, "force_" + axis, start, end
+							self.set_force,
+							node,
+							"force_" + axis,
+							start,
+							end,
 						),
 					)
 				)
@@ -550,6 +582,7 @@ class PaintWidget(paintwdg.PaintWidget):
 					self,
 					functools.partial(
 						self.set_force,
+						node,
 						"force_" + axis,
 						(0, 0, 0),
 						(0, 0, 0),
@@ -558,7 +591,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			)
 		return menu
 
-	def _moments_menu(self):
+	def _moments_menu(self, node):
 		menu = QMenu("Сосредоточенные моменты", self)
 		for title, first, second in (
 			("-x(y)", (0, 1, 0), (0, 0, 1)),
@@ -579,37 +612,39 @@ class PaintWidget(paintwdg.PaintWidget):
 				self.Action(
 					"Момент " + title,
 					self,
-					functools.partial(self.set_torque, first, second),
+					functools.partial(self.set_torque, node, first, second),
 				)
 			)
 		return menu
 
-	def set_sharn_flag(self, kind, first, second):
-		self.hovered_node.sharn = kind
-		self.hovered_node.sharn_vec = numpy.array(first)
-		self.hovered_node.sharn_vec2 = numpy.array(second)
+	def set_sharn_flag(self, node, kind, first, second):
+		node.sharn = kind
+		node.sharn_vec = numpy.array(first)
+		node.sharn_vec2 = numpy.array(second)
 		self.update()
 
-	def set_force(self, name, first, second):
-		setattr(self.hovered_node, name, (first, second))
+	def set_force(self, node, name, first, second):
+		setattr(node, name, (first, second))
 		self.update()
 
-	def set_torque(self, first, second):
-		self.hovered_node.torque = (first, second)
+	def set_torque(self, node, first, second):
+		node.torque = (first, second)
 		self.update()
 
-	def set_distrib_force(self, vector):
-		self.hovered_sect.distrib = vector
+	def set_distrib_force(self, section, vector):
+		section.distrib = vector
 		self.update()
 
-	def delete_node(self):
-		self.shemetype.confwidget.delete_node(self.hovered_node)
-		self.hovered_node = None
+	def delete_node(self, node):
+		self.shemetype.confwidget.delete_node(node)
+		if self.hovered_node is node:
+			self.hovered_node = None
 		self.update()
 
-	def delete_sect(self):
-		self.shemetype.confwidget.delete_sect(self.hovered_sect)
-		self.hovered_sect = None
+	def delete_sect(self, section):
+		self.shemetype.confwidget.delete_sect(section)
+		if self.hovered_sect is section:
+			self.hovered_sect = None
 		self.update()
 
 	def create_label(self, pos):
@@ -618,8 +653,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		)
 		self.update()
 
-	def clone_label(self, pos):
-		label = self.shemetype.task["labels"][self.selected_label_id]
+	def clone_label(self, pos, label_id):
+		label = self.shemetype.task["labels"][label_id]
 		self.shemetype.task["labels"].append(
 			self.shemetype.confwidget.label(
 				label.text,
@@ -628,13 +663,13 @@ class PaintWidget(paintwdg.PaintWidget):
 		)
 		self.update()
 
-	def delete_label(self):
-		del self.shemetype.task["labels"][self.selected_label_id]
+	def delete_label(self, label_id):
+		del self.shemetype.task["labels"][label_id]
 		self.selected_label_id = None
 		self.update()
 
-	def edit_text(self):
-		label = self.shemetype.task["labels"][self.selected_label_id]
+	def edit_text(self, label_id):
+		label = self.shemetype.task["labels"][label_id]
 		text, accepted = QInputDialog.getText(
 			self, "Текст", "Введите текст:", text=label.text
 		)
