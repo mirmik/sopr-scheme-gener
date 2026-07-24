@@ -112,6 +112,13 @@ class DocumentController:
 		self.context.legacy.activate_scheme(scheme)
 		self.context.legacy.resize_canvas(*scheme.get_size())
 		self.view.set_selected_index(index)
+		refresh_layout_button = getattr(
+			self.view,
+			"refresh_page_layout_button",
+			None,
+		)
+		if refresh_layout_button is not None:
+			refresh_layout_button()
 		self.context.events.record(
 			"task.selected",
 			{
@@ -131,6 +138,13 @@ class DocumentController:
 		self.current_index = -1
 		self.view.display_empty()
 		self.view.set_selected_index(-1)
+		refresh_layout_button = getattr(
+			self.view,
+			"refresh_page_layout_button",
+			None,
+		)
+		if refresh_layout_button is not None:
+			refresh_layout_button()
 		self.context.events.record("task.cleared")
 
 

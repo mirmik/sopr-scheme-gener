@@ -70,6 +70,14 @@ class CentralWidget(QWidget):
 		self.type_list_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
 		self.type_list_widget.activated.connect(self.type_scheme_selected)
+		self.page_layout_button = QPushButton("Page layout")
+		self.page_layout_button.setObjectName("activate_page_layout")
+		self.page_layout_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+		self.page_layout_button.setToolTip(
+			"Включить независимые рамки задачи и подписи для текущего документа"
+		)
+		self.page_layout_button.setEnabled(False)
+		self.page_layout_button.clicked.connect(self.activate_page_layout)
 
 		self.hsplitter = QSplitter(Qt.Horizontal)
 		context.legacy.bind_splitter(self.hsplitter)
@@ -99,6 +107,10 @@ class CentralWidget(QWidget):
 		self.settings_layout_wdg = self.settings_layout_wdg_scr
 
 		self.work_layout = QVBoxLayout()
+		self.work_controls_layout = QHBoxLayout()
+		self.work_controls_layout.addStretch()
+		self.work_controls_layout.addWidget(self.page_layout_button)
+		self.work_layout.addLayout(self.work_controls_layout)
 		self.work_layout.addWidget(context.legacy.create_paint_widget_setter(self.container_paint))
 		self.work_layout_wdg = QWidget()
 		self.work_layout_wdg.setLayout(self.work_layout)
@@ -124,6 +136,25 @@ class CentralWidget(QWidget):
 
 	def current_scheme(self):
 		return self.controller.current_scheme
+
+	def activate_page_layout(self):
+		scheme = self.controller.current_scheme
+		if scheme is None or scheme.page_layout is not None:
+			return
+		scheme.paintwidget.activate_page_layout()
+		self.refresh_page_layout_button()
+		self.context.events.record(
+			"page_layout.activated",
+			{"task_type": self.controller.current_spec.identifier},
+		)
+
+	def refresh_page_layout_button(self):
+		scheme = self.controller.current_scheme
+		active = scheme is not None and scheme.page_layout is not None
+		self.page_layout_button.setEnabled(scheme is not None and not active)
+		self.page_layout_button.setText(
+			"Layout включён" if active else "Page layout"
+		)
 
 	def current_task_spec(self):
 		return self.controller.current_spec

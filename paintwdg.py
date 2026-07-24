@@ -208,15 +208,22 @@ class PaintWidget(QWidget):
 		)
 
 	def page_layout(self):
-		return self.shemetype.page_layout or self._derived_page_layout()
-
-	def _materialize_page_layout(self):
-		if self.shemetype.page_layout is None:
-			self.shemetype.page_layout = self._derived_page_layout()
 		return self.shemetype.page_layout
 
+	def activate_page_layout(self):
+		if self.shemetype.page_layout is None:
+			self.shemetype.page_layout = self._derived_page_layout()
+			self.page_layout_state_changed()
+		return self.shemetype.page_layout
+
+	def page_layout_state_changed(self):
+		self._layout_hover = None
+		self._layout_drag = None
+		self.unsetCursor()
+		self.update()
+
 	def _layout_frame_rect(self, frame_name):
-		frame = getattr(self.page_layout(), frame_name)
+		frame = getattr(self.shemetype.page_layout, frame_name)
 		return QRectF(frame.x, frame.y, frame.width, frame.height)
 
 	def _layout_grip_rect(self, rect):
@@ -239,6 +246,8 @@ class PaintWidget(QWidget):
 		}
 
 	def _layout_hit_test(self, point):
+		if self.shemetype.page_layout is None:
+			return None
 		for frame_name in ("note_frame", "task_frame"):
 			rect = self._layout_frame_rect(frame_name)
 			for handle, handle_rect in self._layout_handle_rects(rect).items():
@@ -266,7 +275,7 @@ class PaintWidget(QWidget):
 		return Qt.SizeBDiagCursor
 
 	def _start_layout_drag(self, point, hit):
-		layout = self.page_layout()
+		layout = self.shemetype.page_layout
 		frame = getattr(layout, hit[0])
 		self._layout_drag = {
 			"frame": hit[0],
@@ -284,13 +293,6 @@ class PaintWidget(QWidget):
 		if drag is None:
 			return
 		delta = point - drag["start"]
-		if (
-			self.shemetype.page_layout is None
-			and delta.x() == 0
-			and delta.y() == 0
-		):
-			return
-		self._materialize_page_layout()
 		original = drag["original"]
 		x, y = original.x, original.y
 		width, height = original.width, original.height
@@ -349,7 +351,11 @@ class PaintWidget(QWidget):
 		return False
 
 	def _paint_layout_overlay(self):
-		if self._exporting or self._layout_hover is None:
+		if (
+			self._exporting
+			or self.shemetype.page_layout is None
+			or self._layout_hover is None
+		):
 			return
 		rect = self._layout_frame_rect(self._layout_hover)
 		self.painter.save()

@@ -610,6 +610,8 @@ class DocumentStore:
 			if hasattr(scheme, "texteditor") and prepared["text"] is not None:
 				scheme.texteditor.setPlainText(prepared["text"])
 			scheme.page_layout = prepared["page_layout"]
+			scheme.paintwidget.page_layout_state_changed()
+			self.context.central.refresh_page_layout_button()
 			scheme.task = prepared["task"]
 			scheme.confwidget.clean_and_update_interface()
 			self.context.legacy.resize_canvas(
@@ -638,6 +640,8 @@ class DocumentStore:
 		title = document[0][1]
 		self.context.controller.select_by_title(title)
 		self.context.controller.current_scheme.page_layout = None
+		self.context.controller.current_scheme.paintwidget.page_layout_state_changed()
+		self.context.central.refresh_page_layout_button()
 		self.context.controller.current_scheme.deserialize(document)
 		self.context.events.record(
 			"document.legacy_imported",

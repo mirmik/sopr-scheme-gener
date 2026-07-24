@@ -299,6 +299,8 @@ class StructuredDocument:
 		if kind == "layout":
 			if value is None:
 				owner.page_layout = None
+				owner.paintwidget.page_layout_state_changed()
+				self.context.central.refresh_page_layout_button()
 				return
 			try:
 				owner.page_layout = page_layout_from_data(
@@ -308,6 +310,8 @@ class StructuredDocument:
 				)
 			except PageLayoutError as exc:
 				raise ValueError("Invalid layout: {}".format(exc))
+			owner.paintwidget.page_layout_state_changed()
+			self.context.central.refresh_page_layout_button()
 			return
 		if kind == "layout_child":
 			old_value = getattr(owner, token)

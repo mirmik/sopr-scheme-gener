@@ -1,6 +1,6 @@
 import os
 
-from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtCore import QPoint, QRectF, Qt
 from PyQt5.QtTest import QTest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -15,34 +15,54 @@ def _context():
 	)
 
 
-def test_layout_materializes_only_when_grip_is_dragged():
+def test_layout_activates_only_from_explicit_button_and_cannot_be_disabled():
 	context = _context()
 	try:
 		canvas = context.canvas
-		layout = canvas.page_layout()
+		scheme = context.controller.current_scheme
+		layout = canvas._derived_page_layout()
 		task = layout.task_frame
-
-		QTest.mouseClick(
-			canvas,
-			Qt.LeftButton,
-			pos=QPoint(int(task.x + task.width / 2), int(task.y + task.height / 2)),
+		transient_grip = canvas._layout_grip_rect(
+			QRectF(task.x, task.y, task.width, task.height)
 		)
-		assert context.controller.current_scheme.page_layout is None
+		QTest.mouseMove(canvas, transient_grip.center().toPoint())
+		assert scheme.page_layout is None
+		assert canvas._layout_hover is None
 
-		grip = canvas._layout_grip_rect(canvas._layout_frame_rect("task_frame"))
-		QTest.mouseClick(canvas, Qt.LeftButton, pos=grip.center().toPoint())
-		assert context.controller.current_scheme.page_layout is None
+		button = context.central.page_layout_button
+		assert button.isEnabled()
+		button.click()
 
-		start = grip.center().toPoint()
-		finish = start + QPoint(12, 9)
-		QTest.mousePress(canvas, Qt.LeftButton, pos=start)
-		QTest.mouseMove(canvas, finish)
-		QTest.mouseRelease(canvas, Qt.LeftButton, pos=finish)
+		assert scheme.page_layout is not None
+		assert not button.isEnabled()
+		assert button.text() == "Layout включён"
 
-		materialized = context.controller.current_scheme.page_layout
-		assert materialized is not None
-		assert materialized.task_frame.x == task.x + 12
-		assert materialized.task_frame.y == task.y + 9
+		materialized = scheme.page_layout
+		button.click()
+		assert scheme.page_layout is materialized
+
+		context.controller.select("stress-cube")
+		assert button.isEnabled()
+		assert button.text() == "Page layout"
+		context.controller.select("beams")
+		assert not button.isEnabled()
+	finally:
+		context.window.close()
+
+
+def test_page_layout_button_tracks_loaded_legacy_and_framed_documents():
+	context = _context()
+	try:
+		legacy = context.storage.to_data()
+		context.central.activate_page_layout()
+		framed = context.storage.to_data()
+		assert not context.central.page_layout_button.isEnabled()
+
+		context.storage.load_data(legacy)
+		assert context.central.page_layout_button.isEnabled()
+
+		context.storage.load_data(framed)
+		assert not context.central.page_layout_button.isEnabled()
 	finally:
 		context.window.close()
 
@@ -51,7 +71,9 @@ def test_resize_handle_changes_frame_and_stays_inside_canvas():
 	context = _context()
 	try:
 		canvas = context.canvas
+		context.central.activate_page_layout()
 		task = canvas.page_layout().task_frame
+		initial_width = task.width
 		handle = canvas._layout_handle_rects(
 			canvas._layout_frame_rect("task_frame")
 		)["se"].center().toPoint()
@@ -65,7 +87,7 @@ def test_resize_handle_changes_frame_and_stays_inside_canvas():
 		)
 
 		frame = context.controller.current_scheme.page_layout.task_frame
-		assert frame.width > task.width
+		assert frame.width > initial_width
 		assert frame.x + frame.width <= canvas.width()
 		assert frame.y + frame.height <= canvas.height()
 	finally:
@@ -76,6 +98,7 @@ def test_editor_overlay_is_not_exported():
 	context = _context()
 	try:
 		canvas = context.canvas
+		context.central.activate_page_layout()
 		before = canvas.make_image()
 		canvas._layout_hover = "task_frame"
 		after = canvas.make_image()
