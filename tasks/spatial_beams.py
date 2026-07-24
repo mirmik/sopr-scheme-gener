@@ -396,6 +396,19 @@ class PaintWidget(paintwdg.PaintWidget):
 			self.hovered_node_pressed = None
 			self.update()
 
+	def mouseDoubleClickEvent(self, ev):
+		if self.scene_interaction is None or ev.button() != Qt.LeftButton:
+			return
+		hit = self.scene_interaction.hit_test(ev.pos(), kinds=("label",))
+		if hit is None:
+			return
+		label_id = hit.metadata_value("index")
+		if not isinstance(label_id, int):
+			return
+		self.selected_label_id = label_id
+		self.edit_text(label_id)
+		ev.accept()
+
 	def mouseReleaseEvent(self, ev):
 		was_pressed = self.mouse_pressed
 		self.mouse_pressed = False

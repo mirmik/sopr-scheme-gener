@@ -458,3 +458,37 @@ def test_frames_member_label_drag_does_not_start_grid_member_creation():
 	finally:
 		context.window.close()
 		context.app.processEvents()
+
+
+def test_spatial_beams_label_text_can_be_edited_by_double_click(monkeypatch):
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "spatial-beams", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		label = scheme.confwidget.label("before", (10, 20))
+		scheme.task["labels"].append(label)
+		context.app.processEvents()
+		context.canvas.make_image()
+
+		monkeypatch.setattr(
+			"tasks.spatial_beams.QInputDialog.getText",
+			lambda *args, **kwargs: ("after", True),
+		)
+		start = _device_center(context.canvas.scene_interaction, "label/0")
+		context.canvas.mouseDoubleClickEvent(
+			_mouse_event(
+				QEvent.MouseButtonDblClick,
+				start,
+				button=Qt.LeftButton,
+				buttons=Qt.LeftButton,
+			)
+		)
+
+		assert label.text == "after"
+		assert context.canvas.selected_label_id == 0
+	finally:
+		context.window.close()
+		context.app.processEvents()
