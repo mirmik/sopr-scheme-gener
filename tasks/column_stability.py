@@ -65,7 +65,7 @@ class ConfWidget(common.ConfWidget):
 			"Толщина стержня:", "float", "5"
 		)
 		self.shemetype.support_size = self.sett.add(
-			"Размер опор:", "float", "24"
+			"Размер опор:", "float", "36"
 		)
 		self.shemetype.arrow_size = self.sett.add(
 			"Размер стрелок:", "float", "12"

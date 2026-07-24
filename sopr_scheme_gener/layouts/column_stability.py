@@ -55,7 +55,7 @@ class ColumnStabilityLayoutSettings:
 	font_size: float = 12.0
 	arrow_size: float = 12.0
 	rod_width: float = 5.0
-	support_size: float = 24.0
+	support_size: float = 36.0
 
 
 def _value(record, name, default=None):
@@ -64,17 +64,21 @@ def _value(record, name, default=None):
 	return getattr(record, name, default)
 
 
-def _hatching(x1, y1, x2, y2, stroke, step=8):
+def _hatching(x1, y1, x2, y2, stroke, step=8, direction=-1):
 	lines = []
 	if abs(y2 - y1) < 0.01:
 		x = x1
 		while x <= x2:
-			lines.append(Line(Point(x, y1), Point(x - 6, y1 + 7), stroke))
+			lines.append(
+				Line(Point(x, y1), Point(x + direction * 6, y1 + 7), stroke)
+			)
 			x += step
 	else:
 		y = y1
 		while y <= y2:
-			lines.append(Line(Point(x1, y), Point(x1 - 7, y + 6), stroke))
+			lines.append(
+				Line(Point(x1, y), Point(x1 + direction * 7, y + 6), stroke)
+			)
 			y += step
 	return tuple(lines)
 
@@ -168,6 +172,7 @@ def _side_link(point, size, stroke, object_id, side):
 				wall_x,
 				point.y + size,
 				stroke,
+				direction=sign,
 			),
 		),
 		object_id=object_id,
@@ -192,8 +197,8 @@ def _floating_clamp(point, size, stroke, object_id):
 			Line(Point(left_wall, bottom), Point(left_plate, bottom), stroke),
 			Line(Point(right_plate, top), Point(right_wall, top), stroke),
 			Line(Point(right_plate, bottom), Point(right_wall, bottom), stroke),
-			*_hatching(left_wall, top, left_wall, bottom, stroke),
-			*_hatching(right_wall, top, right_wall, bottom, stroke),
+			*_hatching(left_wall, top, left_wall, bottom, stroke, direction=-1),
+			*_hatching(right_wall, top, right_wall, bottom, stroke, direction=1),
 		),
 		object_id=object_id,
 		metadata=metadata(kind="support", support="floating-clamp"),
@@ -254,10 +259,14 @@ class ColumnStabilityLayoutBuilder:
 		half = Stroke(width=max(1.0, settings.line_width / 2))
 		style = TextStyle(point_size=settings.font_size, italic=True)
 		x = settings.width * 0.43
-		top = max(70.0, settings.support_size + settings.arrow_size + 12)
-		bottom = max(top + 100.0, settings.hcenter + 50.0)
-		if bottom > settings.height - 35:
-			bottom = settings.height - 35
+		top = max(55.0, settings.support_size + 10)
+		bottom = max(top + 150.0, settings.hcenter + 90.0)
+		lower_support = _value(nodes[0], "support", SUPPORT_NONE)
+		if lower_support in (SUPPORT_HINGE, "hinge"):
+			bottom_limit = settings.height - settings.support_size - 10
+		else:
+			bottom_limit = settings.height - 20
+		bottom = min(bottom, bottom_limit)
 		available = bottom - top
 		total = sum(lengths)
 		node_y = [bottom]
@@ -282,7 +291,7 @@ class ColumnStabilityLayoutBuilder:
 				center_y = (start.y + end.y) / 2
 				objects.append(
 					Text(
-						Point(x + 20, center_y),
+						Point(x + 30, center_y),
 						length_text,
 						style,
 						TextAnchor.CENTER,
@@ -294,7 +303,7 @@ class ColumnStabilityLayoutBuilder:
 			if rigidity:
 				objects.append(
 					Text(
-						Point(x + 75, (start.y + end.y) / 2),
+						Point(x + 105, (start.y + end.y) / 2),
 						rigidity,
 						style,
 						TextAnchor.CENTER,
@@ -319,34 +328,87 @@ class ColumnStabilityLayoutBuilder:
 
 			load = _value(node, "load", LOAD_NONE)
 			if load not in (LOAD_NONE, "none", None):
+				is_internal = 0 < index < len(nodes) - 1
 				if load in (LOAD_DOWN, "down"):
 					neighbor_gap = (
 						y - node_y[index + 1] if index + 1 < len(node_y) else 70
 					)
-					load_length = min(48.0, max(24.0, neighbor_gap * 0.65))
-					start, end = Point(x, y - load_length), Point(x, y - 5)
+					load_length = min(52.0, max(28.0, neighbor_gap * 0.65))
+					start_y, end_y = y - load_length, y
 				elif load in (LOAD_UP, "up"):
 					neighbor_gap = y - node_y[index - 1] if index else -70
-					load_length = min(48.0, max(24.0, abs(neighbor_gap) * 0.65))
-					start, end = Point(x, y + load_length), Point(x, y + 5)
+					load_length = min(52.0, max(28.0, abs(neighbor_gap) * 0.65))
+					start_y, end_y = y + load_length, y
 				else:
 					raise ValueError("Unsupported stability load: {!r}".format(load))
-				objects.append(
-					Arrow(
-						start,
-						end,
-						rod,
-						head_length=settings.arrow_size,
-						head_width=settings.arrow_size * 0.7,
-						object_id="node/{}/load".format(index),
-						metadata=metadata(kind="force", index=index, direction=load),
+				if is_internal:
+					bar_half_width = settings.support_size * 0.9
+					arrow_offset = bar_half_width * 0.65
+					left_start = Point(x - arrow_offset, start_y)
+					right_start = Point(x + arrow_offset, start_y)
+					left_end = Point(x - arrow_offset, end_y)
+					right_end = Point(x + arrow_offset, end_y)
+					objects.append(
+						Group(
+							(
+								Line(
+									Point(x - bar_half_width, y),
+									Point(x + bar_half_width, y),
+									main,
+									object_id="node/{}/load/bar".format(index),
+								),
+								Arrow(
+									left_start,
+									left_end,
+									main,
+									head_length=settings.arrow_size,
+									head_width=settings.arrow_size * 2 / 3,
+									head_stroke=half,
+									object_id="node/{}/load/left".format(index),
+								),
+								Arrow(
+									right_start,
+									right_end,
+									main,
+									head_length=settings.arrow_size,
+									head_width=settings.arrow_size * 2 / 3,
+									head_stroke=half,
+									object_id="node/{}/load/right".format(index),
+								),
+							),
+							object_id="node/{}/load".format(index),
+							metadata=metadata(
+								kind="force",
+								index=index,
+								direction=load,
+								style="crossbar",
+							),
+						)
 					)
-				)
+					label_x = x + bar_half_width + 18
+				else:
+					start = Point(x, start_y)
+					end = Point(x, end_y)
+					objects.append(
+						Arrow(
+							start,
+							end,
+							main,
+							head_length=settings.arrow_size,
+							head_width=settings.arrow_size * 2 / 3,
+							head_stroke=half,
+							object_id="node/{}/load".format(index),
+							metadata=metadata(
+								kind="force", index=index, direction=load, style="single"
+							),
+						)
+					)
+					label_x = x + 24
 				label = text_transform(str(_value(node, "load_text", "")))
 				if label:
 					objects.append(
 						Text(
-							Point(x + 24, (start.y + end.y) / 2),
+							Point(label_x, (start_y + end_y) / 2),
 							label,
 							style,
 							TextAnchor.CENTER,

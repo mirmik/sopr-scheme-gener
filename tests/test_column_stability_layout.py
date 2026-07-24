@@ -51,6 +51,64 @@ def test_reference_like_scene_has_segments_loads_labels_and_floating_clamp():
 	assert index.get("node/2/load-label") is not None
 
 
+def test_internal_load_uses_crossbar_and_two_slender_arrows():
+	scene = _build(
+		{
+			"segments": [
+				{"length": 1, "length_text": "l", "rigidity_text": ""},
+				{"length": 1, "length_text": "l", "rigidity_text": ""},
+			],
+			"nodes": [
+				{"support": "заделка", "load": "нет", "load_text": ""},
+				{"support": "нет", "load": "вниз", "load_text": "3F"},
+				{"support": "нет", "load": "нет", "load_text": ""},
+			],
+		}
+	)
+	index = SceneIndex(scene, FixedTextMetrics())
+	load = index.get("node/1/load").item
+
+	assert dict(load.metadata)["style"] == "crossbar"
+	assert index.get("node/1/load/bar") is not None
+	assert index.get("node/1/load/left").item.stroke.width == 2.0
+	assert index.get("node/1/load/right").item.stroke.width == 2.0
+	assert index.get("node/1/load/left").item.head_width == 8.0
+
+
+def test_right_side_link_hatching_is_mirrored_outwards():
+	def support(side):
+		scene = _build(
+			{
+				"segments": [
+					{"length": 1, "length_text": "l", "rigidity_text": ""}
+				],
+				"nodes": [
+					{"support": "нет", "load": "нет", "load_text": ""},
+					{"support": side, "load": "нет", "load_text": ""},
+				],
+			}
+		)
+		return SceneIndex(scene, FixedTextMetrics()).get("node/1/support").item
+
+	left_hatches = [
+		item
+		for item in support("боковая тяга слева").children
+		if hasattr(item, "start")
+		and abs(item.end.x - item.start.x) == 7
+		and abs(item.end.y - item.start.y) == 6
+	]
+	right_hatches = [
+		item
+		for item in support("боковая тяга справа").children
+		if hasattr(item, "start")
+		and abs(item.end.x - item.start.x) == 7
+		and abs(item.end.y - item.start.y) == 6
+	]
+
+	assert any(item.end.x < item.start.x for item in left_hatches)
+	assert any(item.end.x > item.start.x for item in right_hatches)
+
+
 @pytest.mark.parametrize(
 	"support",
 	[
