@@ -193,6 +193,15 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.last_point = QPointF(0,0)
 		self.no_resize = True
 
+	@property
+	def no_resize(self):
+		if not hasattr(self, "shemetype"):
+			return self._legacy_no_resize
+		return self._legacy_no_resize and self.shemetype.page_layout is None
+
+	@no_resize.setter
+	def no_resize(self, value):
+		self._legacy_no_resize = bool(value)
 
 	def scene_bound(self):
 		return (self.last_scene.viewport.width, self.last_scene.viewport.height)
@@ -228,7 +237,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			text_metrics=QtTextMetrics(),
 			device_width=self.width(),
 			device_height=self.height(),
-			aspect_fit=True,
+			aspect_fit=self.shemetype.page_layout is None,
 		)
 		if self.selected_object_id:
 			bounds = self.scene_interaction.index.bounds(self.selected_object_id)
@@ -250,7 +259,9 @@ class PaintWidget(paintwdg.PaintWidget):
 					background=scene.background,
 				)
 		self.last_scene = scene
-		QtGraphicsSceneRenderer().render(scene, self.painter)
+		QtGraphicsSceneRenderer(
+			one_to_one=self.shemetype.page_layout is not None
+		).render(scene, self.painter)
 		self.resize_after_render(*self.scene_bound())
 
 	def mousePressEvent(self, ev):

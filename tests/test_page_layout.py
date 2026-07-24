@@ -118,3 +118,31 @@ def test_task_frame_resize_recomposes_scene_in_local_dimensions():
 		assert context.canvas.last_scene.viewport.height == 160
 	finally:
 		context.window.close()
+
+
+def test_stress_cube_uses_classic_sheet_resize_and_one_to_one_framed_scene():
+	context = _context()
+	try:
+		context.controller.select("stress-cube")
+		canvas = context.canvas
+		scheme = context.controller.current_scheme
+		assert canvas.no_resize is True
+
+		layout = canvas._derived_page_layout()
+		scheme.page_layout = layout
+		assert canvas.no_resize is False
+
+		canvas.make_image()
+		first = canvas.scene_interaction.index.bounds("cube/0")
+		assert canvas.scene_interaction.mapping.scale == 1.0
+
+		layout.task_frame.width -= 60
+		layout.task_frame.height -= 40
+		canvas.make_image()
+		second = canvas.scene_interaction.index.bounds("cube/0")
+
+		assert canvas.scene_interaction.mapping.scale == 1.0
+		assert second.width == first.width
+		assert second.height == first.height
+	finally:
+		context.window.close()
