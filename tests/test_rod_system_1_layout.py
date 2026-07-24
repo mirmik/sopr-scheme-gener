@@ -128,6 +128,13 @@ def test_rod_system_1_layout_covers_configurable_features():
 	assert index.get("rod/1/text/second") is not None
 	assert index.get("rod-force/1").metadata_value("direction") == "+"
 	assert index.get("rod-force/2").metadata_value("direction") == "-"
+	assert index.get("section/0/label").metadata_value("record") == "sections"
+	assert index.get("rod/1/label").metadata_value("offset") == "rod_label"
+	assert index.get("force/1/text").metadata_value("offset") == "force_text"
+	assert (
+		index.get("rod-force/1/text").metadata_value("offset")
+		== "rod_force_text"
+	)
 	assert index.get("endpoint/left/support") is not None
 	assert index.get("endpoint/right/support") is not None
 	assert isinstance(index.get("rod/2").item, Group)

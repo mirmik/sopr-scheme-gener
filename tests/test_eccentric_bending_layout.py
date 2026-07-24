@@ -96,6 +96,9 @@ def test_eccentric_bending_covers_force_axes_directions_and_text_policies():
 			assert index.get("point/{}/force-{}".format(point, axis)) is not None
 	assert index.get("point/0/force-y").metadata_value("policy") == "5"
 	assert index.get("point/0/force-z").metadata_value("policy") == "6"
+	assert index.get("point/0/force-x/text").metadata_value("kind") == "label"
+	assert index.get("point/0/force-y/text").metadata_value("record") == "sections"
+	assert index.get("point/0/force-z/text").metadata_value("offset") == "fz_text"
 
 
 def test_eccentric_bending_rejects_wrong_force_point_count():

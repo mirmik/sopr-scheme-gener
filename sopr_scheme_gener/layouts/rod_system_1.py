@@ -127,6 +127,10 @@ def _text_by_points(
 	offset,
 	object_id,
 	leader=None,
+	label_offset=Point(0.0, 0.0),
+	record=None,
+	index=-1,
+	offset_name=None,
 ):
 	if start == end:
 		return Group((), object_id=object_id)
@@ -175,8 +179,14 @@ def _text_by_points(
 		)
 	return Group(
 		children,
+		offset=label_offset,
 		object_id=object_id,
-		metadata=metadata(kind="label"),
+		metadata=metadata(
+			kind="label",
+			record=record,
+			index=index,
+			offset=offset_name,
+		),
 	)
 
 
@@ -429,6 +439,13 @@ class RodSystem1LayoutBuilder:
 							(x_positions[index] + x_positions[index + 1]) / 2,
 							base_y + settings.base_height / 2,
 						),
+						Point(
+							_value(section, "section_label_offset_x", 0.0),
+							_value(section, "section_label_offset_y", 0.0),
+						),
+						"sections",
+						index,
+						"section_label",
 					)
 				)
 
@@ -466,6 +483,13 @@ class RodSystem1LayoutBuilder:
 							14,
 							"node/{}/label".format(index),
 							Point(x, base_y),
+							Point(
+								_value(node, "rod_label_offset_x", 0.0),
+								_value(node, "rod_label_offset_y", 0.0),
+							),
+							"betsect",
+							index,
+							"rod_label",
 						)
 					)
 				if node_highlighted:
@@ -622,6 +646,13 @@ class RodSystem1LayoutBuilder:
 						14,
 						"rod/{}/label".format(index),
 						leader,
+						Point(
+							_value(node, "rod_label_offset_x", 0.0),
+							_value(node, "rod_label_offset_y", 0.0),
+						),
+						"betsect",
+						index,
+						"rod_label",
 					)
 				)
 
@@ -660,10 +691,23 @@ class RodSystem1LayoutBuilder:
 					middle_y = (start.y + end.y) / 2
 					children.append(
 						Text(
-							Point(x + 7, middle_y + measure.height / 4),
+							Point(
+								x
+								+ 7
+								+ _value(node, "force_text_offset_x", 0.0),
+								middle_y
+								+ measure.height / 4
+								+ _value(node, "force_text_offset_y", 0.0),
+							),
 							force_text,
 							style,
 							object_id="force/{}/text".format(index),
+							metadata=metadata(
+								kind="label",
+								record="betsect",
+								index=index,
+								offset="force_text",
+							),
 						)
 					)
 				objects.append(
@@ -712,6 +756,13 @@ class RodSystem1LayoutBuilder:
 							False,
 							10,
 							"rod-force/{}/text".format(index),
+							label_offset=Point(
+								_value(node, "rod_force_text_offset_x", 0.0),
+								_value(node, "rod_force_text_offset_y", 0.0),
+							),
+							record="betsect",
+							index=index,
+							offset_name="rod_force_text",
 						)
 					)
 				objects.append(

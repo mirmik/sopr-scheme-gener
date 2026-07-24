@@ -95,7 +95,18 @@ def _arrow(start, end, stroke, size):
 	)
 
 
-def _text_by_points(start, end, value, style, metrics, alternate, offset, object_id):
+def _text_by_points(
+	start,
+	end,
+	value,
+	style,
+	metrics,
+	alternate,
+	offset,
+	object_id,
+	label_offset=Point(0.0, 0.0),
+	label_metadata=(),
+):
 	if start == end:
 		return Group((), object_id=object_id)
 	dx, dy = end.x - start.x, end.y - start.y
@@ -107,13 +118,19 @@ def _text_by_points(start, end, value, style, metrics, alternate, offset, object
 	measurement = metrics.measure(value, style)
 	return Text(
 		Point(
-			(start.x + end.x) / 2 + nx * (offset + measurement.width / 2),
-			(start.y + end.y) / 2 + measurement.height / 4 + ny * offset,
+			(start.x + end.x) / 2
+			+ nx * (offset + measurement.width / 2)
+			+ label_offset.x,
+			(start.y + end.y) / 2
+			+ measurement.height / 4
+			+ ny * offset
+			+ label_offset.y,
 		),
 		value,
 		style,
 		TextAnchor.BASELINE_CENTER,
 		object_id=object_id,
+		metadata=label_metadata,
 	)
 
 
@@ -173,9 +190,28 @@ def _dimension(
 	)
 
 
-def _force_label(start, end, value, policy, style, metrics, main, double, object_id):
+def _force_label(
+	start,
+	end,
+	value,
+	policy,
+	style,
+	metrics,
+	main,
+	double,
+	object_id,
+	label_offset,
+	record_index,
+	offset_name,
+):
 	if policy in (None, True, False):
 		policy = "1"
+	label_metadata = metadata(
+		kind="label",
+		record="sections",
+		index=record_index,
+		offset=offset_name,
+	)
 	if policy in ("5", "6"):
 		return Group(
 			(
@@ -188,6 +224,8 @@ def _force_label(start, end, value, policy, style, metrics, main, double, object
 					policy == "6",
 					10 if abs(end.y - start.y) > abs(end.x - start.x) else 14,
 					object_id + "/text",
+					label_offset,
+					label_metadata,
 				),
 				_arrow(start, end, double, 14),
 			),
@@ -211,17 +249,24 @@ def _force_label(start, end, value, policy, style, metrics, main, double, object
 		)
 	return Group(
 		(
-			Rectangle(
-				Rect(
-					position.x - 2,
-					position.y + measurement.height / 7,
-					measurement.width + 4,
-					measurement.height * 11 / 21,
+			Group(
+				(
+					Rectangle(
+						Rect(
+							position.x - 2,
+							position.y + measurement.height / 7,
+							measurement.width + 4,
+							measurement.height * 11 / 21,
+						),
+						stroke=None,
+						fill=Fill(WHITE),
+					),
+					Text(position, value, style),
 				),
-				stroke=None,
-				fill=Fill(WHITE),
+				offset=label_offset,
+				object_id=object_id + "/text",
+				metadata=label_metadata,
 			),
-			Text(position, value, style),
 			_arrow(start, end, double, 14),
 		),
 		object_id=object_id,
@@ -575,6 +620,20 @@ class EccentricBendingLayoutBuilder:
 						main,
 						double,
 						"point/{}/force-{}".format(index, axis_name),
+						Point(
+							_value(
+								record,
+								"f{}_text_offset_x".format(axis_name),
+								0.0,
+							),
+							_value(
+								record,
+								"f{}_text_offset_y".format(axis_name),
+								0.0,
+							),
+						),
+						index,
+						"f{}_text".format(axis_name),
 					)
 				)
 		return Scene(Rect(0, 0, settings.width, settings.height), tuple(objects))

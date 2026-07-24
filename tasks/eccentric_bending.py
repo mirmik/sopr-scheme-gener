@@ -12,7 +12,13 @@ from sopr_scheme_gener.layouts.eccentric_bending import (
 	EccentricBendingLayoutBuilder,
 	EccentricBendingLayoutSettings,
 )
-from sopr_scheme_gener.scene.qt import QtPainterRenderer, QtSceneInteraction, QtTextMetrics
+from sopr_scheme_gener.scene.qt import (
+	QtDraggableLabelController,
+	QtPainterRenderer,
+	QtSceneInteraction,
+	QtTextMetrics,
+	with_label_selection_highlight,
+)
 
 
 class ShemeType(common.SchemeType):
@@ -34,6 +40,12 @@ class ConfWidget(common.ConfWidget):
 			Fx_txt_alttxt="1",
 			Fy_txt_alttxt="1",
 			Fz_txt_alttxt="1",
+			fx_text_offset_x=0.0,
+			fx_text_offset_y=0.0,
+			fy_text_offset_x=0.0,
+			fy_text_offset_y=0.0,
+			fz_text_offset_x=0.0,
+			fz_text_offset_y=0.0,
 		):
 			self.Fx = Fx
 			self.Fy = Fy
@@ -44,6 +56,12 @@ class ConfWidget(common.ConfWidget):
 			self.Fx_txt_alttxt = "1" if Fx_txt_alttxt is None else Fx_txt_alttxt
 			self.Fy_txt_alttxt = "1" if Fy_txt_alttxt is None else Fy_txt_alttxt
 			self.Fz_txt_alttxt = "1" if Fz_txt_alttxt is None else Fz_txt_alttxt
+			self.fx_text_offset_x = fx_text_offset_x
+			self.fx_text_offset_y = fx_text_offset_y
+			self.fy_text_offset_x = fy_text_offset_x
+			self.fy_text_offset_y = fy_text_offset_y
+			self.fz_text_offset_x = fz_text_offset_x
+			self.fz_text_offset_y = fz_text_offset_y
 
 	def create_task_structure(self):
 		self.shemetype.task = {"sections": [self.sect() for _ in range(8)]}
@@ -121,6 +139,8 @@ class PaintWidget(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
 		self.last_scene = None
+		self.setMouseTracking(True)
+		self.label_drag = QtDraggableLabelController()
 
 	def paintEventImplementation(self, ev):
 		settings = EccentricBendingLayoutSettings(
@@ -151,6 +171,28 @@ class PaintWidget(paintwdg.PaintWidget):
 			metrics,
 			text_transform=paintool.greek,
 		)
-		self.last_scene = scene
 		self.scene_interaction = QtSceneInteraction(scene, text_metrics=metrics)
+		self.selected_label_id = self.label_drag.selected_object_id
+		scene = with_label_selection_highlight(
+			scene,
+			self.scene_interaction,
+			self.selected_label_id,
+		)
+		self.last_scene = scene
 		QtPainterRenderer(metrics).render(scene, self.painter)
+
+	def mousePressEvent(self, ev):
+		if self.scene_interaction is None:
+			return
+		self.label_drag.press(self.scene_interaction, ev.pos())
+
+	def mouseReleaseEvent(self, ev):
+		self.label_drag.release()
+		self.repaint()
+
+	def mouseMoveEvent(self, ev):
+		if self.scene_interaction is None:
+			return
+		self.label_drag.move(self.scene_interaction, ev.pos(), self.shemetype.task)
+		self.selected_label_id = self.label_drag.selected_object_id
+		self.repaint()

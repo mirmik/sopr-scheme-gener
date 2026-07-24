@@ -15,7 +15,13 @@ from sopr_scheme_gener.layouts.oblique_bending import (
 	ObliqueBendingLayoutBuilder,
 	ObliqueBendingLayoutSettings,
 )
-from sopr_scheme_gener.scene.qt import QtPainterRenderer, QtSceneInteraction, QtTextMetrics
+from sopr_scheme_gener.scene.qt import (
+	QtDraggableLabelController,
+	QtPainterRenderer,
+	QtSceneInteraction,
+	QtTextMetrics,
+	with_label_selection_highlight,
+)
 
 
 class ShemeType(common.SchemeType):
@@ -43,6 +49,14 @@ class ConfWidget(common.ConfWidget):
 			xS="нет",
 			yS="нет",
 			zS="нет",
+			x_force_text_offset_x=0.0,
+			x_force_text_offset_y=0.0,
+			y_force_text_offset_x=0.0,
+			y_force_text_offset_y=0.0,
+			x_moment_text_offset_x=0.0,
+			x_moment_text_offset_y=0.0,
+			y_moment_text_offset_x=0.0,
+			y_moment_text_offset_y=0.0,
 		):
 			self.xF = xF
 			self.yF = yF
@@ -55,13 +69,35 @@ class ConfWidget(common.ConfWidget):
 			self.xS = xS
 			self.yS = yS
 			self.zS = zS
+			self.x_force_text_offset_x = x_force_text_offset_x
+			self.x_force_text_offset_y = x_force_text_offset_y
+			self.y_force_text_offset_x = y_force_text_offset_x
+			self.y_force_text_offset_y = y_force_text_offset_y
+			self.x_moment_text_offset_x = x_moment_text_offset_x
+			self.x_moment_text_offset_y = x_moment_text_offset_y
+			self.y_moment_text_offset_x = y_moment_text_offset_x
+			self.y_moment_text_offset_y = y_moment_text_offset_y
 
 	class sectforce:
-		def __init__(self, xF="нет", xFtxt="", yF="нет", yFtxt=""):
+		def __init__(
+			self,
+			xF="нет",
+			xFtxt="",
+			yF="нет",
+			yFtxt="",
+			x_load_text_offset_x=0.0,
+			x_load_text_offset_y=0.0,
+			y_load_text_offset_x=0.0,
+			y_load_text_offset_y=0.0,
+		):
 			self.xF = xF
 			self.yF = yF
 			self.xFtxt = xFtxt
 			self.yFtxt = yFtxt
+			self.x_load_text_offset_x = x_load_text_offset_x
+			self.x_load_text_offset_y = x_load_text_offset_y
+			self.y_load_text_offset_x = y_load_text_offset_x
+			self.y_load_text_offset_y = y_load_text_offset_y
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -246,6 +282,8 @@ class PaintWidget(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
 		self.last_scene = None
+		self.setMouseTracking(True)
+		self.label_drag = QtDraggableLabelController()
 
 	def paintEventImplementation(self, ev):
 		settings = ObliqueBendingLayoutSettings(
@@ -274,6 +312,28 @@ class PaintWidget(paintwdg.PaintWidget):
 			text_transform=paintool.greek,
 			length_text=util.text_prepare_ltext,
 		)
-		self.last_scene = scene
 		self.scene_interaction = QtSceneInteraction(scene, text_metrics=metrics)
+		self.selected_label_id = self.label_drag.selected_object_id
+		scene = with_label_selection_highlight(
+			scene,
+			self.scene_interaction,
+			self.selected_label_id,
+		)
+		self.last_scene = scene
 		QtPainterRenderer(metrics).render(scene, self.painter)
+
+	def mousePressEvent(self, ev):
+		if self.scene_interaction is None:
+			return
+		self.label_drag.press(self.scene_interaction, ev.pos())
+
+	def mouseReleaseEvent(self, ev):
+		self.label_drag.release()
+		self.repaint()
+
+	def mouseMoveEvent(self, ev):
+		if self.scene_interaction is None:
+			return
+		self.label_drag.move(self.scene_interaction, ev.pos(), self.shemetype.task)
+		self.selected_label_id = self.label_drag.selected_object_id
+		self.repaint()

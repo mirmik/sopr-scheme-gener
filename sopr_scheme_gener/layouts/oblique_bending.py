@@ -108,6 +108,10 @@ def _text_by_points(
 	alternate,
 	offset,
 	object_id,
+	label_offset=Point(0.0, 0.0),
+	record=None,
+	index=-1,
+	offset_name=None,
 ):
 	if start == end:
 		return Group((), object_id=object_id)
@@ -120,13 +124,28 @@ def _text_by_points(
 	measurement = text_metrics.measure(value, style)
 	return Text(
 		Point(
-			(start.x + end.x) / 2 + nx * (offset + measurement.width / 2),
-			(start.y + end.y) / 2 + measurement.height / 4 + ny * offset,
+			(start.x + end.x) / 2
+			+ nx * (offset + measurement.width / 2)
+			+ label_offset.x,
+			(start.y + end.y) / 2
+			+ measurement.height / 4
+			+ ny * offset
+			+ label_offset.y,
 		),
 		value,
 		style,
 		TextAnchor.BASELINE_CENTER,
 		object_id=object_id,
+		metadata=(
+			metadata(
+				kind="label",
+				record=record,
+				index=index,
+				offset=offset_name,
+			)
+			if record is not None
+			else ()
+		),
 	)
 
 
@@ -354,6 +373,21 @@ class ObliqueBendingLayoutBuilder:
 								False,
 								14 if axis_name == "x" else 10,
 								"node/{}/force-{}/text".format(index, axis_name),
+								Point(
+									_value(
+										node,
+										"{}_force_text_offset_x".format(axis_name),
+										0.0,
+									),
+									_value(
+										node,
+										"{}_force_text_offset_y".format(axis_name),
+										0.0,
+									),
+								),
+								"betsect",
+								index,
+								"{}_force_text".format(axis_name),
 							),
 						),
 						object_id="node/{}/force-{}".format(index, axis_name),
@@ -396,6 +430,21 @@ class ObliqueBendingLayoutBuilder:
 								variant == "-",
 								14,
 								"node/{}/moment-{}/text".format(index, axis_name),
+								Point(
+									_value(
+										node,
+										"{}_moment_text_offset_x".format(axis_name),
+										0.0,
+									),
+									_value(
+										node,
+										"{}_moment_text_offset_y".format(axis_name),
+										0.0,
+									),
+								),
+								"betsect",
+								index,
+								"{}_moment_text".format(axis_name),
 							),
 						),
 						object_id="node/{}/moment-{}".format(index, axis_name),
@@ -469,6 +518,21 @@ class ObliqueBendingLayoutBuilder:
 						"section/{}/distributed-{}/text".format(
 							index, axis_name
 						),
+						Point(
+							_value(
+								load,
+								"{}_load_text_offset_x".format(axis_name),
+								0.0,
+							),
+							_value(
+								load,
+								"{}_load_text_offset_y".format(axis_name),
+								0.0,
+							),
+						),
+						"sectforce",
+						index,
+						"{}_load_text".format(axis_name),
 					)
 				)
 				objects.append(

@@ -115,6 +115,15 @@ def test_oblique_bending_covers_forces_moments_loads_supports_and_projection_mod
 	assert index.get("node/1/moment-y").metadata_value("direction") == "+"
 	assert index.get("section/0/distributed-x").metadata_value("direction") == "+"
 	assert index.get("section/0/distributed-y").metadata_value("direction") == "-"
+	assert index.get("node/0/force-x/text").metadata_value("kind") == "label"
+	assert (
+		index.get("node/0/moment-x/text").metadata_value("offset")
+		== "x_moment_text"
+	)
+	assert (
+		index.get("section/0/distributed-y/text").metadata_value("record")
+		== "sectforce"
+	)
 	for axis in ("x", "y", "z"):
 		assert index.get("node/0/support-{}".format(axis)) is not None
 

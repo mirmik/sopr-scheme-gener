@@ -283,8 +283,10 @@ layout и тесты геометрии Qt не импортируют. Тот �
   в Scene core;
 - `QtDraggableLabelController` реализует общий контракт сохраняемых смещений:
   Scene-метка с `kind=label`, `record`, `index` и `offset` связывается с
-  `<offset>_offset_x/y` соответствующей записи task model. Первые потребители
-  контракта — `column-stability` и все три подтипа `axial-torsion`.
+  `<offset>_offset_x/y` соответствующей записи task model. Контракт используют
+  `column-stability`, все три подтипа `axial-torsion`, `rod-system-1`,
+  `oblique-bending` и `eccentric-bending`; старые документы получают нулевые
+  смещения по умолчанию.
 
 `beams`, `stress-cube`, `plate`, `rod-system-2`, `frames` и
 `axial-torsion` больше не строят локальные `TextItem`/hover maps для

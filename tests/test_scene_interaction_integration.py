@@ -319,3 +319,89 @@ def test_torsion_action_label_reuses_shared_persisted_offset():
 	finally:
 		context.window.close()
 		context.app.processEvents()
+
+
+def test_rod_system_1_force_label_uses_shared_drag_controller():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "rod-system-1", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		node = scheme.task["betsect"][0]
+		node.F = "+"
+		node.Ftxt = "P"
+		context.app.processEvents()
+		context.canvas.make_image()
+
+		object_id = "force/0/text"
+		start = _device_center(context.canvas.scene_interaction, object_id)
+		_hover(context.canvas, start)
+		assert context.canvas.selected_label_id == object_id
+		_drag(context.canvas, start, (start[0] + 11, start[1] - 7))
+
+		assert node.force_text_offset_x == pytest.approx(11)
+		assert node.force_text_offset_y == pytest.approx(-7)
+		document = context.storage.to_data()
+		context.storage.load_data(document)
+		restored = context.controller.current_scheme.task["betsect"][0]
+		assert restored.force_text_offset_x == pytest.approx(11)
+		assert restored.force_text_offset_y == pytest.approx(-7)
+	finally:
+		context.window.close()
+		context.app.processEvents()
+
+
+def test_oblique_bending_moment_label_uses_shared_drag_controller():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "oblique-bending", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		node = scheme.task["betsect"][0]
+		node.xM = "+"
+		node.xMtxt = "M"
+		context.app.processEvents()
+		context.canvas.make_image()
+
+		object_id = "node/0/moment-x/text"
+		start = _device_center(context.canvas.scene_interaction, object_id)
+		_hover(context.canvas, start)
+		assert context.canvas.selected_label_id == object_id
+		_drag(context.canvas, start, (start[0] - 8, start[1] + 9))
+
+		assert node.x_moment_text_offset_x == pytest.approx(-8)
+		assert node.x_moment_text_offset_y == pytest.approx(9)
+	finally:
+		context.window.close()
+		context.app.processEvents()
+
+
+def test_eccentric_bending_force_label_uses_shared_drag_controller():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "eccentric-bending", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		record = scheme.task["sections"][0]
+		record.Fx = "справа +"
+		record.Fx_txt = "F"
+		context.app.processEvents()
+		context.canvas.make_image()
+
+		object_id = "point/0/force-x/text"
+		start = _device_center(context.canvas.scene_interaction, object_id)
+		_hover(context.canvas, start)
+		assert context.canvas.selected_label_id == object_id
+		_drag(context.canvas, start, (start[0] + 7, start[1] + 5))
+
+		assert record.fx_text_offset_x == pytest.approx(7)
+		assert record.fx_text_offset_y == pytest.approx(5)
+	finally:
+		context.window.close()
+		context.app.processEvents()
