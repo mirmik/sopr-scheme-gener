@@ -6,7 +6,7 @@ from sopr_scheme_gener.layouts.rod_system_1 import (
 	RodSystem1LayoutBuilder,
 	RodSystem1LayoutSettings,
 )
-from sopr_scheme_gener.scene import Group, Rect, SceneIndex, TextMeasurement
+from sopr_scheme_gener.scene import Group, Line, Rect, SceneIndex, TextMeasurement
 
 
 class FixedTextMetrics:
@@ -151,6 +151,34 @@ def test_rod_system_1_layout_rejects_inconsistent_documents():
 			RodSystem1LayoutSettings(400, 250, 125),
 			FixedTextMetrics(),
 		)
+
+
+def test_rod_label_leader_keeps_its_object_anchor_when_label_moves():
+	task = _task()
+	task["betsect"][1]["lbl"] = "R"
+	base = RodSystem1LayoutBuilder().build(
+		task,
+		RodSystem1LayoutSettings(400, 250, 125),
+		FixedTextMetrics(),
+	)
+	task["betsect"][1]["rod_label_offset_x"] = 24
+	task["betsect"][1]["rod_label_offset_y"] = -11
+	moved = RodSystem1LayoutBuilder().build(
+		task,
+		RodSystem1LayoutSettings(400, 250, 125),
+		FixedTextMetrics(),
+	)
+
+	base_group = _index(base).get("rod/1/label").item
+	moved_group = _index(moved).get("rod/1/label").item
+	base_leader = base_group.children[-1]
+	moved_leader = moved_group.children[-1]
+
+	assert isinstance(base_leader, Line)
+	assert isinstance(moved_leader, Line)
+	assert moved_leader.start == base_leader.start
+	assert moved_leader.end.x == pytest.approx(base_leader.end.x + 24)
+	assert moved_leader.end.y == pytest.approx(base_leader.end.y - 11)
 
 
 def test_rod_system_1_has_no_legacy_subject_painting_path():

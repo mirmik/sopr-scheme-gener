@@ -6,7 +6,7 @@ from sopr_scheme_gener.layouts.eccentric_bending import (
 	EccentricBendingLayoutBuilder,
 	EccentricBendingLayoutSettings,
 )
-from sopr_scheme_gener.scene import Rect, SceneIndex, TextMeasurement
+from sopr_scheme_gener.scene import Rect, SceneIndex, Text, TextMeasurement
 
 
 class FixedTextMetrics:
@@ -104,6 +104,19 @@ def test_eccentric_bending_covers_force_axes_directions_and_text_policies():
 def test_eccentric_bending_rejects_wrong_force_point_count():
 	with pytest.raises(ValueError, match="eight"):
 		_build({"sections": [_record()]})
+
+
+def test_eccentric_bending_omits_empty_force_labels_and_uses_no_text_backdrop():
+	task = _task()
+	task["sections"][0] = _record(Fx="справа +", Fx_txt="")
+	task["sections"][1] = _record(Fx="слева -", Fx_txt="F")
+	index = SceneIndex(_build(task), FixedTextMetrics())
+
+	assert index.get("point/0/force-x") is not None
+	assert index.get("point/0/force-x/text") is None
+	label = index.get("point/1/force-x/text")
+	assert label.metadata_value("kind") == "label"
+	assert isinstance(label.item, Text)
 
 
 def test_eccentric_bending_widget_has_no_subject_legacy_painting():

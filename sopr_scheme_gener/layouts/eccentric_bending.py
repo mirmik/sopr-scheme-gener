@@ -15,7 +15,6 @@ from sopr_scheme_gener.scene import (
 	Point,
 	Polygon,
 	Rect,
-	Rectangle,
 	Scene,
 	Stroke,
 	Text,
@@ -206,6 +205,13 @@ def _force_label(
 ):
 	if policy in (None, True, False):
 		policy = "1"
+	force_metadata = metadata(kind="force", policy=policy)
+	if not value:
+		return Group(
+			(_arrow(start, end, double, 14),),
+			object_id=object_id,
+			metadata=force_metadata,
+		)
 	label_metadata = metadata(
 		kind="label",
 		record="sections",
@@ -230,7 +236,7 @@ def _force_label(
 				_arrow(start, end, double, 14),
 			),
 			object_id=object_id,
-			metadata=metadata(kind="force", policy=policy),
+			metadata=force_metadata,
 		)
 	measurement = metrics.measure(value, style)
 	if policy == "1":
@@ -249,28 +255,17 @@ def _force_label(
 		)
 	return Group(
 		(
-			Group(
-				(
-					Rectangle(
-						Rect(
-							position.x - 2,
-							position.y + measurement.height / 7,
-							measurement.width + 4,
-							measurement.height * 11 / 21,
-						),
-						stroke=None,
-						fill=Fill(WHITE),
-					),
-					Text(position, value, style),
-				),
-				offset=label_offset,
+			Text(
+				position.translated(label_offset),
+				value,
+				style,
 				object_id=object_id + "/text",
 				metadata=label_metadata,
 			),
 			_arrow(start, end, double, 14),
 		),
 		object_id=object_id,
-		metadata=metadata(kind="force", policy=policy),
+		metadata=force_metadata,
 	)
 
 

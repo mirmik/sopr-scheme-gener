@@ -144,10 +144,12 @@ def _text_by_points(
 	measurement = text_metrics.measure(value, style)
 	center = Point(
 		(start.x + end.x) / 2
-		+ nx * (offset + measurement.width / 2),
+		+ nx * (offset + measurement.width / 2)
+		+ label_offset.x,
 		(start.y + end.y) / 2
 		+ measurement.height / 4
-		+ ny * offset,
+		+ ny * offset
+		+ label_offset.y,
 	)
 	children = [
 		Text(
@@ -179,7 +181,6 @@ def _text_by_points(
 		)
 	return Group(
 		children,
-		offset=label_offset,
 		object_id=object_id,
 		metadata=metadata(
 			kind="label",
