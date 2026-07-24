@@ -146,3 +146,24 @@ def test_qt_interaction_adapter_maps_device_points_and_hits_scene_objects():
 		== "label/0"
 	)
 	assert interaction.delta(QPointF(15, 5), QPointF(10, 15)) == QPointF(10, -20)
+
+
+def test_qt_interaction_adapter_accounts_for_frame_origin():
+	_app = QApplication.instance() or QApplication(["scene-origin-test"])
+	scene = Scene(
+		Rect(0, 0, 100, 100),
+		(
+			Rectangle(
+				Rect(10, 15, 20, 20),
+				object_id="label/0",
+				metadata=metadata(kind="label"),
+			),
+		),
+	)
+	interaction = QtSceneInteraction(scene, device_x=40, device_y=30)
+
+	assert interaction.point(QPointF(50, 45)) == QPointF(10, 15)
+	assert (
+		interaction.hit_test(QPointF(50, 45), kinds=("label",)).object_id
+		== "label/0"
+	)
