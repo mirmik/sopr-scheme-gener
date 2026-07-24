@@ -20,4 +20,4 @@ def test_default_render_baselines():
 	assert baseline_dir == Path("tests/baselines/linux-qt5").resolve()
 	assert environment_fingerprint()["platform"] == "linux"
 	manifest = verify_baselines(baseline_dir)
-	assert len(manifest["entries"]) == 22
+	assert len(manifest["entries"]) == 23

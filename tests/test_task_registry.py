@@ -5,7 +5,7 @@ from sopr_scheme_gener.task_registry import TASK_SPECS, TASK_SPECS_BY_ID
 
 def test_task_registry_has_unique_stable_ids():
 	identifiers = [spec.identifier for spec in TASK_SPECS]
-	assert len(identifiers) == 11
+	assert len(identifiers) == 12
 	assert len(identifiers) == len(set(identifiers))
 	assert set(identifiers) == set(TASK_SPECS_BY_ID)
 

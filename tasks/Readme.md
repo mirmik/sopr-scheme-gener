@@ -16,3 +16,4 @@
 | `stress-cube` | `tasks.stress_cube` |
 | `shafts-pipes` | `tasks.shafts_pipes` |
 | `spatial-beams` | `tasks.spatial_beams` |
+| `column-stability` | `tasks.column_stability` |

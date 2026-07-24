@@ -77,7 +77,7 @@ soprctl exec --code "ctx.select_task('stress-cube'); result = ctx.canvas.size()"
 ## Render baseline
 
 Текущий визуальный результат Qt5/Linux зафиксирован для default-состояния всех
-11 типов задач и для 11 доверенных legacy-файлов из репозитория:
+12 типов задач и для 11 доверенных legacy-файлов из репозитория:
 
 ```bash
 sopr-baseline verify

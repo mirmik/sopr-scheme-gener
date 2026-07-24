@@ -65,6 +65,12 @@ TASK_SPECS = (
 		"tasks.spatial_beams",
 		"ShemeType",
 	),
+	TaskSpec(
+		"column-stability",
+		"Устойчивость стержней",
+		"tasks.column_stability",
+		"ShemeType",
+	),
 )
 
 

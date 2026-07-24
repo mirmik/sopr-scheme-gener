@@ -31,6 +31,7 @@ TASK_OBJECT_TYPES = {
 	"stress-cube": ("sect", "label"),
 	"shafts-pipes": ("sect",),
 	"spatial-beams": ("sect", "node", "label"),
+	"column-stability": ("segment", "node"),
 }
 TASK_SCHEMA_VERSIONS = {task_id: 1 for task_id in TASK_OBJECT_TYPES}
 TASK_MIGRATIONS = {task_id: {} for task_id in TASK_OBJECT_TYPES}
