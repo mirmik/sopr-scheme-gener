@@ -145,8 +145,15 @@ class PaintWidget(QWidget):
 	def resizeEvent(self, ev):
 		if getattr(self, "shemetype", None) is not None:
 			self._clamp_page_layout()
-		self.shemetype.width_getter.set(self.width())
-		self.shemetype.height_getter.set(self.height())
+		blockers = (
+			QSignalBlocker(self.shemetype.width_getter.obj),
+			QSignalBlocker(self.shemetype.height_getter.obj),
+		)
+		try:
+			self.shemetype.width_getter.set(self.width())
+			self.shemetype.height_getter.set(self.height())
+		finally:
+			del blockers
 
 		self.shemetype.updateSizeFields()
 

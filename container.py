@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import *
 import common
 
 class ContainerWidget(QWidget):
+	RESIZE_MARGIN = 9
+
 	def __init__(self, border, fixedSize, filter):
 		"""
 			filter - фильтровать входящие события
@@ -20,6 +22,7 @@ class ContainerWidget(QWidget):
 		self.mtrack = False
 		self.hormode=False
 		self.vermode=False
+		self.resize_start = None
 
 		self.layout = QVBoxLayout()
 		self.curwidget = QWidget()
@@ -69,102 +72,127 @@ class ContainerWidget(QWidget):
 
 		super().paintEvent(ev)
 
+	def _resize_disabled(self):
+		if not getattr(self.curwidget, "no_resize", False):
+			return False
+		scheme = getattr(self.curwidget, "shemetype", None)
+		return scheme is None or scheme.page_layout is None
+
+	def _resize_hit(self, point):
+		x = point.x()
+		y = point.y()
+		margin = self.RESIZE_MARGIN
+		width = self.curwidget.width()
+		height = self.curwidget.height()
+		hormode = (
+			1
+			if x <= margin
+			else -1
+			if x >= width - margin
+			else 0
+		)
+		vermode = (
+			1
+			if y <= margin
+			else -1
+			if y >= height - margin
+			else 0
+		)
+		return hormode, vermode
+
+	def _resize_cursor(self, hormode, vermode):
+		if hormode and vermode:
+			return (
+				Qt.SizeFDiagCursor
+				if hormode == vermode
+				else Qt.SizeBDiagCursor
+			)
+		if hormode:
+			return Qt.SizeHorCursor
+		if vermode:
+			return Qt.SizeVerCursor
+		return Qt.ArrowCursor
+
+	def _set_resize_cursor(self, cursor):
+		self.setCursor(cursor)
+		self.curwidget.setCursor(cursor)
+
 	def mouseMoveEventHandler(self, ev):
 		x = ev.pos().x()
 		y = ev.pos().y()
 
-		if hasattr(self.curwidget, "no_resize") and self.curwidget.no_resize:
-			return
+		if self._resize_disabled():
+			self.mtrack = False
+			self.resize_start = None
+			self.unsetCursor()
+			self.curwidget.unsetCursor()
+			return False
 
-		if self.mtrack:
-			xdiff = self.lastx - x
-			ydiff = self.lasty - y
-
-		def resize_hor():
-			sz = self.curwidget.width() + xdiff * self.hormode
-			if sz < 10: sz = 10
-			self.resize(sz, self.curwidget.height())
-			self.update()
-			
-			if self.hormode == -1:
-				self.lastx -= xdiff
-
-
-		def resize_ver():
-			sz = self.curwidget.height() + ydiff * self.vermode
-			if sz < 10: sz = 10
-			self.resize(self.curwidget.width(), sz)
-			self.update()
-			
-			if self.vermode == -1:
-				self.lasty -= ydiff
-
-
-		if self.mtrack:
+		if self.mtrack and self.resize_start is not None:
+			start_x, start_y, start_width, start_height = self.resize_start
+			width = start_width
+			height = start_height
 			if self.hormode:
-				resize_hor()
-				return
-	
+				width = max(10, start_width + (start_x - x) * self.hormode)
 			if self.vermode:
-				resize_ver()
-				return
+				height = max(10, start_height + (start_y - y) * self.vermode)
+			self.resize(width, height)
+			self.update()
+			self._set_resize_cursor(
+				self._resize_cursor(self.hormode, self.vermode)
+			)
+			return True
 
-		if 1 < x < 10:
-			self.setCursor(Qt.SizeHorCursor)
-			if self.mtrack: 
-				self.hormode = +1
-				resize_hor()
-			return
-
-		if self.curwidget.width() - 1 > x > self.curwidget.width() - 10:
-			self.setCursor(Qt.SizeHorCursor)
-			if self.mtrack: 
-				self.hormode = -1
-				resize_hor()
-			return
-
-		if 1 < y < 10:
-			self.setCursor(Qt.SizeVerCursor)
-			if self.mtrack: 
-				self.vermode = +1
-				resize_ver()
-			return
-
-		if self.curwidget.height() - 1 >y > self.curwidget.height() - 10:
-			self.setCursor(Qt.SizeVerCursor)
-			if self.mtrack:
-				self.vermode = -1 
-				resize_ver()
-			return
-
-		self.setCursor(Qt.ArrowCursor)
-
-		#->setCursor(Qt::SizeFDiagCursor);
+		hormode, vermode = self._resize_hit(ev.pos())
+		if hormode or vermode:
+			self._set_resize_cursor(self._resize_cursor(hormode, vermode))
+			return True
+		self.unsetCursor()
+		self.curwidget.unsetCursor()
+		return False
 
 	def mousePressEventHandler(self, ev):
+		if ev.button() != Qt.LeftButton:
+			return False
+		if self._resize_disabled():
+			return False
+		self.hormode, self.vermode = self._resize_hit(ev.pos())
+		if not self.hormode and not self.vermode:
+			return False
 		self.mtrack = True
-		self.lastx = ev.pos().x()
-		self.lasty = ev.pos().y()
+		self.resize_start = (
+			ev.pos().x(),
+			ev.pos().y(),
+			self.curwidget.width(),
+			self.curwidget.height(),
+		)
+		self._set_resize_cursor(
+			self._resize_cursor(self.hormode, self.vermode)
+		)
+		self.curwidget.grabMouse()
+		return True
 
 	def mouseReleaseEventHandler(self, ev):
+		handled = self.mtrack
 		self.mtrack = False
 		self.hormode=False
 		self.vermode=False
+		self.resize_start = None
+		if handled:
+			self.curwidget.releaseMouse()
+		return handled
 
 	def eventFilter(self, obj, event):
 		if self.filter is False:
 			return True
 		
 		if event.type() == QtCore.QEvent.MouseMove:
-			self.mouseMoveEventHandler(event)
-			return False
+			return self.mouseMoveEventHandler(event)
 
 		if event.type() == QtCore.QEvent.MouseButtonPress:
-			self.mousePressEventHandler(event)
-			return False
+			return self.mousePressEventHandler(event)
 
 		if event.type() == QtCore.QEvent.MouseButtonRelease:
-			self.mouseReleaseEventHandler(event)
-			return False
+			return self.mouseReleaseEventHandler(event)
 
 		return False
