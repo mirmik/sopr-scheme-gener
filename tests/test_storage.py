@@ -51,6 +51,33 @@ def test_trusted_legacy_fixtures_convert_and_round_trip_as_json(context):
 		assert context.storage.load_data(parsed) == converted
 
 
+def test_documents_without_new_label_offsets_still_load_and_render(context):
+	def remove_offsets(value):
+		if isinstance(value, dict):
+			for key in tuple(value):
+				if key.endswith(("_offset_x", "_offset_y")):
+					del value[key]
+				else:
+					remove_offsets(value[key])
+		elif isinstance(value, list):
+			for item in value:
+				remove_offsets(item)
+
+	for spec in context.task_specs:
+		context.controller.select(spec.identifier)
+		document = json.loads(
+			json.dumps(context.storage.to_data(), ensure_ascii=False)
+		)
+		remove_offsets(document["task"]["payload"])
+
+		context.storage.load_data(document)
+		context.app.processEvents()
+		image = context.canvas.make_image()
+
+		assert context.controller.current_spec.identifier == spec.identifier
+		assert image.bits().asstring(image.sizeInBytes())
+
+
 def test_spatial_task_preserves_object_cycles_and_shared_arrays(context):
 	context.controller.select("spatial-beams")
 	data = context.storage.to_data()
