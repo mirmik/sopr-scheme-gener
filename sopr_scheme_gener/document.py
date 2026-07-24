@@ -4,6 +4,12 @@ import numbers
 
 import numpy
 
+from .page_layout import (
+	PageLayoutError,
+	page_layout_from_data,
+	validate_page_layout,
+)
+
 
 def to_json_value(value, seen=None, path=""):
 	if value is None or isinstance(value, (bool, int, float, str)):
@@ -179,6 +185,11 @@ class StructuredDocument:
 				for key, getter in self._setting_getters().items()
 			},
 			"text": text,
+			"layout": (
+				scheme.page_layout.to_data()
+				if scheme.page_layout is not None
+				else None
+			),
 			"task": to_json_value(scheme.task, path="/task"),
 		}
 
@@ -222,6 +233,23 @@ class StructuredDocument:
 				raise ValueError("Canvas path must be /canvas/width or /canvas/height")
 			return ("canvas", tokens[1], None)
 
+		if root == "layout":
+			if len(tokens) == 1:
+				return ("layout", scheme, None)
+			if scheme.page_layout is None:
+				raise ValueError(
+					"Layout is not materialized; set /layout before editing its fields"
+				)
+			if (
+				len(tokens) != 3
+				or tokens[1] not in ("task_frame", "note_frame")
+				or tokens[2] not in ("x", "y", "width", "height")
+			):
+				raise ValueError(
+					"Layout paths address /layout/<frame>/<coordinate>"
+				)
+			return ("layout_child", getattr(scheme.page_layout, tokens[1]), tokens[2])
+
 		raise ValueError("Document root {!r} is read-only or unknown".format(root))
 
 	def _read_live(self, target):
@@ -234,6 +262,10 @@ class StructuredDocument:
 			return owner.toPlainText()
 		if kind == "canvas":
 			return getattr(self.context.canvas, owner)()
+		if kind == "layout":
+			return owner.page_layout.to_data() if owner.page_layout is not None else None
+		if kind == "layout_child":
+			return getattr(owner, token)
 		raise AssertionError("Unknown live target kind: {}".format(kind))
 
 	def _write_live(self, target, value):
@@ -254,7 +286,41 @@ class StructuredDocument:
 				width = _coerce_value(width, value)
 			else:
 				height = _coerce_value(height, value)
+			layout = self._require_scheme().page_layout
+			if layout is not None:
+				try:
+					validate_page_layout(layout, width, height)
+				except PageLayoutError as exc:
+					raise ValueError(
+						"Canvas would not contain the current layout: {}".format(exc)
+					)
 			self.context.legacy.resize_canvas(width, height)
+			return
+		if kind == "layout":
+			if value is None:
+				owner.page_layout = None
+				return
+			try:
+				owner.page_layout = page_layout_from_data(
+					value,
+					self.context.canvas.width(),
+					self.context.canvas.height(),
+				)
+			except PageLayoutError as exc:
+				raise ValueError("Invalid layout: {}".format(exc))
+			return
+		if kind == "layout_child":
+			old_value = getattr(owner, token)
+			setattr(owner, token, _coerce_value(old_value, value, widen_numeric=True))
+			try:
+				validate_page_layout(
+					self._require_scheme().page_layout,
+					self.context.canvas.width(),
+					self.context.canvas.height(),
+				)
+			except PageLayoutError as exc:
+				setattr(owner, token, old_value)
+				raise ValueError("Invalid layout: {}".format(exc))
 			return
 		raise AssertionError("Unknown live target kind: {}".format(kind))
 

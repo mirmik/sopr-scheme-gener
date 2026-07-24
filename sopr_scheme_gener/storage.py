@@ -11,6 +11,7 @@ import numpy
 
 from .document import _getter_map, to_json_value
 from .legacy_storage import load_trusted_pickle
+from .page_layout import PageLayoutError, page_layout_from_data
 
 
 FORMAT_NAME = "sopr-scheme-document"
@@ -392,6 +393,8 @@ class DocumentStore:
 		extensions = {}
 		if hasattr(scheme, "section_container"):
 			extensions["section"] = _section_values(scheme.section_container)
+		if scheme.page_layout is not None:
+			extensions["page_layout"] = scheme.page_layout.to_data()
 		return {
 			"format": FORMAT_NAME,
 			"version": FORMAT_VERSION,
@@ -520,13 +523,32 @@ class DocumentStore:
 			raise DocumentFormatError("extensions must be a JSON object")
 		section = None
 		has_section = hasattr(scheme, "section_container")
-		if set(data["extensions"]) != ({"section"} if has_section else set()):
+		allowed_extensions = {"page_layout"}
+		required_extensions = {"section"} if has_section else set()
+		if (
+			not required_extensions.issubset(data["extensions"])
+			or not set(data["extensions"]).issubset(
+				required_extensions | allowed_extensions
+			)
+		):
 			raise DocumentFormatError("extensions do not match this task type")
 		if has_section:
 			section = _validated_section_values(
 				scheme.section_container,
 				data["extensions"]["section"],
 			)
+		page_layout = None
+		if "page_layout" in data["extensions"]:
+			try:
+				page_layout = page_layout_from_data(
+					data["extensions"]["page_layout"],
+					canvas["width"],
+					canvas["height"],
+				)
+			except PageLayoutError as exc:
+				raise DocumentFormatError(
+					"Invalid extensions.page_layout: {}".format(exc)
+				)
 		task_data = data["task"]
 		if not isinstance(task_data, dict) or set(task_data) != {"version", "payload"}:
 			raise DocumentFormatError("task must contain version and payload")
@@ -565,6 +587,7 @@ class DocumentStore:
 			"settings": settings,
 			"text": data["text"],
 			"section": section,
+			"page_layout": page_layout,
 			"task": task,
 		}
 
@@ -586,6 +609,7 @@ class DocumentStore:
 						getter.set(value)
 			if hasattr(scheme, "texteditor") and prepared["text"] is not None:
 				scheme.texteditor.setPlainText(prepared["text"])
+			scheme.page_layout = prepared["page_layout"]
 			scheme.task = prepared["task"]
 			scheme.confwidget.clean_and_update_interface()
 			self.context.legacy.resize_canvas(
@@ -613,6 +637,7 @@ class DocumentStore:
 			raise DocumentFormatError("Malformed trusted legacy document")
 		title = document[0][1]
 		self.context.controller.select_by_title(title)
+		self.context.controller.current_scheme.page_layout = None
 		self.context.controller.current_scheme.deserialize(document)
 		self.context.events.record(
 			"document.legacy_imported",

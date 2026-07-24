@@ -197,6 +197,8 @@ class QtSceneInteraction:
 		device_width=None,
 		device_height=None,
 		aspect_fit=False,
+		device_x=0,
+		device_y=0,
 	):
 		self.text_metrics = text_metrics or QtTextMetrics()
 		self.index = SceneIndex(scene, self.text_metrics)
@@ -210,9 +212,17 @@ class QtSceneInteraction:
 			)
 		else:
 			self.mapping = ViewportMapping.direct(scene.viewport)
+		self.device_x = device_x
+		self.device_y = device_y
+
+	def set_device_origin(self, x, y):
+		self.device_x = x
+		self.device_y = y
 
 	def point(self, qt_point):
-		point = self.mapping.from_device(Point(qt_point.x(), qt_point.y()))
+		point = self.mapping.from_device(
+			Point(qt_point.x() - self.device_x, qt_point.y() - self.device_y)
+		)
 		return QPointF(point.x, point.y)
 
 	def delta(self, current_qt_point, previous_qt_point):
@@ -225,7 +235,9 @@ class QtSceneInteraction:
 		return QPointF(delta.x, delta.y)
 
 	def hit_test(self, qt_point, kinds=None, predicate=None):
-		point = self.mapping.from_device(Point(qt_point.x(), qt_point.y()))
+		point = self.mapping.from_device(
+			Point(qt_point.x() - self.device_x, qt_point.y() - self.device_y)
+		)
 		return self.index.hit_test(point, kinds=kinds, predicate=predicate)
 
 

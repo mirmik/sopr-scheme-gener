@@ -42,6 +42,72 @@ def test_json_document_round_trip_for_every_task(context, tmp_path):
 		assert after["task_type"] == spec.identifier
 
 
+def test_optional_page_layout_round_trips_without_materializing_legacy(context):
+	context.controller.select("beams")
+	legacy = context.storage.to_data()
+	assert "page_layout" not in legacy["extensions"]
+
+	context.storage.load_data(legacy)
+	assert context.controller.current_scheme.page_layout is None
+	assert "page_layout" not in context.storage.to_data()["extensions"]
+
+	width = context.canvas.width()
+	height = context.canvas.height()
+	framed = json.loads(json.dumps(legacy))
+	framed["extensions"]["page_layout"] = {
+		"version": 1,
+		"task_frame": {
+			"x": 10,
+			"y": 10,
+			"width": width - 20,
+			"height": height - 100,
+		},
+		"note_frame": {
+			"x": 20,
+			"y": height - 80,
+			"width": width - 40,
+			"height": 60,
+		},
+	}
+
+	assert context.storage.load_data(framed) == framed
+
+
+@pytest.mark.parametrize(
+	"mutate, message",
+	[
+		(
+			lambda layout: layout["task_frame"].update({"width": 0}),
+			"dimensions must be positive",
+		),
+		(
+			lambda layout: layout["note_frame"].update({"x": -1}),
+			"must start inside the canvas",
+		),
+		(
+			lambda layout: layout["task_frame"].update({"width": 100000}),
+			"must fit inside the canvas",
+		),
+		(
+			lambda layout: layout.update({"version": 99}),
+			"Unsupported page_layout version",
+		),
+	],
+)
+def test_page_layout_validation(context, mutate, message):
+	context.controller.select("beams")
+	document = context.storage.to_data()
+	document["extensions"]["page_layout"] = {
+		"version": 1,
+		"task_frame": {"x": 0, "y": 0, "width": 100, "height": 100},
+		"note_frame": {"x": 0, "y": 100, "width": 100, "height": 50},
+	}
+	mutate(document["extensions"]["page_layout"])
+
+	with pytest.raises(DocumentFormatError, match=message):
+		context.storage.load_data(document)
+
+
 def test_trusted_legacy_fixtures_convert_and_round_trip_as_json(context):
 	for spec, fixture in trusted_fixtures():
 		converted = context.storage.import_trusted_legacy(fixture)

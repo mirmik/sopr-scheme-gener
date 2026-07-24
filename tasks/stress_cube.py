@@ -210,7 +210,11 @@ class PaintWidget(paintwdg.PaintWidget):
 			vertical_border=self.shemetype.hborder.get(),
 			line_width=self.shemetype.line_width.get(),
 			font_size=self.shemetype.font_size.get(),
-			note=self.shemetype.texteditor.toPlainText(),
+			note=(
+				""
+				if self.shemetype.page_layout is not None
+				else self.shemetype.texteditor.toPlainText()
+			),
 		)
 		scene = StressCubeLayoutBuilder().build(
 			self.shemetype.task,
@@ -218,6 +222,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			text_metrics=QtTextMetrics(),
 			text_transform=paintool.greek,
 		)
+		scene = self.framed_scene(scene, recompose=True)
 		self.scene_interaction = QtSceneInteraction(
 			scene,
 			text_metrics=QtTextMetrics(),

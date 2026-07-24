@@ -74,6 +74,32 @@ def test_structured_document_get_set_patch_and_scenario():
 		context.window.close()
 
 
+def test_structured_document_can_materialize_and_edit_page_layout():
+	args = build_parser().parse_args(["--type", "beams", "--no-maximize"])
+	context = create_runtime(args)
+	try:
+		assert context.document.get("/layout") is None
+		layout = {
+			"version": 1,
+			"task_frame": {"x": 10, "y": 10, "width": 300, "height": 180},
+			"note_frame": {"x": 20, "y": 190, "width": 280, "height": 50},
+		}
+		assert context.document.set("/layout", layout) == layout
+		assert context.document.set("/layout/task_frame/x", 25) == 25
+		assert context.storage.to_data()["extensions"]["page_layout"][
+			"task_frame"
+		]["x"] == 25
+
+		with pytest.raises(ValueError, match="must fit inside the canvas"):
+			context.document.set("/layout/task_frame/width", 100000)
+		assert context.document.get("/layout/task_frame/width") == 300
+
+		assert context.document.set("/layout", None) is None
+		assert "page_layout" not in context.storage.to_data()["extensions"]
+	finally:
+		context.window.close()
+
+
 def test_render_errors_are_reported_without_opening_a_modal():
 	args = build_parser().parse_args(["--type", "beams", "--no-maximize"])
 	context = create_runtime(args)

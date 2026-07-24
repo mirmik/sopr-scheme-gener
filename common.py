@@ -61,6 +61,7 @@ class StyleWidget(QWidget):
 class SchemeType:
 	def __init__(self, name):
 		self.name = name
+		self.page_layout = None
 	
 	def serialize(self, marchpath):
 		slst = self.confwidget.serialize_list()

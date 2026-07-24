@@ -301,7 +301,11 @@ class PaintWidget(paintwdg.PaintWidget):
 			arrow_size=self.shemetype.arrow_size.get(),
 			font_size=self.shemetype.font_size.get(),
 			line_width=self.shemetype.line_width.get(),
-			note=self.shemetype.texteditor.toPlainText(),
+			note=(
+				""
+				if self.shemetype.page_layout is not None
+				else self.shemetype.texteditor.toPlainText()
+			),
 			section=self._section_spec(),
 			hovered_node=node_index,
 			hovered_section=section_index,
@@ -316,6 +320,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			metrics,
 			text_transform=paintool.greek,
 		)
+		scene = self.framed_scene(scene, recompose=True)
 		self.last_scene = scene
 		self.scene_interaction = QtSceneInteraction(
 			scene,

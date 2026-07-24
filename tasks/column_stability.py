@@ -182,6 +182,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			metrics,
 			text_transform=paintool.greek,
 		)
+		scene = self.framed_scene(scene)
 		self.last_scene = scene
 		self.scene_interaction = QtSceneInteraction(scene, text_metrics=metrics)
 		self.selected_label_id = self.label_drag.selected_object_id

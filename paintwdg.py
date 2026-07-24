@@ -8,6 +8,8 @@ import traceback
 import common
 import functools
 import paintool
+from sopr_scheme_gener.page_layout import PageFrame, PageLayout
+from sopr_scheme_gener.scene.model import Group, Point, Rect, Scene
 
 EXIT_ON_EXCEPT = False
 ERROR_REPORTER = None
@@ -101,12 +103,30 @@ class PaintWidget(QWidget):
 		self.selected_label_id = None
 		self.label_items = {}
 		self.scene_interaction = None
+		self._layout_hover = None
+		self._layout_drag = None
+		self._exporting = False
+		self._layout_render_frame = None
 		super().__init__()
+		self.setMouseTracking(True)
+		self.installEventFilter(self)
 
 	def enable_common_mouse_events(self):
 		self.common_mouse_events_enabled = True
 
+	def width(self):
+		if self._layout_render_frame is not None:
+			return max(1, int(round(self._layout_render_frame.width)))
+		return super().width()
+
+	def height(self):
+		if self._layout_render_frame is not None:
+			return max(1, int(round(self._layout_render_frame.height)))
+		return super().height()
+
 	def resize_after_render(self, x, y):
+		if self.shemetype.page_layout is not None:
+			return
 		self.resize_after_render_data = (x, y)
 
 	def apply_resize_after_render(self):
@@ -123,18 +143,264 @@ class PaintWidget(QWidget):
 		common.PAINT_CONTAINER.resize(width, height)
 
 	def resizeEvent(self, ev):
+		if getattr(self, "shemetype", None) is not None:
+			self._clamp_page_layout()
 		self.shemetype.width_getter.set(self.width())
 		self.shemetype.height_getter.set(self.height())
 
 		self.shemetype.updateSizeFields()
 
+	def _clamp_page_layout(self):
+		layout = self.shemetype.page_layout
+		if layout is None:
+			return
+		canvas_width = max(1, super().width())
+		canvas_height = max(1, super().height())
+		for frame in (layout.task_frame, layout.note_frame):
+			frame.width = min(max(1, frame.width), canvas_width)
+			frame.height = min(max(1, frame.height), canvas_height)
+			frame.x = min(max(0, frame.x), canvas_width - frame.width)
+			frame.y = min(max(0, frame.y), canvas_height - frame.height)
+
 	def make_image(self):
 		img = QImage(self.size(), QImage.Format_ARGB32)
-		
-		with QPainter(img) as painter:
-			self.render(painter)
+		self._exporting = True
+		try:
+			with QPainter(img) as painter:
+				self.render(painter)
+		finally:
+			self._exporting = False
 
 		return img
+
+	def _derived_page_layout(self):
+		width = max(1, self.width())
+		height = max(1, self.height())
+		current_font = self.font
+		font = QFont(current_font() if callable(current_font) else current_font)
+		font.setPointSize(self.shemetype.font_size.get())
+		lines = self.shemetype.texteditor.toPlainText().splitlines()
+		note_height = max(50, QFontMetrics(font).height() * max(1, len(lines)) + 20)
+		note_height = min(note_height, max(1, height // 2))
+		margin = min(20, max(0, width // 8), max(0, height // 8))
+		note_y = max(margin, height - note_height - margin)
+		task_height = max(1, note_y - margin * 2)
+		return PageLayout(
+			task_frame=PageFrame(
+				margin,
+				margin,
+				max(1, width - margin * 2),
+				task_height,
+			),
+			note_frame=PageFrame(
+				margin,
+				note_y,
+				max(1, width - margin * 2),
+				max(1, height - note_y - margin),
+			),
+		)
+
+	def page_layout(self):
+		return self.shemetype.page_layout or self._derived_page_layout()
+
+	def _materialize_page_layout(self):
+		if self.shemetype.page_layout is None:
+			self.shemetype.page_layout = self._derived_page_layout()
+		return self.shemetype.page_layout
+
+	def _layout_frame_rect(self, frame_name):
+		frame = getattr(self.page_layout(), frame_name)
+		return QRectF(frame.x, frame.y, frame.width, frame.height)
+
+	def _layout_grip_rect(self, rect):
+		return QRectF(rect.center().x() - 11, rect.top() + 7, 22, 9)
+
+	def _layout_handle_rects(self, rect):
+		points = {
+			"nw": rect.topLeft(),
+			"n": QPointF(rect.center().x(), rect.top()),
+			"ne": rect.topRight(),
+			"e": QPointF(rect.right(), rect.center().y()),
+			"se": rect.bottomRight(),
+			"s": QPointF(rect.center().x(), rect.bottom()),
+			"sw": rect.bottomLeft(),
+			"w": QPointF(rect.left(), rect.center().y()),
+		}
+		return {
+			name: QRectF(point.x() - 4, point.y() - 4, 8, 8)
+			for name, point in points.items()
+		}
+
+	def _layout_hit_test(self, point):
+		for frame_name in ("note_frame", "task_frame"):
+			rect = self._layout_frame_rect(frame_name)
+			for handle, handle_rect in self._layout_handle_rects(rect).items():
+				if handle_rect.contains(point):
+					return frame_name, "resize", handle
+			if self._layout_grip_rect(rect).contains(point):
+				return frame_name, "move", None
+		for frame_name in ("note_frame", "task_frame"):
+			if self._layout_frame_rect(frame_name).contains(point):
+				return frame_name, "hover", None
+		return None
+
+	def _layout_cursor(self, hit):
+		if hit is None or hit[1] == "hover":
+			return Qt.ArrowCursor
+		if hit[1] == "move":
+			return Qt.SizeAllCursor
+		handle = hit[2]
+		if handle in ("n", "s"):
+			return Qt.SizeVerCursor
+		if handle in ("e", "w"):
+			return Qt.SizeHorCursor
+		if handle in ("nw", "se"):
+			return Qt.SizeFDiagCursor
+		return Qt.SizeBDiagCursor
+
+	def _start_layout_drag(self, point, hit):
+		layout = self.page_layout()
+		frame = getattr(layout, hit[0])
+		self._layout_drag = {
+			"frame": hit[0],
+			"action": hit[1],
+			"handle": hit[2],
+			"start": QPointF(point),
+			"original": PageFrame(frame.x, frame.y, frame.width, frame.height),
+		}
+		self._layout_hover = hit[0]
+		self.setCursor(self._layout_cursor(hit))
+		self.update()
+
+	def _update_layout_drag(self, point):
+		drag = self._layout_drag
+		if drag is None:
+			return
+		delta = point - drag["start"]
+		if (
+			self.shemetype.page_layout is None
+			and delta.x() == 0
+			and delta.y() == 0
+		):
+			return
+		self._materialize_page_layout()
+		original = drag["original"]
+		x, y = original.x, original.y
+		width, height = original.width, original.height
+		if drag["action"] == "move":
+			x = min(max(0, x + delta.x()), self.width() - width)
+			y = min(max(0, y + delta.y()), self.height() - height)
+		else:
+			handle = drag["handle"]
+			right = original.x + original.width
+			bottom = original.y + original.height
+			if "w" in handle:
+				x = min(max(0, original.x + delta.x()), right - 40)
+				width = right - x
+			if "e" in handle:
+				width = min(max(40, original.width + delta.x()), self.width() - x)
+			if "n" in handle:
+				y = min(max(0, original.y + delta.y()), bottom - 40)
+				height = bottom - y
+			if "s" in handle:
+				height = min(max(40, original.height + delta.y()), self.height() - y)
+		frame = getattr(self.shemetype.page_layout, drag["frame"])
+		frame.x, frame.y, frame.width, frame.height = x, y, width, height
+		self.update()
+
+	def eventFilter(self, watched, event):
+		if watched is not self:
+			return False
+		event_type = event.type()
+		if event_type == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
+			hit = self._layout_hit_test(QPointF(event.pos()))
+			if hit is not None and hit[1] in ("move", "resize"):
+				self._start_layout_drag(event.pos(), hit)
+				return True
+		if event_type == QEvent.MouseMove:
+			if self._layout_drag is not None:
+				self._update_layout_drag(event.pos())
+				return True
+			hit = self._layout_hit_test(QPointF(event.pos()))
+			hover = hit[0] if hit is not None else None
+			if hover != self._layout_hover:
+				self._layout_hover = hover
+				self.update()
+			self.setCursor(self._layout_cursor(hit))
+			return False
+		if event_type == QEvent.MouseButtonRelease and self._layout_drag is not None:
+			self._update_layout_drag(event.pos())
+			self._layout_drag = None
+			self.unsetCursor()
+			self.update()
+			return True
+		if event_type == QEvent.Leave and self._layout_drag is None:
+			if self._layout_hover is not None:
+				self._layout_hover = None
+				self.update()
+			self.unsetCursor()
+		return False
+
+	def _paint_layout_overlay(self):
+		if self._exporting or self._layout_hover is None:
+			return
+		rect = self._layout_frame_rect(self._layout_hover)
+		self.painter.save()
+		pen = QPen(QColor(35, 120, 210, 210), 1, Qt.DashLine)
+		self.painter.setPen(pen)
+		self.painter.setBrush(Qt.NoBrush)
+		self.painter.drawRect(rect)
+		self.painter.setPen(QPen(QColor(35, 120, 210), 1))
+		self.painter.setBrush(QColor(255, 255, 255, 235))
+		for handle_rect in self._layout_handle_rects(rect).values():
+			self.painter.drawRect(handle_rect)
+		grip = self._layout_grip_rect(rect)
+		self.painter.setBrush(QColor(35, 120, 210, 220))
+		self.painter.drawRoundedRect(grip, 2, 2)
+		self.painter.setPen(QPen(Qt.white, 1))
+		for offset in (-5, 0, 5):
+			x = grip.center().x() + offset
+			self.painter.drawLine(
+				QPointF(x, grip.top() + 2),
+				QPointF(x, grip.bottom() - 2),
+			)
+		self.painter.restore()
+
+	def framed_scene(self, scene, recompose=False):
+		if self.shemetype.page_layout is None:
+			return scene
+		objects = tuple(
+			item
+			for item in scene.objects
+			if getattr(item, "object_id", None) != "viewport-border"
+		)
+		if not recompose:
+			if len(objects) == len(scene.objects):
+				return scene
+			return type(scene)(
+				scene.viewport,
+				objects,
+				content_bounds=scene.content_bounds,
+				background=scene.background,
+			)
+		width = self.width()
+		height = self.height()
+		source = scene.viewport
+		offset = Point(
+			(width - source.width) / 2 - source.x,
+			(height - source.height) / 2 - source.y,
+		)
+		content_bounds = (
+			scene.content_bounds.translated(offset)
+			if scene.content_bounds is not None
+			else source.translated(offset)
+		)
+		return Scene(
+			Rect(0, 0, width, height),
+			(Group(objects, offset=offset),),
+			content_bounds=content_bounds,
+			background=scene.background,
+		)
 
 	def predraw_dialog(self):
 		PaintPreDialog(self).exec()
@@ -213,29 +479,83 @@ class PaintWidget(QWidget):
 			self.hcenter = self.height()/2 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2
 			self.text_height = QFontMetrics(self.font).height() * len(addtext.splitlines())
 
+	def _paint_task_contents(self, ev):
+		self.eval_hcenter()
+		self.paintEventImplementation(ev)
+		if self.scene_interaction is not None:
+			self.scene_interaction.set_device_origin(
+				self._layout_render_frame.x if self._layout_render_frame else 0,
+				self._layout_render_frame.y if self._layout_render_frame else 0,
+			)
+		if self.common_mouse_events_enabled:
+			self.common_scene.addRect(
+				0,
+				0,
+				self.width(),
+				self.height(),
+				pen=QPen(Qt.NoPen),
+			)
+			self.common_scene.render(self.painter)
+
+	def _paint_note(self, frame=None):
+		addtext = self.shemetype.texteditor.toPlainText()
+		self.painter.setPen(self.pen)
+		self.painter.setFont(self.font)
+		self.painter.setBrush(Qt.black)
+		if frame is not None:
+			self.painter.drawText(
+				QRectF(frame.x, frame.y, frame.width, frame.height),
+				Qt.AlignLeft | Qt.AlignTop | Qt.TextWordWrap,
+				paintool.greek(addtext),
+			)
+			return
+		n = len(addtext.splitlines())
+		for i, line in enumerate(addtext.splitlines()):
+			self.painter.drawText(
+				QPointF(
+					40,
+					self.height() - QFontMetrics(self.font).height() * (n - i),
+				),
+				paintool.greek(line),
+			)
+
 	def paintEvent(self, ev):
 		self.common_scene = QGraphicsScene()
 
 		try:
-			self.paintEventCommon()			
-			self.eval_hcenter()
-			self.paintEventImplementation(ev)
+			self.paintEventCommon()
+			layout = self.shemetype.page_layout
+			if layout is None:
+				self._paint_task_contents(ev)
+				if not self.no_text_render:
+					self._paint_note()
+			else:
+				frame = layout.task_frame
+				self.painter.save()
+				self.painter.setClipRect(
+					QRectF(frame.x, frame.y, frame.width, frame.height)
+				)
+				self.painter.setViewport(
+					int(round(frame.x)),
+					int(round(frame.y)),
+					max(1, int(round(frame.width))),
+					max(1, int(round(frame.height))),
+				)
+				self.painter.setWindow(
+					0,
+					0,
+					max(1, int(round(frame.width))),
+					max(1, int(round(frame.height))),
+				)
+				self._layout_render_frame = frame
+				try:
+					self._paint_task_contents(ev)
+				finally:
+					self._layout_render_frame = None
+					self.painter.restore()
+				self._paint_note(layout.note_frame)
 
-			if self.common_mouse_events_enabled:
-				self.common_scene.addRect(0,0,self.width(),self.height(), pen=QPen(Qt.NoPen))
-				self.common_scene.render(self.painter)
-
-			if not self.no_text_render:
-				addtext = self.shemetype.texteditor.toPlainText()
-				self.painter.setPen(self.pen)
-				self.painter.setFont(self.font)
-				self.painter.setBrush(Qt.black)
-				n = len(addtext.splitlines())
-				for i, l in enumerate(addtext.splitlines()):
-					self.painter.drawText(QPointF(
-					40, 
-					self.height() - QFontMetrics(self.font).height()*(n-i)), 
-					paintool.greek(l))
+			self._paint_layout_overlay()
 			
 			self.painter.end()
 	
@@ -245,6 +565,7 @@ class PaintWidget(QWidget):
 					QTimer.singleShot(0, self.apply_resize_after_render)
 
 		except Exception as ex:
+			self._layout_render_frame = None
 			if EXIT_ON_EXCEPT:
 				traceback.print_exc()				
 				exit(0)

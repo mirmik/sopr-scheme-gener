@@ -204,7 +204,11 @@ class PaintWidget(paintwdg.PaintWidget):
 			tube_width=self.shemetype.tubewidth.get(),
 			horizontal_border=self.shemetype.wborder.get(),
 			vertical_border=self.shemetype.hborder.get(),
-			note=self.shemetype.texteditor.toPlainText(),
+			note=(
+				""
+				if self.shemetype.page_layout is not None
+				else self.shemetype.texteditor.toPlainText()
+			),
 			font_size=self.shemetype.font_size.get(),
 			line_width=self.shemetype.line_width.get(),
 		)
@@ -215,6 +219,7 @@ class PaintWidget(paintwdg.PaintWidget):
 			metrics,
 			text_transform=paintool.greek,
 		)
+		scene = self.framed_scene(scene, recompose=True)
 		self.scene_interaction = QtSceneInteraction(scene, text_metrics=metrics)
 		self.selected_label_id = self.label_drag.selected_object_id
 		scene = with_label_selection_highlight(
