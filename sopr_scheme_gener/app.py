@@ -70,11 +70,11 @@ class CentralWidget(QWidget):
 		self.type_list_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
 		self.type_list_widget.activated.connect(self.type_scheme_selected)
-		self.page_layout_button = QPushButton("Page layout")
+		self.page_layout_button = QPushButton("Свободное расположение")
 		self.page_layout_button.setObjectName("activate_page_layout")
 		self.page_layout_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 		self.page_layout_button.setToolTip(
-			"Включить независимые рамки задачи и подписи для текущего документа"
+			"Разрешить независимо перемещать и растягивать задачу и подпись"
 		)
 		self.page_layout_button.setEnabled(False)
 		self.page_layout_button.clicked.connect(self.activate_page_layout)
@@ -153,7 +153,11 @@ class CentralWidget(QWidget):
 		active = scheme is not None and scheme.page_layout is not None
 		self.page_layout_button.setEnabled(scheme is not None and not active)
 		self.page_layout_button.setText(
-			"Layout включён" if active else "Page layout"
+			(
+				"Свободное расположение включено"
+				if active
+				else "Свободное расположение"
+			)
 		)
 
 	def current_task_spec(self):

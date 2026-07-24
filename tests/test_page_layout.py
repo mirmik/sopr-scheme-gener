@@ -35,7 +35,7 @@ def test_layout_activates_only_from_explicit_button_and_cannot_be_disabled():
 
 		assert scheme.page_layout is not None
 		assert not button.isEnabled()
-		assert button.text() == "Layout включён"
+		assert button.text() == "Свободное расположение включено"
 
 		materialized = scheme.page_layout
 		button.click()
@@ -43,7 +43,7 @@ def test_layout_activates_only_from_explicit_button_and_cannot_be_disabled():
 
 		context.controller.select("stress-cube")
 		assert button.isEnabled()
-		assert button.text() == "Page layout"
+		assert button.text() == "Свободное расположение"
 		context.controller.select("beams")
 		assert not button.isEnabled()
 	finally:
