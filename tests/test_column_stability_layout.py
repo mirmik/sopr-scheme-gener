@@ -26,31 +26,31 @@ def test_reference_like_scene_has_segments_loads_labels_and_floating_clamp():
 	scene = _build(
 		{
 			"segments": [
-				{"length": 1, "length_text": "l", "rigidity_text": ""},
 				{"length": 1, "length_text": "l", "rigidity_text": "EJ_min"},
+				{"length": 1, "length_text": "l", "rigidity_text": ""},
 			],
 			"nodes": [
-				{"support": "fixed", "load": "none", "load_text": ""},
+				{"support": "none", "load": "down", "load_text": "F"},
 				{
 					"support": "floating-clamp",
 					"load": "none",
 					"load_text": "",
 				},
-				{"support": "none", "load": "down", "load_text": "F"},
 			],
+			"base_support": "fixed",
 		}
 	)
 	index = SceneIndex(scene, FixedTextMetrics())
 
 	assert index.get("segment/0/body") is not None
-	assert index.get("segment/1/rigidity-label") is not None
+	assert index.get("segment/0/rigidity-label") is not None
 	assert dict(index.get("node/1/support").item.metadata)["support"] == (
 		"floating-clamp"
 	)
-	assert index.get("node/2/load") is not None
-	assert index.get("node/2/load-label") is not None
+	assert index.get("node/0/load") is not None
+	assert index.get("node/0/load-label") is not None
 	assert dict(index.get("segment/0/length-label").item.metadata)["kind"] == "label"
-	assert dict(index.get("segment/1/rigidity-label").item.metadata)[
+	assert dict(index.get("segment/0/rigidity-label").item.metadata)[
 		"label_kind"
 	] == "rigidity"
 
@@ -69,7 +69,6 @@ def test_label_offsets_move_length_rigidity_and_load_text():
 			}
 		],
 		"nodes": [
-			{"support": "заделка", "load": "нет", "load_text": ""},
 			{
 				"support": "нет",
 				"load": "вниз",
@@ -78,6 +77,7 @@ def test_label_offsets_move_length_rigidity_and_load_text():
 				"load_offset_y": 4,
 			},
 		],
+		"base_support": "заделка",
 	}
 	moved = SceneIndex(_build(base_task), FixedTextMetrics())
 	default = SceneIndex(
@@ -87,9 +87,9 @@ def test_label_offsets_move_length_rigidity_and_load_text():
 					{"length": 1, "length_text": "l", "rigidity_text": "EJ"}
 				],
 				"nodes": [
-					{"support": "заделка", "load": "нет", "load_text": ""},
 					{"support": "нет", "load": "вниз", "load_text": "F"},
 				],
+				"base_support": "заделка",
 			}
 		),
 		FixedTextMetrics(),
@@ -98,7 +98,7 @@ def test_label_offsets_move_length_rigidity_and_load_text():
 	for object_id, dx, dy in (
 		("segment/0/length-label", 11, -7),
 		("segment/0/rigidity-label", -5, 9),
-		("node/1/load-label", 13, 4),
+		("node/0/load-label", 13, 4),
 	):
 		moved_position = moved.get(object_id).item.position
 		default_position = default.get(object_id).item.position
@@ -114,10 +114,10 @@ def test_internal_load_uses_crossbar_and_two_slender_arrows():
 				{"length": 1, "length_text": "l", "rigidity_text": ""},
 			],
 			"nodes": [
-				{"support": "заделка", "load": "нет", "load_text": ""},
-				{"support": "нет", "load": "вниз", "load_text": "3F"},
 				{"support": "нет", "load": "нет", "load_text": ""},
+				{"support": "нет", "load": "вниз", "load_text": "3F"},
 			],
+			"base_support": "заделка",
 		}
 	)
 	index = SceneIndex(scene, FixedTextMetrics())
@@ -138,12 +138,12 @@ def test_right_side_link_hatching_is_mirrored_outwards():
 					{"length": 1, "length_text": "l", "rigidity_text": ""}
 				],
 				"nodes": [
-					{"support": "нет", "load": "нет", "load_text": ""},
 					{"support": side, "load": "нет", "load_text": ""},
 				],
+				"base_support": "нет",
 			}
 		)
-		return SceneIndex(scene, FixedTextMetrics()).get("node/1/support").item
+		return SceneIndex(scene, FixedTextMetrics()).get("node/0/support").item
 
 	left_hatches = [
 		item
@@ -179,13 +179,13 @@ def test_endpoint_side_link_centers_joint_and_keeps_link_out_of_circles(
 		{
 			"segments": [{"length": 1, "length_text": "l", "rigidity_text": ""}],
 			"nodes": [
-				{"support": "заделка", "load": "нет", "load_text": ""},
 				{"support": support_name, "load": "нет", "load_text": ""},
 			],
+			"base_support": "заделка",
 		}
 	)
 	index = SceneIndex(scene, FixedTextMetrics())
-	support = index.get("node/1/support").item
+	support = index.get("node/0/support").item
 	body = index.get("segment/0/body").item
 	link, inner_joint, outer_joint = support.children[:3]
 	inner_center_x = inner_joint.bounds.x + inner_joint.bounds.width / 2
@@ -207,10 +207,10 @@ def test_internal_side_link_keeps_joint_beside_rod():
 				{"length": 1, "length_text": "l", "rigidity_text": ""},
 			],
 			"nodes": [
-				{"support": "заделка", "load": "нет", "load_text": ""},
-				{"support": "боковая тяга справа", "load": "нет", "load_text": ""},
 				{"support": "нет", "load": "нет", "load_text": ""},
+				{"support": "боковая тяга справа", "load": "нет", "load_text": ""},
 			],
+			"base_support": "заделка",
 		}
 	)
 	index = SceneIndex(scene, FixedTextMetrics())
@@ -222,27 +222,16 @@ def test_internal_side_link_keeps_joint_beside_rod():
 	assert inner_center_x > body.start.x
 
 
-@pytest.mark.parametrize(
-	("node_index", "normal_direction"),
-	[(0, 1), (1, -1)],
-)
-def test_hinge_triangle_grows_from_support_line_and_joint_covers_apex(
-	node_index,
-	normal_direction,
-):
-	nodes = [
-		{"support": "нет", "load": "нет", "load_text": ""},
-		{"support": "нет", "load": "нет", "load_text": ""},
-	]
-	nodes[node_index]["support"] = "шарнир"
+def test_base_hinge_triangle_grows_from_support_line_and_joint_covers_apex():
 	scene = _build(
 		{
 			"segments": [{"length": 1, "length_text": "l", "rigidity_text": ""}],
-			"nodes": nodes,
+			"nodes": [{"support": "нет", "load": "нет", "load_text": ""}],
+			"base_support": "шарнир",
 		}
 	)
 	index = SceneIndex(scene, FixedTextMetrics())
-	support = index.get("node/{}/support".format(node_index)).item
+	support = index.get("base/support").item
 	triangle = support.children[0]
 	surface = support.children[1]
 	joint = support.children[-1]
@@ -261,7 +250,7 @@ def test_hinge_triangle_grows_from_support_line_and_joint_covers_apex(
 	]
 	assert hatches
 	assert all(
-		(item.end.y - item.start.y) * normal_direction > 0
+		item.end.y - item.start.y > 0
 		for item in hatches
 	)
 
@@ -269,39 +258,51 @@ def test_hinge_triangle_grows_from_support_line_and_joint_covers_apex(
 @pytest.mark.parametrize(
 	"support",
 	[
-		"заделка",
-		"шарнир",
 		"боковая тяга слева",
 		"боковая тяга справа",
 		"плавающая заделка",
 	],
 )
-def test_all_editor_support_types_render(support):
+def test_all_node_support_types_render(support):
 	scene = _build(
 		{
 			"segments": [{"length": 1, "length_text": "l", "rigidity_text": ""}],
 			"nodes": [
-				{"support": "нет", "load": "нет", "load_text": ""},
 				{"support": support, "load": "нет", "load_text": ""},
 			],
+			"base_support": "нет",
 		}
 	)
-	assert SceneIndex(scene, FixedTextMetrics()).get("node/1/support") is not None
+	assert SceneIndex(scene, FixedTextMetrics()).get("node/0/support") is not None
+
+
+@pytest.mark.parametrize("support", ["заделка", "шарнир"])
+def test_all_base_support_types_render(support):
+	scene = _build(
+		{
+			"segments": [{"length": 1}],
+			"nodes": [{"support": "нет"}],
+			"base_support": support,
+		}
+	)
+	assert SceneIndex(scene, FixedTextMetrics()).get("base/support") is not None
 
 
 def test_layout_rejects_broken_composition():
-	with pytest.raises(ValueError, match="one more node"):
+	with pytest.raises(ValueError, match="one upper node"):
 		_build(
 			{
-				"segments": [{"length": 1}],
+				"segments": [{"length": 1}, {"length": 1}],
 				"nodes": [{"support": "нет"}],
+				"base_support": "нет",
 			}
 		)
 	with pytest.raises(ValueError, match="positive"):
 		_build(
 			{
 				"segments": [{"length": 0}],
-				"nodes": [{"support": "нет"}, {"support": "нет"}],
+				"nodes": [{"support": "нет"}],
+				"base_support": "нет",
 			}
 		)
 

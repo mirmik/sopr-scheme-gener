@@ -35,7 +35,38 @@ TASK_OBJECT_TYPES = {
 	"column-stability": ("segment", "node"),
 }
 TASK_SCHEMA_VERSIONS = {task_id: 1 for task_id in TASK_OBJECT_TYPES}
+TASK_SCHEMA_VERSIONS["column-stability"] = 2
+
+
+def _migrate_column_stability_v1(payload):
+	if not isinstance(payload, dict):
+		raise DocumentFormatError("column-stability v1 payload must be an object")
+	segments = payload.get("segments")
+	nodes = payload.get("nodes")
+	if (
+		not isinstance(segments, list)
+		or not isinstance(nodes, list)
+		or len(nodes) != len(segments) + 1
+	):
+		raise DocumentFormatError(
+			"column-stability v1 requires one more node than segment"
+		)
+	bottom_node = nodes[0]
+	try:
+		base_support = bottom_node["fields"]["support"]
+	except (KeyError, TypeError):
+		raise DocumentFormatError(
+			"column-stability v1 bottom node has no support"
+		)
+	result = dict(payload)
+	result["base_support"] = base_support
+	result["segments"] = list(reversed(segments))
+	result["nodes"] = list(reversed(nodes[1:]))
+	return result
+
+
 TASK_MIGRATIONS = {task_id: {} for task_id in TASK_OBJECT_TYPES}
+TASK_MIGRATIONS["column-stability"] = {1: _migrate_column_stability_v1}
 
 
 class DocumentFormatError(ValueError):

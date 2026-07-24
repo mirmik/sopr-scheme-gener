@@ -91,6 +91,14 @@ class SchemeType:
 					print("SchemeType::deserialize", k)
 					do_deserialize(v, vd)
 
+		migrate_legacy_task = getattr(
+			self.confwidget,
+			"migrate_legacy_task",
+			None,
+		)
+		if migrate_legacy_task is not None:
+			migrate_legacy_task()
+
 		if DEBUG:
 			print("SchemeType::clean_and_update_interface")
 	

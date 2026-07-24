@@ -39,6 +39,13 @@ SUPPORT_TYPES = (
 	SUPPORT_SIDE_RIGHT,
 	SUPPORT_FLOATING,
 )
+BASE_SUPPORT_TYPES = (SUPPORT_NONE, SUPPORT_FIXED, SUPPORT_HINGE)
+NODE_SUPPORT_TYPES = (
+	SUPPORT_NONE,
+	SUPPORT_SIDE_LEFT,
+	SUPPORT_SIDE_RIGHT,
+	SUPPORT_FLOATING,
+)
 
 LOAD_NONE = "нет"
 LOAD_DOWN = "вниз"
@@ -238,7 +245,7 @@ def _support(point, support, settings, stroke, object_id, node_index, node_count
 			settings.support_size,
 			stroke,
 			object_id,
-			at_top=node_index == node_count - 1,
+			at_top=node_index == 0,
 		)
 	if support in (SUPPORT_HINGE, "hinge"):
 		return _hinge_support(
@@ -246,7 +253,7 @@ def _support(point, support, settings, stroke, object_id, node_index, node_count
 			settings.support_size,
 			stroke,
 			object_id,
-			at_top=node_index == node_count - 1,
+			at_top=node_index == 0,
 		)
 	if support in (SUPPORT_SIDE_LEFT, "side-link-left"):
 		return _side_link(
@@ -255,7 +262,7 @@ def _support(point, support, settings, stroke, object_id, node_index, node_count
 			stroke,
 			object_id,
 			"left",
-			at_endpoint=node_index in (0, node_count - 1),
+			at_endpoint=node_index == 0,
 		)
 	if support in (SUPPORT_SIDE_RIGHT, "side-link-right"):
 		return _side_link(
@@ -264,7 +271,7 @@ def _support(point, support, settings, stroke, object_id, node_index, node_count
 			stroke,
 			object_id,
 			"right",
-			at_endpoint=node_index in (0, node_count - 1),
+			at_endpoint=node_index == 0,
 		)
 	if support in (
 		SUPPORT_FLOATING,
@@ -283,10 +290,24 @@ class ColumnStabilityLayoutBuilder:
 		text_transform = text_transform or (lambda value: value)
 		segments = task.get("segments", ())
 		nodes = task.get("nodes", ())
+		base_support = task.get("base_support", SUPPORT_NONE)
 		if not segments:
 			raise ValueError("column-stability requires at least one segment")
-		if len(nodes) != len(segments) + 1:
-			raise ValueError("column-stability requires one more node than segment")
+		if len(nodes) != len(segments):
+			raise ValueError(
+				"column-stability requires one upper node per segment"
+			)
+		if base_support not in (
+			SUPPORT_NONE,
+			SUPPORT_FIXED,
+			SUPPORT_HINGE,
+			"none",
+			"fixed",
+			"hinge",
+		):
+			raise ValueError(
+				"Unsupported stability base support: {!r}".format(base_support)
+			)
 
 		lengths = [float(_value(segment, "length", 1.0)) for segment in segments]
 		if any(length <= 0 for length in lengths):
@@ -299,22 +320,23 @@ class ColumnStabilityLayoutBuilder:
 		x = settings.width * 0.43
 		top = max(55.0, settings.support_size + 10)
 		bottom = max(top + 150.0, settings.hcenter + 90.0)
-		lower_support = _value(nodes[0], "support", SUPPORT_NONE)
-		if lower_support in (SUPPORT_HINGE, "hinge"):
+		if base_support in (SUPPORT_HINGE, "hinge"):
 			bottom_limit = settings.height - settings.support_size - 10
 		else:
 			bottom_limit = settings.height - 20
 		bottom = min(bottom, bottom_limit)
 		available = bottom - top
 		total = sum(lengths)
-		node_y = [bottom]
+		boundary_y = [top]
 		for length in lengths:
-			node_y.append(node_y[-1] - available * length / total)
+			boundary_y.append(
+				boundary_y[-1] + available * length / total
+			)
 
 		objects = []
 		for index, segment in enumerate(segments):
-			start = Point(x, node_y[index])
-			end = Point(x, node_y[index + 1])
+			start = Point(x, boundary_y[index])
+			end = Point(x, boundary_y[index + 1])
 			objects.append(
 				Line(
 					start,
@@ -372,7 +394,7 @@ class ColumnStabilityLayoutBuilder:
 					)
 				)
 
-		for index, (node, y) in enumerate(zip(nodes, node_y)):
+		for index, (node, y) in enumerate(zip(nodes, boundary_y[:-1])):
 			point = Point(x, y)
 			support = _support(
 				point,
@@ -388,15 +410,20 @@ class ColumnStabilityLayoutBuilder:
 
 			load = _value(node, "load", LOAD_NONE)
 			if load not in (LOAD_NONE, "none", None):
-				is_internal = 0 < index < len(nodes) - 1
+				is_internal = index > 0
 				if load in (LOAD_DOWN, "down"):
 					neighbor_gap = (
-						y - node_y[index + 1] if index + 1 < len(node_y) else 70
+						y - boundary_y[index - 1]
+						if index > 0
+						else 70
 					)
-					load_length = min(52.0, max(28.0, neighbor_gap * 0.65))
+					load_length = min(
+						52.0,
+						max(28.0, abs(neighbor_gap) * 0.65),
+					)
 					start_y, end_y = y - load_length, y
 				elif load in (LOAD_UP, "up"):
-					neighbor_gap = y - node_y[index - 1] if index else -70
+					neighbor_gap = y - boundary_y[index + 1]
 					load_length = min(52.0, max(28.0, abs(neighbor_gap) * 0.65))
 					start_y, end_y = y + load_length, y
 				else:
@@ -486,6 +513,26 @@ class ColumnStabilityLayoutBuilder:
 							),
 						)
 					)
+
+		base_point = Point(x, boundary_y[-1])
+		if base_support in (SUPPORT_FIXED, "fixed"):
+			objects.append(
+				_fixed_support(
+					base_point,
+					settings.support_size,
+					main,
+					"base/support",
+				)
+			)
+		elif base_support in (SUPPORT_HINGE, "hinge"):
+			objects.append(
+				_hinge_support(
+					base_point,
+					settings.support_size,
+					main,
+					"base/support",
+				)
+			)
 
 		objects.append(
 			Rectangle(

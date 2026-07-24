@@ -155,6 +155,34 @@ def test_spatial_task_preserves_object_cycles_and_shared_arrays(context):
 	assert context.storage.to_data() == data
 
 
+def test_column_stability_v1_migrates_to_top_down_model_without_raster_change(
+	context,
+):
+	context.controller.select("column-stability")
+	current = context.storage.to_data()
+	before = context.canvas.make_image()
+	v1 = json.loads(json.dumps(current, ensure_ascii=False))
+	payload = v1["task"]["payload"]
+	base_node = {
+		"$type": "object",
+		"class": "node",
+		"fields": {
+			"support": payload.pop("base_support"),
+			"load": "нет",
+			"load_text": "",
+			"load_offset_x": 0.0,
+			"load_offset_y": 0.0,
+		},
+	}
+	payload["segments"].reverse()
+	payload["nodes"] = [base_node] + list(reversed(payload["nodes"]))
+	v1["task"]["version"] = 1
+
+	assert context.storage.load_data(v1) == current
+	after = context.canvas.make_image()
+	assert after == before
+
+
 def test_file_menu_saves_and_opens_json_sidecar_by_image_hash(
 	context,
 	tmp_path,

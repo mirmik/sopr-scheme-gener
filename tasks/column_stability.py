@@ -6,16 +6,17 @@ import paintwdg
 import tablewidget
 import taskconf_menu
 
-from PyQt5.QtWidgets import QLabel, QTextEdit
+from PyQt5.QtWidgets import QComboBox, QHBoxLayout, QLabel, QTextEdit
 
 from sopr_scheme_gener.layouts.column_stability import (
 	LOAD_DOWN,
 	LOAD_NONE,
 	LOAD_TYPES,
+	BASE_SUPPORT_TYPES,
+	NODE_SUPPORT_TYPES,
 	SUPPORT_FIXED,
 	SUPPORT_FLOATING,
 	SUPPORT_NONE,
-	SUPPORT_TYPES,
 	ColumnStabilityLayoutBuilder,
 	ColumnStabilityLayoutSettings,
 )
@@ -72,14 +73,14 @@ class ConfWidget(common.ConfWidget):
 	def create_task_structure(self):
 		self.shemetype.task = {
 			"segments": [
-				self.segment(1.0, "l", ""),
 				self.segment(1.0, "l", "EJ_min"),
+				self.segment(1.0, "l", ""),
 			],
 			"nodes": [
-				self.node(SUPPORT_FIXED),
-				self.node(SUPPORT_FLOATING),
 				self.node(SUPPORT_NONE, LOAD_DOWN, "F"),
+				self.node(SUPPORT_FLOATING),
 			],
+			"base_support": SUPPORT_FIXED,
 		}
 
 	def __init__(self, scheme):
@@ -105,6 +106,20 @@ class ConfWidget(common.ConfWidget):
 		self.setLayout(self.vlayout)
 
 	def update_interface(self):
+		self.base_support_combo = QComboBox()
+		self.base_support_combo.setObjectName("column_base_support")
+		self.base_support_combo.addItems(list(BASE_SUPPORT_TYPES))
+		self.base_support_combo.setCurrentText(
+			self.shemetype.task.get("base_support", SUPPORT_NONE)
+		)
+		self.base_support_combo.currentTextChanged.connect(
+			self._base_support_changed
+		)
+		base_support_layout = QHBoxLayout()
+		base_support_layout.addWidget(QLabel("Нижняя опора:"))
+		base_support_layout.addWidget(self.base_support_combo)
+		self.vlayout.addLayout(base_support_layout)
+
 		self.segment_table = tablewidget.TableWidget(self.shemetype, "segments")
 		self.segment_table.addColumn("length", "float", "Длина")
 		self.segment_table.addColumn("length_text", "str", "Размер")
@@ -113,7 +128,7 @@ class ConfWidget(common.ConfWidget):
 
 		self.node_table = tablewidget.TableWidget(self.shemetype, "nodes")
 		self.node_table.addColumn(
-			"support", "list", "Опора", variant=list(SUPPORT_TYPES)
+			"support", "list", "Опора", variant=list(NODE_SUPPORT_TYPES)
 		)
 		self.node_table.addColumn("load", "list", "Сила", variant=list(LOAD_TYPES))
 		self.node_table.addColumn("load_text", "str", "Текст силы")
@@ -121,9 +136,9 @@ class ConfWidget(common.ConfWidget):
 
 		self.segment_table.updated.connect(self.redraw)
 		self.node_table.updated.connect(self.redraw)
-		self.vlayout.addWidget(QLabel("Участки (снизу вверх):"))
+		self.vlayout.addWidget(QLabel("Участки (сверху вниз):"))
 		self.vlayout.addWidget(self.segment_table)
-		self.vlayout.addWidget(QLabel("Узлы (снизу вверх):"))
+		self.vlayout.addWidget(QLabel("Узлы над участками (сверху вниз):"))
 		self.vlayout.addWidget(self.node_table)
 		self.vlayout.addWidget(self.sett)
 		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
@@ -137,7 +152,7 @@ class ConfWidget(common.ConfWidget):
 		segments = self.shemetype.task["segments"]
 		idx = max(0, min(idx, len(segments)))
 		segments.insert(idx, self.segment())
-		self.shemetype.task["nodes"].insert(idx + 1, self.node())
+		self.shemetype.task["nodes"].insert(idx, self.node())
 		self._update_tables()
 
 	def del_action_impl(self, idx):
@@ -146,8 +161,22 @@ class ConfWidget(common.ConfWidget):
 			return
 		index = idx if idx >= 0 else len(segments) - 1
 		del segments[index]
-		del self.shemetype.task["nodes"][index + 1]
+		del self.shemetype.task["nodes"][index]
 		self._update_tables()
+
+	def _base_support_changed(self, support):
+		self.shemetype.task["base_support"] = support
+		self.redraw()
+
+	def migrate_legacy_task(self):
+		task = self.shemetype.task
+		segments = task.get("segments", [])
+		nodes = task.get("nodes", [])
+		if "base_support" in task or len(nodes) != len(segments) + 1:
+			return
+		task["base_support"] = nodes[0].support
+		task["segments"] = list(reversed(segments))
+		task["nodes"] = list(reversed(nodes[1:]))
 
 	def _update_tables(self):
 		self.segment_table.updateTable()
