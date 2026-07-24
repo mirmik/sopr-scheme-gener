@@ -474,6 +474,10 @@ class PaintWidget(QWidget):
 		self.painter = painter
 		
 	def eval_hcenter(self):
+		if self.shemetype.page_layout is not None:
+			self.hcenter = self.height() / 2
+			self.text_height = 0
+			return
 		if not self.no_text_render:
 			addtext = self.shemetype.texteditor.toPlainText()
 			self.hcenter = self.height()/2 - QFontMetrics(self.font).height() * len(addtext.splitlines()) / 2

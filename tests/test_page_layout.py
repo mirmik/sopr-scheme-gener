@@ -146,3 +146,43 @@ def test_stress_cube_uses_classic_sheet_resize_and_one_to_one_framed_scene():
 		assert second.height == first.height
 	finally:
 		context.window.close()
+
+
+def test_page_layout_task_scene_is_independent_from_note_text_for_every_task():
+	context = _context()
+	try:
+		for spec in context.task_specs:
+			context.controller.select(spec.identifier)
+			scheme = context.controller.current_scheme
+			scheme.texteditor.setPlainText("")
+			scheme.page_layout = context.canvas._derived_page_layout()
+			empty_note_image = context.canvas.make_image()
+			empty_note_scene = context.canvas.last_scene
+
+			scheme.texteditor.setPlainText(
+				"Первая строка\nВторая строка\nТретья строка"
+			)
+			long_note_image = context.canvas.make_image()
+			long_note_scene = context.canvas.last_scene
+
+			assert long_note_scene == empty_note_scene, spec.identifier
+			assert long_note_image != empty_note_image, spec.identifier
+	finally:
+		context.window.close()
+
+
+def test_legacy_layout_keeps_historic_note_dependent_task_position():
+	context = _context()
+	try:
+		scheme = context.controller.current_scheme
+		assert scheme.page_layout is None
+		scheme.texteditor.setPlainText("")
+		context.canvas.make_image()
+		empty_note_scene = context.canvas.last_scene
+
+		scheme.texteditor.setPlainText("Первая строка\nВторая строка")
+		context.canvas.make_image()
+
+		assert context.canvas.last_scene != empty_note_scene
+	finally:
+		context.window.close()
