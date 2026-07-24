@@ -78,6 +78,10 @@ def _text_by_points(
 	alternate,
 	offset,
 	object_id,
+	label_offset=Point(0.0, 0.0),
+	record=None,
+	index=-1,
+	offset_name=None,
 ):
 	if start == end:
 		return Group((), object_id=object_id)
@@ -91,10 +95,12 @@ def _text_by_points(
 	measurement = text_metrics.measure(value, style)
 	center = Point(
 		(start.x + end.x) / 2
-		+ nx * (offset + measurement.width / 2),
+		+ nx * (offset + measurement.width / 2)
+		+ label_offset.x,
 		(start.y + end.y) / 2
 		+ measurement.height / 4
-		+ ny * offset,
+		+ ny * offset
+		+ label_offset.y,
 	)
 	return Text(
 		center,
@@ -102,10 +108,33 @@ def _text_by_points(
 		style,
 		TextAnchor.BASELINE_CENTER,
 		object_id=object_id,
+		metadata=(
+			metadata(
+				kind="label",
+				record=record,
+				index=index,
+				offset=offset_name,
+			)
+			if record is not None
+			else ()
+		),
 	)
 
 
-def _angled_text(start, end, value, style, text_metrics, alternate, offset, object_id):
+def _angled_text(
+	start,
+	end,
+	value,
+	style,
+	text_metrics,
+	alternate,
+	offset,
+	object_id,
+	label_offset=Point(0.0, 0.0),
+	record=None,
+	index=-1,
+	offset_name=None,
+):
 	if alternate:
 		start, end = end, start
 	if start == end:
@@ -123,8 +152,8 @@ def _angled_text(start, end, value, style, text_metrics, alternate, offset, obje
 	radians = rotation * math.pi / 180
 	center = Point((start.x + end.x) / 2, (start.y + end.y) / 2)
 	position = Point(
-		center.x - math.sin(radians) * baseline_offset,
-		center.y + math.cos(radians) * baseline_offset,
+		center.x - math.sin(radians) * baseline_offset + label_offset.x,
+		center.y + math.cos(radians) * baseline_offset + label_offset.y,
 	)
 	return Text(
 		position,
@@ -133,6 +162,12 @@ def _angled_text(start, end, value, style, text_metrics, alternate, offset, obje
 		TextAnchor.BASELINE_CENTER,
 		rotation_degrees=rotation,
 		object_id=object_id,
+		metadata=metadata(
+			kind="label",
+			record=record,
+			index=index,
+			offset=offset_name,
+		),
 	)
 
 
@@ -390,6 +425,13 @@ class RodSystem2LayoutBuilder:
 					_value(section, "alttxt", False),
 					14,
 					"section/{}/body/text".format(index),
+					Point(
+						_value(section, "body_text_offset_x", 0.0),
+						_value(section, "body_text_offset_y", 0.0),
+					),
+					"sections",
+					index,
+					"body_text",
 				)
 			)
 			rendered_body_text = True
@@ -493,6 +535,13 @@ class RodSystem2LayoutBuilder:
 						_value(section, "alttxt", False),
 						27 if force == "вдоль" else 12,
 						"section/{}/force/text".format(index),
+						Point(
+							_value(section, "force_text_offset_x", 0.0),
+							_value(section, "force_text_offset_y", 0.0),
+						),
+						"sections",
+						index,
+						"force_text",
 					)
 				)
 			objects.append(

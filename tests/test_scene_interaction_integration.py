@@ -405,3 +405,56 @@ def test_eccentric_bending_force_label_uses_shared_drag_controller():
 	finally:
 		context.window.close()
 		context.app.processEvents()
+
+
+def test_rod_system_2_force_label_drag_does_not_start_member_creation():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "rod-system-2", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		section = scheme.confwidget.sect(force="от", ftxt="P", angle=0)
+		scheme.task["sections"].append(section)
+		context.app.processEvents()
+		context.canvas.make_image()
+
+		object_id = "section/0/force/text"
+		start = _device_center(context.canvas.scene_interaction, object_id)
+		_hover(context.canvas, start)
+		assert context.canvas.selected_label_id == object_id
+		_drag(context.canvas, start, (start[0] + 12, start[1] - 6))
+
+		assert section.force_text_offset_x == pytest.approx(12)
+		assert section.force_text_offset_y == pytest.approx(-6)
+		assert len(scheme.task["sections"]) == 1
+	finally:
+		context.window.close()
+		context.app.processEvents()
+
+
+def test_frames_member_label_drag_does_not_start_grid_member_creation():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "frames", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		context.app.processEvents()
+		context.canvas.make_image()
+
+		section = scheme.task["sections"][0]
+		object_id = "member/0/text"
+		start = _device_center(context.canvas.scene_interaction, object_id)
+		_hover(context.canvas, start)
+		assert context.canvas.selected_label_id == object_id
+		_drag(context.canvas, start, (start[0] - 9, start[1] + 8))
+
+		assert section.member_text_offset_x == pytest.approx(-9)
+		assert section.member_text_offset_y == pytest.approx(8)
+		assert len(scheme.task["sections"]) == 3
+	finally:
+		context.window.close()
+		context.app.processEvents()

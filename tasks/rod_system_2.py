@@ -15,9 +15,11 @@ from sopr_scheme_gener.layouts.rod_system_2 import (
 )
 from sopr_scheme_gener.scene import Point
 from sopr_scheme_gener.scene.qt import (
+	QtDraggableLabelController,
 	QtPainterRenderer,
 	QtSceneInteraction,
 	QtTextMetrics,
+	with_label_selection_highlight,
 )
 
 from PyQt5.QtCore import QPointF
@@ -46,6 +48,10 @@ class ConfWidget_T1(common.ConfWidget):
 			addangle=0,
 			start_from=-1,
 			wide=False,
+			body_text_offset_x=0.0,
+			body_text_offset_y=0.0,
+			force_text_offset_x=0.0,
+			force_text_offset_y=0.0,
 		):
 			self.start_from = start_from
 			self.l = l
@@ -59,6 +65,10 @@ class ConfWidget_T1(common.ConfWidget):
 			self.alttxt = alttxt
 			self.addangle = addangle
 			self.wide = wide
+			self.body_text_offset_x = body_text_offset_x
+			self.body_text_offset_y = body_text_offset_y
+			self.force_text_offset_x = force_text_offset_x
+			self.force_text_offset_y = force_text_offset_y
 
 	def create_task_structure(self):
 		self.shemetype.task = {"sections": []}
@@ -177,6 +187,7 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		self.base_length = 80
 		super().__init__()
 		self.setMouseTracking(True)
+		self.label_drag = QtDraggableLabelController()
 
 	def _point_for_node(self, index):
 		if self.scene_interaction is None:
@@ -238,6 +249,12 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 			length_text=util.text_prepare_ltext,
 		)
 		self.scene_interaction = QtSceneInteraction(scene, text_metrics=metrics)
+		self.selected_label_id = self.label_drag.selected_object_id
+		scene = with_label_selection_highlight(
+			scene,
+			self.scene_interaction,
+			self.selected_label_id,
+		)
 		self.last_scene = scene
 		self.base_length = settings.base_length
 		root = self._point_for_node(0)
@@ -259,6 +276,18 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		self.target_point = QPointF(ev.pos())
 		if self.scene_interaction is None:
 			return
+		if self.label_drag.move(
+			self.scene_interaction,
+			ev.pos(),
+			self.shemetype.task,
+		):
+			self.selected_label_id = self.label_drag.selected_object_id
+			self.update()
+			return
+		self.selected_label_id = self.label_drag.selected_object_id
+		if self.selected_label_id is not None:
+			self.update()
+			return
 		hit = self.scene_interaction.hit_test(ev.pos(), kinds=("node",))
 		if hit is None:
 			self.hovered_point = None
@@ -269,6 +298,11 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		self.update()
 
 	def mousePressEvent(self, ev):
+		if (
+			self.scene_interaction is not None
+			and self.label_drag.press(self.scene_interaction, ev.pos())
+		):
+			return
 		if self.hovered_point_index is None:
 			return
 		self.mouse_pressed = True
@@ -278,6 +312,10 @@ class PaintWidget_T1(paintwdg.PaintWidget):
 		self.update()
 
 	def mouseReleaseEvent(self, ev):
+		if self.label_drag.pressed:
+			self.label_drag.release()
+			self.update()
+			return
 		if not self.mouse_pressed:
 			return
 		self.mouse_pressed = False

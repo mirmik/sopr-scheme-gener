@@ -74,6 +74,7 @@ def test_default_frames_layout_has_stable_semantic_objects():
 	assert index.get("member/0").metadata_value("kind") == "member"
 	assert index.get("member/0/line") is not None
 	assert index.get("member/1/text") is not None
+	assert index.get("member/1/text").metadata_value("offset") == "member_text"
 	assert index.get("member/2") is not None
 
 
@@ -132,6 +133,10 @@ def test_frames_layout_covers_loads_supports_forces_moments_and_labels():
 
 	assert index.get("section/cross-section").metadata_value("kind") == "cross-section"
 	assert index.get("member/0/distributed").metadata_value("direction") == "+"
+	assert (
+		index.get("member/0/distributed/text").metadata_value("offset")
+		== "load_text"
+	)
 	assert index.get("member/1/distributed").metadata_value("direction") == "-"
 	assert index.get("member/2/distributed") is None
 	for member in range(4):
@@ -143,6 +148,15 @@ def test_frames_layout_covers_loads_supports_forces_moments_and_labels():
 		assert index.get("member/{}/end-moment".format(member)) is not None
 		assert index.get("member/{}/start-label".format(member)) is not None
 		assert index.get("member/{}/end-label".format(member)) is not None
+	assert index.get("member/0/start-label").metadata_value("record") == "label"
+	assert (
+		index.get("member/0/start-force/text").metadata_value("offset")
+		== "start_force_text"
+	)
+	assert (
+		index.get("member/0/end-moment/text").metadata_value("offset")
+		== "end_moment_text"
+	)
 	assert index.get("highlight/member") is not None
 	assert index.get("highlight/node") is not None
 

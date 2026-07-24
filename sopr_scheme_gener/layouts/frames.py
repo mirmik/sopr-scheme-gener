@@ -118,6 +118,10 @@ def _text_by_points(
 	alternate,
 	offset,
 	object_id,
+	label_offset=Point(0.0, 0.0),
+	record=None,
+	index=-1,
+	offset_name=None,
 ):
 	if start == end:
 		return Group((), object_id=object_id)
@@ -131,10 +135,12 @@ def _text_by_points(
 	measurement = text_metrics.measure(value, style)
 	position = Point(
 		(start.x + end.x) / 2
-		+ nx * (offset + measurement.width / 2),
+		+ nx * (offset + measurement.width / 2)
+		+ label_offset.x,
 		(start.y + end.y) / 2
 		+ measurement.height / 4
-		+ ny * offset,
+		+ ny * offset
+		+ label_offset.y,
 	)
 	return Text(
 		position,
@@ -142,21 +148,48 @@ def _text_by_points(
 		style,
 		TextAnchor.BASELINE_CENTER,
 		object_id=object_id,
+		metadata=(
+			metadata(
+				kind="label",
+				record=record,
+				index=index,
+				offset=offset_name,
+			)
+			if record is not None
+			else ()
+		),
 	)
 
 
-def _label(center, value, direction, style, text_metrics, object_id):
+def _label(
+	center,
+	value,
+	direction,
+	style,
+	text_metrics,
+	object_id,
+	label_offset,
+	record,
+	index,
+	offset_name,
+):
 	angle = _DIRECTION_ANGLES[direction]
 	measurement = text_metrics.measure(value, style)
 	return Text(
 		Point(
 			center.x + math.cos(angle) * 17,
 			center.y - math.sin(angle) * 17 + measurement.height / 4,
-		),
+		).translated(label_offset),
 		value,
 		style,
 		TextAnchor.BASELINE_CENTER,
 		object_id=object_id,
+		metadata=metadata(
+			kind="label",
+			record=record,
+			index=index,
+			offset=offset_name,
+		),
 	)
 
 
@@ -269,24 +302,32 @@ def _distributed_load(
 	half,
 	arrow_size,
 	index,
+	label_offset,
 ):
 	if direction not in ("+", "-"):
 		return None
-	text = _text_by_points(
-		start,
-		end,
-		value,
-		style,
-		text_metrics,
-		direction == "-",
-		30,
-		"member/{}/distributed/text".format(index),
-	)
 	load_start, load_end = (start, end) if direction == "+" else (end, start)
 	dx = load_end.x - load_start.x
 	dy = load_end.y - load_start.y
 	distance = math.hypot(dx, dy)
-	children = [text]
+	children = []
+	if value:
+		children.append(
+			_text_by_points(
+				start,
+				end,
+				value,
+				style,
+				text_metrics,
+				direction == "-",
+				30,
+				"member/{}/distributed/text".format(index),
+				label_offset,
+				"sectforce",
+				index,
+				"load_text",
+			)
+		)
 	if distance >= 20:
 		count = int(distance / 10)
 		count = count - count % 2 + 1
@@ -318,7 +359,20 @@ def _distributed_load(
 	)
 
 
-def _force(center, force_type, value, alternate, style, text_metrics, half, size, object_id):
+def _force(
+	center,
+	force_type,
+	value,
+	alternate,
+	style,
+	text_metrics,
+	half,
+	size,
+	object_id,
+	label_offset,
+	index,
+	offset_name,
+):
 	if force_type == "нет":
 		return None
 	direction_name = force_type.split()[0]
@@ -338,13 +392,13 @@ def _force(center, force_type, value, alternate, style, text_metrics, half, size
 			position = Point(
 				middle.x,
 				middle.y + (-7 if alternate else measurement.height - 2),
-			)
+			).translated(label_offset)
 			anchor = TextAnchor.BASELINE_CENTER
 		else:
 			position = Point(
 				middle.x + (7 if alternate else -measurement.width - 7),
 				middle.y + measurement.height / 4,
-			)
+			).translated(label_offset)
 			anchor = TextAnchor.BASELINE_LEFT
 		children.append(
 			Text(
@@ -353,6 +407,12 @@ def _force(center, force_type, value, alternate, style, text_metrics, half, size
 				style,
 				anchor,
 				object_id=object_id + "/text",
+				metadata=metadata(
+					kind="label",
+					record="betsect",
+					index=index,
+					offset=offset_name,
+				),
 			)
 		)
 	return Group(
@@ -362,7 +422,19 @@ def _force(center, force_type, value, alternate, style, text_metrics, half, size
 	)
 
 
-def _moment(center, moment_type, value, style, text_metrics, half, size, object_id):
+def _moment(
+	center,
+	moment_type,
+	value,
+	style,
+	text_metrics,
+	half,
+	size,
+	object_id,
+	label_offset,
+	index,
+	offset_name,
+):
 	if moment_type == "нет":
 		return None
 	direction_name, sign = moment_type.split()
@@ -410,11 +482,17 @@ def _moment(center, moment_type, value, style, text_metrics, half, size, object_
 			anchor = TextAnchor.BASELINE_CENTER
 		children.append(
 			Text(
-				position,
+				position.translated(label_offset),
 				value,
 				style,
 				anchor,
 				object_id=object_id + "/text",
+				metadata=metadata(
+					kind="label",
+					record="betsect",
+					index=index,
+					offset=offset_name,
+				),
 			)
 		)
 	return Group(
@@ -532,6 +610,13 @@ class FramesLayoutBuilder:
 					_value(section, "alttxt", False),
 					14,
 					"member/{}/text".format(index),
+					Point(
+						_value(section, "member_text_offset_x", 0.0),
+						_value(section, "member_text_offset_y", 0.0),
+					),
+					"sections",
+					index,
+					"member_text",
 				),
 			]
 			label = labels[index]
@@ -546,6 +631,13 @@ class FramesLayoutBuilder:
 						style,
 						text_metrics,
 						"member/{}/start-label".format(index),
+						Point(
+							_value(label, "start_label_offset_x", 0.0),
+							_value(label, "start_label_offset_y", 0.0),
+						),
+						"label",
+						index,
+						"start_label",
 					)
 				)
 			if end_label:
@@ -557,6 +649,13 @@ class FramesLayoutBuilder:
 						style,
 						text_metrics,
 						"member/{}/end-label".format(index),
+						Point(
+							_value(label, "end_label_offset_x", 0.0),
+							_value(label, "end_label_offset_y", 0.0),
+						),
+						"label",
+						index,
+						"end_label",
 					)
 				)
 			objects.append(
@@ -578,6 +677,10 @@ class FramesLayoutBuilder:
 				half,
 				settings.arrow_size / 3 * 2,
 				index,
+				Point(
+					_value(loads[index], "load_text_offset_x", 0.0),
+					_value(loads[index], "load_text_offset_y", 0.0),
+				),
 			)
 			if load is not None:
 				objects.append(load)
@@ -618,6 +721,12 @@ class FramesLayoutBuilder:
 					half,
 					settings.arrow_size,
 					"member/{}/start-moment".format(index),
+					Point(
+						_value(node, "start_moment_text_offset_x", 0.0),
+						_value(node, "start_moment_text_offset_y", 0.0),
+					),
+					index,
+					"start_moment_text",
 				),
 				_moment(
 					end,
@@ -628,6 +737,12 @@ class FramesLayoutBuilder:
 					half,
 					settings.arrow_size,
 					"member/{}/end-moment".format(index),
+					Point(
+						_value(node, "end_moment_text_offset_x", 0.0),
+						_value(node, "end_moment_text_offset_y", 0.0),
+					),
+					index,
+					"end_moment_text",
 				),
 				_force(
 					start,
@@ -639,6 +754,12 @@ class FramesLayoutBuilder:
 					half,
 					settings.arrow_size,
 					"member/{}/start-force".format(index),
+					Point(
+						_value(node, "start_force_text_offset_x", 0.0),
+						_value(node, "start_force_text_offset_y", 0.0),
+					),
+					index,
+					"start_force_text",
 				),
 				_force(
 					end,
@@ -650,6 +771,12 @@ class FramesLayoutBuilder:
 					half,
 					settings.arrow_size,
 					"member/{}/end-force".format(index),
+					Point(
+						_value(node, "end_force_text_offset_x", 0.0),
+						_value(node, "end_force_text_offset_y", 0.0),
+					),
+					index,
+					"end_force_text",
 				),
 			):
 				if item is not None:

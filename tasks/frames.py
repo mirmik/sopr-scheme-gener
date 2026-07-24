@@ -12,9 +12,11 @@ from sopr_scheme_gener.layouts.beam_sections import BeamSectionSpec
 from sopr_scheme_gener.layouts.frames import FramesLayoutBuilder, FramesLayoutSettings
 from sopr_scheme_gener.scene import Point
 from sopr_scheme_gener.scene.qt import (
+	QtDraggableLabelController,
 	QtPainterRenderer,
 	QtSceneInteraction,
 	QtTextMetrics,
+	with_label_selection_highlight,
 )
 
 from PyQt5.QtCore import QPointF
@@ -93,6 +95,8 @@ class ConfWidget_T4(common.ConfWidget):
 			ystrt=None,
 			xfini=None,
 			yfini=None,
+			member_text_offset_x=0.0,
+			member_text_offset_y=0.0,
 		):
 			self.xstrt = str(strt[0]) if xstrt is None else xstrt
 			self.ystrt = str(strt[1]) if ystrt is None else ystrt
@@ -102,6 +106,8 @@ class ConfWidget_T4(common.ConfWidget):
 			self.rsharn = rsharn
 			self.txt = txt
 			self.alttxt = alttxt
+			self.member_text_offset_x = member_text_offset_x
+			self.member_text_offset_y = member_text_offset_y
 
 	class label:
 		def __init__(
@@ -110,16 +116,32 @@ class ConfWidget_T4(common.ConfWidget):
 			fmaker="",
 			smaker_pos="сверху",
 			fmaker_pos="сверху",
+			start_label_offset_x=0.0,
+			start_label_offset_y=0.0,
+			end_label_offset_x=0.0,
+			end_label_offset_y=0.0,
 		):
 			self.smaker = smaker
 			self.fmaker = fmaker
 			self.smaker_pos = smaker_pos
 			self.fmaker_pos = fmaker_pos
+			self.start_label_offset_x = start_label_offset_x
+			self.start_label_offset_y = start_label_offset_y
+			self.end_label_offset_x = end_label_offset_x
+			self.end_label_offset_y = end_label_offset_y
 
 	class sectforce:
-		def __init__(self, distrib="clean", txt=""):
+		def __init__(
+			self,
+			distrib="clean",
+			txt="",
+			load_text_offset_x=0.0,
+			load_text_offset_y=0.0,
+		):
 			self.distrib = distrib
 			self.txt = txt
+			self.load_text_offset_x = load_text_offset_x
+			self.load_text_offset_y = load_text_offset_y
 
 	class betsect:
 		def __init__(
@@ -134,6 +156,14 @@ class ConfWidget_T4(common.ConfWidget):
 			mr_txt="",
 			fl_txt_alt=False,
 			fr_txt_alt=False,
+			start_force_text_offset_x=0.0,
+			start_force_text_offset_y=0.0,
+			end_force_text_offset_x=0.0,
+			end_force_text_offset_y=0.0,
+			start_moment_text_offset_x=0.0,
+			start_moment_text_offset_y=0.0,
+			end_moment_text_offset_x=0.0,
+			end_moment_text_offset_y=0.0,
 		):
 			self.fenl = fenl
 			self.fenr = fenr
@@ -145,6 +175,14 @@ class ConfWidget_T4(common.ConfWidget):
 			self.mr_txt = mr_txt
 			self.fl_txt_alt = fl_txt_alt
 			self.fr_txt_alt = fr_txt_alt
+			self.start_force_text_offset_x = start_force_text_offset_x
+			self.start_force_text_offset_y = start_force_text_offset_y
+			self.end_force_text_offset_x = end_force_text_offset_x
+			self.end_force_text_offset_y = end_force_text_offset_y
+			self.start_moment_text_offset_x = start_moment_text_offset_x
+			self.start_moment_text_offset_y = start_moment_text_offset_y
+			self.end_moment_text_offset_x = end_moment_text_offset_x
+			self.end_moment_text_offset_y = end_moment_text_offset_y
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -343,6 +381,7 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		self.pressed_point_index = None
 		self.highlited_element = None
 		self.setMouseTracking(True)
+		self.label_drag = QtDraggableLabelController()
 
 	def frame_section_spec(self):
 		if not self.shemetype.section_enable.get():
@@ -461,6 +500,12 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 			length_text=util.text_prepare_ltext,
 		)
 		self.scene_interaction = QtSceneInteraction(scene, text_metrics=metrics)
+		self.selected_label_id = self.label_drag.selected_object_id
+		scene = with_label_selection_highlight(
+			scene,
+			self.scene_interaction,
+			self.selected_label_id,
+		)
 		self.last_scene = scene
 		QtPainterRenderer(metrics).render(scene, self.painter)
 
@@ -476,11 +521,23 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 
 	def mouseMoveEvent(self, ev):
 		pos = ev.pos()
+		if self.scene_interaction is None:
+			return
+		if self.label_drag.move(
+			self.scene_interaction,
+			pos,
+			self.shemetype.task,
+		):
+			self.selected_label_id = self.label_drag.selected_object_id
+			self.update()
+			return
+		self.selected_label_id = self.label_drag.selected_object_id
+		if self.selected_label_id is not None:
+			self.update()
+			return
 		if pos.x() < 20 or self.width() - pos.x() < 20:
 			return
 		if pos.y() < 20 or self.height() - pos.y() < 20:
-			return
-		if self.scene_interaction is None:
 			return
 		hit = self.scene_interaction.hit_test(pos, kinds=("grid-node",))
 		if hit is None:
@@ -495,6 +552,11 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 			self.update()
 
 	def mousePressEvent(self, ev):
+		if (
+			self.scene_interaction is not None
+			and self.label_drag.press(self.scene_interaction, ev.pos())
+		):
+			return
 		if self.hovered_point_index is None:
 			return
 		self.mouse_pressed = True
@@ -503,6 +565,10 @@ class PaintWidget_T4(paintwdg.PaintWidget):
 		self.update()
 
 	def mouseReleaseEvent(self, ev):
+		if self.label_drag.pressed:
+			self.label_drag.release()
+			self.update()
+			return
 		if not self.mouse_pressed:
 			return
 		self.mouse_pressed = False

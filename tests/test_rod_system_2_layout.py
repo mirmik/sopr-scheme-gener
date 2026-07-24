@@ -109,6 +109,11 @@ def test_rod_system_2_layout_covers_branching_feature_matrix():
 	assert index.get("section/2/force").metadata_value("direction") == "вдоль"
 	assert index.get("section/3/body") is None
 	assert index.get("section/3/force") is not None
+	assert index.get("section/0/body/text").metadata_value("offset") == "body_text"
+	assert (
+		index.get("section/0/force/text").metadata_value("offset")
+		== "force_text"
+	)
 	assert index.get("node/2/hover") is not None
 	assert index.get("node/4").metadata_value("kind") == "geometry-node"
 	assert isinstance(index.get("section/2/body").item, Group)
