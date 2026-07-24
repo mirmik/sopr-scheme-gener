@@ -66,6 +66,7 @@ class SchemeType:
 	def __init__(self, name):
 		self.name = name
 		self.page_layout = None
+		self.canvas_size = None
 	
 	def serialize(self, marchpath):
 		slst = self.confwidget.serialize_list()
@@ -97,6 +98,7 @@ class SchemeType:
 
 		for kd, vd in dct:
 			if kd == "size":
+				self.canvas_size = (vd.width(), vd.height())
 				CONFVIEW.load_size(vd)
 
 		self.paintwidget.prevent_errors = False
@@ -113,6 +115,11 @@ class SchemeType:
 		self.width_getter = CONFVIEW.width_getter
 		self.height_getter = CONFVIEW.height_getter
 		self.arrow_size_getter = CONFVIEW.arrow_size_getter
+		if self.canvas_size is None:
+			self.canvas_size = (
+				self.width_getter.get(),
+				self.height_getter.get(),
+			)
 
 		self.confwidget.inittask()
 
@@ -123,7 +130,9 @@ class SchemeType:
 		self.confwidget.redraw()
 
 	def get_size(self):
-		return (CONFVIEW.width_getter.get(), CONFVIEW.height_getter.get())
+		if self.canvas_size is None:
+			return (CONFVIEW.width_getter.get(), CONFVIEW.height_getter.get())
+		return self.canvas_size
 
 class StubWidget(StyleWidget):
 	def __init__(self, text):

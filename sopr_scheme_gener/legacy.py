@@ -2,6 +2,7 @@
 
 import common
 import paintwdg
+from PyQt5.QtCore import QSignalBlocker
 
 
 class LegacyAdapter:
@@ -38,3 +39,14 @@ class LegacyAdapter:
 
 	def resize_canvas(self, width, height):
 		common.PAINT_CONTAINER.resize(width, height)
+
+	def publish_canvas_size(self, width, height):
+		blockers = (
+			QSignalBlocker(common.CONFVIEW.width_getter.obj),
+			QSignalBlocker(common.CONFVIEW.height_getter.obj),
+		)
+		try:
+			common.CONFVIEW.width_getter.set(width)
+			common.CONFVIEW.height_getter.set(height)
+		finally:
+			del blockers

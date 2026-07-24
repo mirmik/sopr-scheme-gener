@@ -103,6 +103,7 @@ class DocumentController:
 		index = self.resolve_index(selector)
 		scheme = self.scheme_types[index]
 		changed = self.current_index != index
+		canvas_size = scheme.get_size()
 
 		# Legacy widgets may repaint while they are being attached, so publish
 		# the active scheme before changing the widget hierarchy.
@@ -110,7 +111,14 @@ class DocumentController:
 		self.view.display_scheme(scheme, changed=changed)
 		self.current_index = index
 		self.context.legacy.activate_scheme(scheme)
-		self.context.legacy.resize_canvas(*scheme.get_size())
+		self.context.legacy.resize_canvas(*canvas_size)
+		publish_canvas_size = getattr(
+			self.context.legacy,
+			"publish_canvas_size",
+			None,
+		)
+		if publish_canvas_size is not None:
+			publish_canvas_size(*canvas_size)
 		self.view.set_selected_index(index)
 		refresh_layout_button = getattr(
 			self.view,

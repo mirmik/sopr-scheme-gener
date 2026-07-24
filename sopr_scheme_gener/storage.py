@@ -614,7 +614,15 @@ class DocumentStore:
 			self.context.central.refresh_page_layout_button()
 			scheme.task = prepared["task"]
 			scheme.confwidget.clean_and_update_interface()
+			scheme.canvas_size = (
+				prepared["canvas"]["width"],
+				prepared["canvas"]["height"],
+			)
 			self.context.legacy.resize_canvas(
+				prepared["canvas"]["width"],
+				prepared["canvas"]["height"],
+			)
+			self.context.legacy.publish_canvas_size(
 				prepared["canvas"]["width"],
 				prepared["canvas"]["height"],
 			)
