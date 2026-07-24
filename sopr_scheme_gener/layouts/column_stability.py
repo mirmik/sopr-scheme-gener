@@ -329,24 +329,44 @@ class ColumnStabilityLayoutBuilder:
 				center_y = (start.y + end.y) / 2
 				objects.append(
 					Text(
-						Point(x + 30, center_y),
+						Point(
+							x + 30 + float(_value(segment, "length_offset_x", 0.0)),
+							center_y
+							+ float(_value(segment, "length_offset_y", 0.0)),
+						),
 						length_text,
 						style,
 						TextAnchor.CENTER,
 						object_id="segment/{}/length-label".format(index),
-						metadata=metadata(kind="length-label", index=index),
+						metadata=metadata(
+							kind="label",
+							label_kind="length",
+							record="segment",
+							index=index,
+						),
 					)
 				)
 			rigidity = text_transform(str(_value(segment, "rigidity_text", "")))
 			if rigidity:
 				objects.append(
 					Text(
-						Point(x + 105, (start.y + end.y) / 2),
+						Point(
+							x
+							+ 105
+							+ float(_value(segment, "rigidity_offset_x", 0.0)),
+							(start.y + end.y) / 2
+							+ float(_value(segment, "rigidity_offset_y", 0.0)),
+						),
 						rigidity,
 						style,
 						TextAnchor.CENTER,
 						object_id="segment/{}/rigidity-label".format(index),
-						metadata=metadata(kind="rigidity-label", index=index),
+						metadata=metadata(
+							kind="label",
+							label_kind="rigidity",
+							record="segment",
+							index=index,
+						),
 					)
 				)
 
@@ -446,12 +466,21 @@ class ColumnStabilityLayoutBuilder:
 				if label:
 					objects.append(
 						Text(
-							Point(label_x, (start_y + end_y) / 2),
+							Point(
+								label_x + float(_value(node, "load_offset_x", 0.0)),
+								(start_y + end_y) / 2
+								+ float(_value(node, "load_offset_y", 0.0)),
+							),
 							label,
 							style,
 							TextAnchor.CENTER,
 							object_id="node/{}/load-label".format(index),
-							metadata=metadata(kind="force-label", index=index),
+							metadata=metadata(
+								kind="label",
+								label_kind="load",
+								record="node",
+								index=index,
+							),
 						)
 					)
 

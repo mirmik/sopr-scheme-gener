@@ -147,3 +147,66 @@ def test_plate_hover_and_drag_reuses_scene_interaction():
 	finally:
 		context.window.close()
 		context.app.processEvents()
+
+
+@pytest.mark.parametrize(
+	("object_id", "record_name", "record_index", "x_field", "y_field"),
+	[
+		(
+			"segment/0/length-label",
+			"segments",
+			0,
+			"length_offset_x",
+			"length_offset_y",
+		),
+		(
+			"segment/1/rigidity-label",
+			"segments",
+			1,
+			"rigidity_offset_x",
+			"rigidity_offset_y",
+		),
+		(
+			"node/2/load-label",
+			"nodes",
+			2,
+			"load_offset_x",
+			"load_offset_y",
+		),
+	],
+)
+def test_column_stability_generated_labels_are_draggable_and_persisted(
+	object_id,
+	record_name,
+	record_index,
+	x_field,
+	y_field,
+):
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "column-stability", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		context.app.processEvents()
+		context.canvas.make_image()
+		start = _device_center(context.canvas.scene_interaction, object_id)
+		_hover(context.canvas, start)
+
+		assert context.canvas.selected_label_id == object_id
+		record = scheme.task[record_name][record_index]
+		before = (getattr(record, x_field), getattr(record, y_field))
+		_drag(context.canvas, start, (start[0] + 14, start[1] - 8))
+
+		assert getattr(record, x_field) == pytest.approx(before[0] + 14)
+		assert getattr(record, y_field) == pytest.approx(before[1] - 8)
+
+		document = context.storage.to_data()
+		context.storage.load_data(document)
+		restored = context.controller.current_scheme.task[record_name][record_index]
+		assert getattr(restored, x_field) == pytest.approx(before[0] + 14)
+		assert getattr(restored, y_field) == pytest.approx(before[1] - 8)
+	finally:
+		context.window.close()
+		context.app.processEvents()

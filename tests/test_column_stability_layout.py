@@ -49,6 +49,61 @@ def test_reference_like_scene_has_segments_loads_labels_and_floating_clamp():
 	)
 	assert index.get("node/2/load") is not None
 	assert index.get("node/2/load-label") is not None
+	assert dict(index.get("segment/0/length-label").item.metadata)["kind"] == "label"
+	assert dict(index.get("segment/1/rigidity-label").item.metadata)[
+		"label_kind"
+	] == "rigidity"
+
+
+def test_label_offsets_move_length_rigidity_and_load_text():
+	base_task = {
+		"segments": [
+			{
+				"length": 1,
+				"length_text": "l",
+				"rigidity_text": "EJ",
+				"length_offset_x": 11,
+				"length_offset_y": -7,
+				"rigidity_offset_x": -5,
+				"rigidity_offset_y": 9,
+			}
+		],
+		"nodes": [
+			{"support": "заделка", "load": "нет", "load_text": ""},
+			{
+				"support": "нет",
+				"load": "вниз",
+				"load_text": "F",
+				"load_offset_x": 13,
+				"load_offset_y": 4,
+			},
+		],
+	}
+	moved = SceneIndex(_build(base_task), FixedTextMetrics())
+	default = SceneIndex(
+		_build(
+			{
+				"segments": [
+					{"length": 1, "length_text": "l", "rigidity_text": "EJ"}
+				],
+				"nodes": [
+					{"support": "заделка", "load": "нет", "load_text": ""},
+					{"support": "нет", "load": "вниз", "load_text": "F"},
+				],
+			}
+		),
+		FixedTextMetrics(),
+	)
+
+	for object_id, dx, dy in (
+		("segment/0/length-label", 11, -7),
+		("segment/0/rigidity-label", -5, 9),
+		("node/1/load-label", 13, 4),
+	):
+		moved_position = moved.get(object_id).item.position
+		default_position = default.get(object_id).item.position
+		assert moved_position.x == default_position.x + dx
+		assert moved_position.y == default_position.y + dy
 
 
 def test_internal_load_uses_crossbar_and_two_slender_arrows():

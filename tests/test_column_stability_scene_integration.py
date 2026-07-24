@@ -54,3 +54,39 @@ def test_clearing_rod_width_while_editing_does_not_break_render():
 		assert bridge.dispatch("errors.list", {}) == []
 	finally:
 		context.window.close()
+
+
+def test_documents_without_label_offsets_remain_renderable():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "column-stability", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		document = context.storage.to_data()
+		payload = document["task"]["payload"]
+		for segment in payload["segments"]:
+			for field in (
+				"length_offset_x",
+				"length_offset_y",
+				"rigidity_offset_x",
+				"rigidity_offset_y",
+			):
+				segment["fields"].pop(field)
+		for node in payload["nodes"]:
+			node["fields"].pop("load_offset_x")
+			node["fields"].pop("load_offset_y")
+
+		context.storage.load_data(document)
+		context.app.processEvents()
+		image = context.canvas.make_image()
+
+		assert image.bits().asstring(image.sizeInBytes())
+		assert context.canvas.scene_interaction.index.get(
+			"segment/0/length-label"
+		) is not None
+		assert context.canvas.scene_interaction.index.get(
+			"node/2/load-label"
+		) is not None
+	finally:
+		context.window.close()
