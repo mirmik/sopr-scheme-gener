@@ -64,13 +64,29 @@ def _value(record, name, default=None):
 	return getattr(record, name, default)
 
 
-def _hatching(x1, y1, x2, y2, stroke, step=8, direction=-1):
+def _hatching(
+	x1,
+	y1,
+	x2,
+	y2,
+	stroke,
+	step=8,
+	direction=-1,
+	normal_direction=1,
+):
 	lines = []
 	if abs(y2 - y1) < 0.01:
 		x = x1
 		while x <= x2:
 			lines.append(
-				Line(Point(x, y1), Point(x + direction * 6, y1 + 7), stroke)
+				Line(
+					Point(x, y1),
+					Point(
+						x + direction * 6,
+						y1 + normal_direction * 7,
+					),
+					stroke,
+				)
 			)
 			x += step
 	else:
@@ -84,8 +100,8 @@ def _hatching(x1, y1, x2, y2, stroke, step=8, direction=-1):
 
 
 def _fixed_support(point, size, stroke, object_id, at_top=False):
-	y = point.y - 2 if at_top else point.y + 2
-	surface_y = y - 2 if at_top else y + 2
+	sign = -1 if at_top else 1
+	surface_y = point.y + sign * 4
 	return Group(
 		(
 			Line(Point(point.x - size, surface_y), Point(point.x + size, surface_y), stroke),
@@ -95,6 +111,7 @@ def _fixed_support(point, size, stroke, object_id, at_top=False):
 				point.x + size,
 				surface_y,
 				stroke,
+				normal_direction=sign,
 			),
 		),
 		object_id=object_id,
@@ -108,21 +125,16 @@ def _hinge_support(point, size, stroke, object_id, at_top=False):
 	base_y = point.y + sign * size
 	triangle = Polygon(
 		(
-			Point(point.x, point.y + sign * radius),
+			point,
 			Point(point.x - size * 0.65, base_y),
 			Point(point.x + size * 0.65, base_y),
 		),
 		stroke,
 		Fill(WHITE),
 	)
-	surface_y = base_y + sign * 3
+	surface_y = base_y
 	return Group(
 		(
-			Ellipse(
-				Rect(point.x - radius, point.y - radius, radius * 2, radius * 2),
-				stroke,
-				Fill(WHITE),
-			),
 			triangle,
 			Line(
 				Point(point.x - size, surface_y),
@@ -135,6 +147,12 @@ def _hinge_support(point, size, stroke, object_id, at_top=False):
 				point.x + size,
 				surface_y,
 				stroke,
+				normal_direction=sign,
+			),
+			Ellipse(
+				Rect(point.x - radius, point.y - radius, radius * 2, radius * 2),
+				stroke,
+				Fill(WHITE),
 			),
 		),
 		object_id=object_id,

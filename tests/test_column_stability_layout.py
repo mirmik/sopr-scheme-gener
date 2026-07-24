@@ -6,7 +6,7 @@ from sopr_scheme_gener.layouts.column_stability import (
 	ColumnStabilityLayoutBuilder,
 	ColumnStabilityLayoutSettings,
 )
-from sopr_scheme_gener.scene import SceneIndex, TextMeasurement
+from sopr_scheme_gener.scene import Point, SceneIndex, TextMeasurement
 
 
 class FixedTextMetrics:
@@ -165,6 +165,50 @@ def test_internal_side_link_keeps_joint_beside_rod():
 	inner_center_x = inner_joint.bounds.x + inner_joint.bounds.width / 2
 
 	assert inner_center_x > body.start.x
+
+
+@pytest.mark.parametrize(
+	("node_index", "normal_direction"),
+	[(0, 1), (1, -1)],
+)
+def test_hinge_triangle_grows_from_support_line_and_joint_covers_apex(
+	node_index,
+	normal_direction,
+):
+	nodes = [
+		{"support": "нет", "load": "нет", "load_text": ""},
+		{"support": "нет", "load": "нет", "load_text": ""},
+	]
+	nodes[node_index]["support"] = "шарнир"
+	scene = _build(
+		{
+			"segments": [{"length": 1, "length_text": "l", "rigidity_text": ""}],
+			"nodes": nodes,
+		}
+	)
+	index = SceneIndex(scene, FixedTextMetrics())
+	support = index.get("node/{}/support".format(node_index)).item
+	triangle = support.children[0]
+	surface = support.children[1]
+	joint = support.children[-1]
+	joint_center_x = joint.bounds.x + joint.bounds.width / 2
+	joint_center_y = joint.bounds.y + joint.bounds.height / 2
+
+	assert triangle.points[0] == Point(joint_center_x, joint_center_y)
+	assert triangle.points[1].y == surface.start.y
+	assert triangle.points[2].y == surface.start.y
+	assert support.children.index(joint) > support.children.index(triangle)
+
+	hatches = [
+		item
+		for item in support.children[2:-1]
+		if hasattr(item, "start") and item.end.y != item.start.y
+	]
+	assert hatches
+	assert all(
+		(item.end.y - item.start.y) * normal_direction > 0
+		for item in hatches
+	)
 
 
 @pytest.mark.parametrize(
