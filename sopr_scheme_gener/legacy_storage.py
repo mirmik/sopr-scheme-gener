@@ -31,10 +31,11 @@ def install_legacy_task_module_aliases():
 
 
 def load_trusted_pickle(path):
-	"""Load a legacy document that the caller has already chosen to trust.
+	"""Load a legacy pickle sidecar through the compatibility boundary.
 
-	Pickle can execute arbitrary code. This function must never be used for
-	automatic discovery or untrusted input.
+	Pickle can execute arbitrary code. Historical image-first documents require
+	this loader when only their ``.dat`` sidecar is available; all new sidecars
+	are written as validated JSON.
 	"""
 
 	# Older PyQt5 pickles refer to the former top-level ``sip`` module. Modern

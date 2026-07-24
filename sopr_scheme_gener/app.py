@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import *
 import os
 import sys
 import argparse
+import hashlib
 
 import collections
 
@@ -207,36 +208,86 @@ class MainWindow(QMainWindow):
 		settings = QSettings("sopr-scheme-gener", "sopr-scheme-gener")
 		return settings.value("lastdir", None)
 
+	@staticmethod
+	def file_hash(path):
+		digest = hashlib.sha256()
+		with open(path, "rb") as stream:
+			for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+				digest.update(chunk)
+		return digest.hexdigest()
+
+	def sidecar_paths(self, image_path):
+		image_path = os.path.abspath(image_path)
+		save_dir = os.path.join(os.path.dirname(image_path), ".save")
+		digest = self.file_hash(image_path)
+		base = os.path.basename(image_path)
+		json_paths = (
+			os.path.join(save_dir, digest + ".sopr.json"),
+			os.path.join(save_dir, digest + ".json"),
+			os.path.join(save_dir, base + ".sopr.json"),
+			os.path.join(save_dir, base + ".json"),
+		)
+		legacy_paths = (
+			os.path.join(save_dir, digest + ".dat"),
+			os.path.join(save_dir, base + ".dat"),
+		)
+		return json_paths, legacy_paths
+
 	def save_document_action(self):
-		path, _selected_filter = QFileDialog.getSaveFileName(
+		path, selected_filter = QFileDialog.getSaveFileName(
 			self,
-			"Сохранить документ",
+			"Сохранить схему",
 			self.get_last_dirpath(),
-			"Документ SOPR (*.sopr.json);;JSON (*.json)",
-			"Документ SOPR (*.sopr.json)",
+			"PNG (*.png);;JPEG (*.jpg *.jpeg)",
+			"PNG (*.png)",
 		)
 		if not path:
 			return
-		if not path.lower().endswith(".json"):
-			path += ".sopr.json"
+		if not os.path.splitext(path)[1]:
+			path += ".jpg" if selected_filter.startswith("JPEG") else ".png"
 		self.save_last_dirpath(os.path.dirname(path))
 		try:
-			self.context.storage.save(path)
+			self.context.controller.current_scheme.paintwidget.save_image(path)
+			json_paths, _legacy_paths = self.sidecar_paths(path)
+			self.context.storage.save(json_paths[0])
 		except Exception as ex:
 			util.msgbox_error(str(ex))
 
 	def open_document_action(self):
 		path, _selected_filter = QFileDialog.getOpenFileName(
 			self,
-			"Открыть документ",
+			"Открыть схему",
 			self.get_last_dirpath(),
-			"Документ SOPR (*.sopr.json *.json)",
+			(
+				"Изображения (*.png *.jpg *.jpeg);;"
+				"Документ SOPR (*.sopr.json *.json);;"
+				"Старый документ SOPR (*.dat)"
+			),
 		)
 		if not path:
 			return
 		self.save_last_dirpath(os.path.dirname(path))
 		try:
-			self.context.storage.load(path)
+			extension = os.path.splitext(path)[1].lower()
+			if extension == ".json":
+				self.context.storage.load(path)
+				return
+			if extension == ".dat":
+				self.context.storage.import_trusted_legacy(path)
+				return
+			json_paths, legacy_paths = self.sidecar_paths(path)
+			for candidate in json_paths:
+				if os.path.exists(candidate):
+					self.context.storage.load(candidate)
+					return
+			for candidate in legacy_paths:
+				if os.path.exists(candidate):
+					self.context.storage.import_trusted_legacy(candidate)
+					self.context.storage.save(json_paths[0])
+					return
+			raise FileNotFoundError(
+				"Не найден файл состояния для изображения: {}".format(path)
+			)
 		except Exception as ex:
 			util.msgbox_error(str(ex))
 
@@ -261,23 +312,11 @@ class MainWindow(QMainWindow):
 	def import_legacy_action(self):
 		path, _selected_filter = QFileDialog.getOpenFileName(
 			self,
-			"Импортировать доверенный старый документ",
+			"Импортировать старый документ",
 			self.get_last_dirpath(),
 			"Старый документ SOPR (*.dat)",
 		)
 		if not path:
-			return
-		choice = QMessageBox.warning(
-			self,
-			"Небезопасный старый формат",
-			(
-				"Файлы .dat используют Python pickle и могут выполнять код. "
-				"Продолжайте только для файла из доверенного источника."
-			),
-			QMessageBox.Open | QMessageBox.Cancel,
-			QMessageBox.Cancel,
-		)
-		if choice != QMessageBox.Open:
 			return
 		self.save_last_dirpath(os.path.dirname(path))
 		try:
@@ -331,15 +370,15 @@ class MainWindow(QMainWindow):
 
 	def createActions(self):
 		self.OpenDocumentAction = self.create_action(
-			"Открыть документ...",
+			"Открыть схему...",
 			self.open_document_action,
-			"Открыть документ SOPR",
+			"Открыть схему по изображению",
 			"Ctrl+O",
 		)
 		self.SaveDocumentAction = self.create_action(
-			"Сохранить документ...",
+			"Сохранить схему...",
 			self.save_document_action,
-			"Сохранить документ SOPR",
+			"Сохранить изображение и JSON-состояние",
 			"Ctrl+S",
 		)
 		self.ExportImageAction = self.create_action(
@@ -348,9 +387,9 @@ class MainWindow(QMainWindow):
 			"Экспортировать изображение без состояния документа",
 		)
 		self.ImportLegacyAction = self.create_action(
-			"Импортировать старый доверенный .dat...",
+			"Импортировать старый .dat...",
 			self.import_legacy_action,
-			"Явно импортировать старый pickle-документ",
+			"Импортировать старый документ",
 		)
 		self.PrePictureAction = self.create_action("Показать изображение...", self.pre_picture_action, "Показать изображение")
 		self.GreekAction = self.create_action("Греческий и спецсимволы", self.greek_action, "Показать справку по греческому алфавиту и спецсимволам")

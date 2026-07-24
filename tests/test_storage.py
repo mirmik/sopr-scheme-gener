@@ -89,40 +89,78 @@ def test_spatial_task_preserves_object_cycles_and_shared_arrays(context):
 	assert context.storage.to_data() == data
 
 
-def test_file_menu_separates_document_and_image_operations(
+def test_file_menu_saves_and_opens_json_sidecar_by_image_hash(
 	context,
 	tmp_path,
 	monkeypatch,
 ):
 	context.controller.select("beams")
-	document_path = tmp_path / "beam.sopr.json"
 	image_path = tmp_path / "beam.png"
-
-	monkeypatch.setattr(
-		QFileDialog,
-		"getSaveFileName",
-		lambda *args, **kwargs: (str(document_path), "Документ SOPR (*.sopr.json)"),
-	)
-	context.window.save_document_action()
-	assert json.loads(document_path.read_text(encoding="utf-8"))["task_type"] == "beams"
-
-	context.controller.select("stress-cube")
-	monkeypatch.setattr(
-		QFileDialog,
-		"getOpenFileName",
-		lambda *args, **kwargs: (str(document_path), "Документ SOPR (*.sopr.json)"),
-	)
-	context.window.open_document_action()
-	assert context.controller.current_spec.identifier == "beams"
 
 	monkeypatch.setattr(
 		QFileDialog,
 		"getSaveFileName",
 		lambda *args, **kwargs: (str(image_path), "PNG (*.png)"),
 	)
-	context.window.export_image_action()
+	context.window.save_document_action()
 	assert image_path.read_bytes().startswith(b"\x89PNG")
-	assert not (tmp_path / ".save").exists()
+	json_paths, _legacy_paths = context.window.sidecar_paths(image_path)
+	sidecar = Path(json_paths[0])
+	assert sidecar.parent == tmp_path / ".save"
+	assert json.loads(sidecar.read_text(encoding="utf-8"))["task_type"] == "beams"
+
+	context.controller.select("stress-cube")
+	monkeypatch.setattr(
+		QFileDialog,
+		"getOpenFileName",
+		lambda *args, **kwargs: (str(image_path), "Изображения (*.png)"),
+	)
+	context.window.open_document_action()
+	assert context.controller.current_spec.identifier == "beams"
+
+	export_path = tmp_path / "plain.png"
+	sidecars_before_export = set((tmp_path / ".save").iterdir())
+	monkeypatch.setattr(
+		QFileDialog,
+		"getSaveFileName",
+		lambda *args, **kwargs: (str(export_path), "PNG (*.png)"),
+	)
+	context.window.export_image_action()
+	assert export_path.read_bytes().startswith(b"\x89PNG")
+	assert set((tmp_path / ".save").iterdir()) == sidecars_before_export
+
+
+def test_opening_old_image_loads_dat_silently_and_migrates_sidecar(
+	context,
+	tmp_path,
+	monkeypatch,
+):
+	spec, fixture = next(iter(trusted_fixtures()))
+	image_path = tmp_path / "legacy.png"
+	image_path.write_bytes(b"legacy image bytes")
+	json_paths, legacy_paths = context.window.sidecar_paths(image_path)
+	legacy_path = Path(legacy_paths[0])
+	legacy_path.parent.mkdir()
+	legacy_path.write_bytes(fixture.read_bytes())
+
+	context.controller.select(
+		next(
+			candidate.identifier
+			for candidate in context.task_specs
+			if candidate.identifier != spec.identifier
+		)
+	)
+	monkeypatch.setattr(
+		QFileDialog,
+		"getOpenFileName",
+		lambda *args, **kwargs: (str(image_path), "Изображения (*.png)"),
+	)
+	context.window.open_document_action()
+
+	assert context.controller.current_spec.identifier == spec.identifier
+	migrated = Path(json_paths[0])
+	assert migrated.exists()
+	assert json.loads(migrated.read_text(encoding="utf-8"))["task_type"] == spec.identifier
 
 
 def test_invalid_documents_are_rejected_before_selection_changes(context, tmp_path):
@@ -159,7 +197,7 @@ def test_invalid_documents_are_rejected_before_selection_changes(context, tmp_pa
 		context.storage.load(malformed)
 
 
-def test_only_explicit_legacy_boundary_imports_pickle_loader():
+def test_only_storage_compatibility_boundary_imports_pickle_loader():
 	package_dir = Path(__file__).resolve().parents[1] / "sopr_scheme_gener"
 	offenders = []
 	for path in package_dir.glob("*.py"):
