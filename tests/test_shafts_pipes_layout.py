@@ -34,8 +34,14 @@ def test_default_shafts_scene_exposes_pipe_camera_and_dimensions():
 	assert scene.viewport.height == 213
 	assert index.get("section/main/upper-wall") is not None
 	assert index.get("section/main/diameter-label") is not None
+	assert (
+		index.get("section/main/diameter-label").metadata_value("offset")
+		== "diameter_main_text"
+	)
 	assert index.get("camera/upper") is not None
 	assert index.get("dimension/thickness/label") is not None
+	assert index.get("pressure/external").metadata_value("kind") == "label"
+	assert index.get("pressure/internal").metadata_value("kind") == "legacy-text"
 	assert index.get("viewport-border") is not None
 
 
@@ -49,6 +55,9 @@ def test_central_shaft_uses_three_sections_and_validates_record_count():
 	assert index.get("section/left/body") is not None
 	assert index.get("section/central/upper-wall") is not None
 	assert index.get("section/right/body") is not None
+	assert index.get("section/left/diameter-label").metadata_value("index") == 0
+	assert index.get("section/central/diameter-label").metadata_value("index") == 1
+	assert index.get("section/right/diameter-label").metadata_value("index") == 0
 
 	with pytest.raises(ValueError, match="2 section"):
 		_build([_section()], has_central=True)
@@ -73,8 +82,17 @@ def test_shafts_feature_scene_contains_forces_and_moments(bending_style):
 
 	assert index.get("force/left") is not None
 	assert index.get("force/right") is not None
+	assert index.get("force/left/label").metadata_value("offset") == "force_left_text"
 	assert index.get("torque/left-label") is not None
+	assert (
+		index.get("torque/right-label").metadata_value("offset")
+		== "torque_right_text"
+	)
 	assert index.get("bending/left") is not None
+	assert (
+		index.get("bending/left-label").metadata_value("offset")
+		== "bending_left_text"
+	)
 	assert index.get("dimension/length") is not None
 
 

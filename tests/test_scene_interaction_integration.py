@@ -492,3 +492,34 @@ def test_spatial_beams_label_text_can_be_edited_by_double_click(monkeypatch):
 	finally:
 		context.window.close()
 		context.app.processEvents()
+
+
+def test_shafts_pipes_force_label_uses_shared_persisted_drag_offset():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "shafts-pipes", "--no-maximize", "--error"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		scheme.uncentered_force.set("-")
+		context.app.processEvents()
+		context.canvas.make_image()
+
+		record = scheme.task["sections"][0]
+		object_id = "force/left/label"
+		start = _device_center(context.canvas.scene_interaction, object_id)
+		_hover(context.canvas, start)
+		assert context.canvas.selected_label_id == object_id
+		_drag(context.canvas, start, (start[0] + 8, start[1] - 6))
+
+		assert record.force_left_text_offset_x == pytest.approx(8)
+		assert record.force_left_text_offset_y == pytest.approx(-6)
+		document = context.storage.to_data()
+		context.storage.load_data(document)
+		restored = context.controller.current_scheme.task["sections"][0]
+		assert restored.force_left_text_offset_x == pytest.approx(8)
+		assert restored.force_left_text_offset_y == pytest.approx(-6)
+	finally:
+		context.window.close()
+		context.app.processEvents()

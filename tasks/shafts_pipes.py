@@ -13,9 +13,11 @@ from sopr_scheme_gener.layouts.shafts_pipes import (
 	ShaftsPipesLayoutSettings,
 )
 from sopr_scheme_gener.scene.qt import (
+	QtDraggableLabelController,
 	QtGraphicsSceneRenderer,
 	QtSceneInteraction,
 	QtTextMetrics,
+	with_label_selection_highlight,
 )
 
 
@@ -30,6 +32,22 @@ class ConfWidget(common.ConfWidget):
 		def __init__(self, D=30, Dtext="d"):
 			self.D = D
 			self.Dtext = Dtext
+			for name in (
+				"diameter_main_text",
+				"diameter_left_text",
+				"diameter_central_text",
+				"diameter_right_text",
+				"external_pressure_text",
+				"internal_pressure_text",
+				"torque_left_text",
+				"torque_right_text",
+				"bending_left_text",
+				"bending_right_text",
+				"force_left_text",
+				"force_right_text",
+			):
+				setattr(self, name + "_offset_x", 0.0)
+				setattr(self, name + "_offset_y", 0.0)
 
 	def __init__(self, scheme):
 		super().__init__(scheme, noinitbuttons=True)
@@ -158,6 +176,8 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.no_text_render = True
 		self.no_resize = True
 		self.last_scene = None
+		self.setMouseTracking(True)
+		self.label_drag = QtDraggableLabelController()
 
 	def paintEventImplementation(self, ev):
 		settings = ShaftsPipesLayoutSettings(
@@ -195,10 +215,32 @@ class PaintWidget(paintwdg.PaintWidget):
 			metrics,
 			text_transform=paintool.greek,
 		)
-		self.last_scene = scene
 		self.scene_interaction = QtSceneInteraction(scene, text_metrics=metrics)
+		self.selected_label_id = self.label_drag.selected_object_id
+		scene = with_label_selection_highlight(
+			scene,
+			self.scene_interaction,
+			self.selected_label_id,
+		)
+		self.last_scene = scene
 		QtGraphicsSceneRenderer(metrics, one_to_one=True).render(
 			scene,
 			self.painter,
 		)
 		self.resize_after_render(scene.viewport.width, scene.viewport.height)
+
+	def mousePressEvent(self, ev):
+		if self.scene_interaction is None:
+			return
+		self.label_drag.press(self.scene_interaction, ev.pos())
+
+	def mouseReleaseEvent(self, ev):
+		self.label_drag.release()
+		self.repaint()
+
+	def mouseMoveEvent(self, ev):
+		if self.scene_interaction is None:
+			return
+		self.label_drag.move(self.scene_interaction, ev.pos(), self.shemetype.task)
+		self.selected_label_id = self.label_drag.selected_object_id
+		self.repaint()

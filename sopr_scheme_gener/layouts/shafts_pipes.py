@@ -191,25 +191,59 @@ class ShaftsPipesLayoutBuilder:
 			rotation=0.0,
 			clean=False,
 			object_id=None,
+			label_index=None,
+			offset_name=None,
 		):
 			value = text_transform(value)
 			measurement = text_metrics.measure(value, style)
-			objects.append(
-				Text(
-					center,
-					value,
-					style,
-					TextAnchor.CENTER,
-					rotation_degrees=math.degrees(rotation),
-					object_id=object_id,
-					metadata=metadata(
-						kind="legacy-text",
-						offset=offset,
-						clean=clean,
+			text = Text(
+				center,
+				value,
+				style,
+				TextAnchor.CENTER,
+				rotation_degrees=math.degrees(rotation),
+				object_id=(
+					object_id + "/content"
+					if object_id and label_index is not None and value
+					else object_id
+				),
+				metadata=metadata(
+					kind="legacy-text",
+					offset=offset,
+					clean=clean,
+				),
+			)
+			rendered_center = center
+			if label_index is not None and value:
+				label_offset = Point(
+					_value(
+						sections[label_index],
+						offset_name + "_offset_x",
+						0.0,
+					),
+					_value(
+						sections[label_index],
+						offset_name + "_offset_y",
+						0.0,
 					),
 				)
-			)
-			bounds.legacy_text(center, measurement, offset, rotation)
+				objects.append(
+					Group(
+						(text,),
+						offset=label_offset,
+						object_id=object_id,
+						metadata=metadata(
+							kind="label",
+							record="sections",
+							index=label_index,
+							offset=offset_name,
+						),
+					)
+				)
+				rendered_center = center.translated(label_offset)
+			else:
+				objects.append(text)
+			bounds.legacy_text(rendered_center, measurement, offset, rotation)
 
 		def add_arrow(
 			start,
@@ -370,6 +404,13 @@ class ShaftsPipesLayoutBuilder:
 					rotation=math.pi / 2,
 					clean=True,
 					object_id=prefix + "/diameter-label",
+					label_index=1 if prefix == "section/central" else 0,
+					offset_name={
+						"section/main": "diameter_main_text",
+						"section/left": "diameter_left_text",
+						"section/central": "diameter_central_text",
+						"section/right": "diameter_right_text",
+					}.get(prefix, "diameter_main_text"),
 				)
 
 		def draw_camera(wmax, wmin, hmax, hmin, hint):
@@ -428,6 +469,8 @@ class ShaftsPipesLayoutBuilder:
 			settings.pressure_text,
 			Point(-(w3 + 3 * w2) / 4 + 15, -ymax - 18),
 			object_id="pressure/external",
+			label_index=0,
+			offset_name="external_pressure_text",
 		)
 
 		if settings.torque_direction != "нет":
@@ -469,12 +512,16 @@ class ShaftsPipesLayoutBuilder:
 				Point(position - 15, -max_radius),
 				offset="left",
 				object_id="torque/left-label",
+				label_index=0,
+				offset_name="torque_left_text",
 			)
 			add_text(
 				settings.torque_text,
 				Point(-position + 15, -max_radius),
 				offset="right",
 				object_id="torque/right-label",
+				label_index=0,
+				offset_name="torque_right_text",
 			)
 
 		if settings.bending_direction != "нет":
@@ -496,11 +543,17 @@ class ShaftsPipesLayoutBuilder:
 					settings.bending_text,
 					Point(w1 - 56, 0),
 					offset="left",
+					object_id="bending/left-label",
+					label_index=0,
+					offset_name="bending_left_text",
 				)
 				add_text(
 					settings.bending_text,
 					Point(w4 + 56, 0),
 					offset="right",
+					object_id="bending/right-label",
+					label_index=0,
+					offset_name="bending_right_text",
 				)
 			else:
 				x, y = 35.0, radius + 15
@@ -522,11 +575,17 @@ class ShaftsPipesLayoutBuilder:
 					settings.bending_text,
 					Point(w1 - 20, label_y if inverse else -label_y),
 					offset="left",
+					object_id="bending/left-label",
+					label_index=0,
+					offset_name="bending_left_text",
 				)
 				add_text(
 					settings.bending_text,
 					Point(w4 + 20, label_y if inverse else -label_y),
 					offset="right",
+					object_id="bending/right-label",
+					label_index=0,
+					offset_name="bending_right_text",
 				)
 
 		if settings.force_direction != "нет":
@@ -568,6 +627,8 @@ class ShaftsPipesLayoutBuilder:
 					settings.force_text,
 					Point((start.x + end.x) / 2, -force_radius - 13),
 					object_id="force/{}/label".format(name),
+					label_index=0,
+					offset_name="force_{}_text".format(name),
 				)
 
 		text_position = (
@@ -621,6 +682,8 @@ class ShaftsPipesLayoutBuilder:
 			Point(-(w3 + 3 * w2) / 4 + 15, -ymin + 25),
 			clean=True,
 			object_id="pressure/internal",
+			label_index=0,
+			offset_name="internal_pressure_text",
 		)
 
 		if settings.has_central:
