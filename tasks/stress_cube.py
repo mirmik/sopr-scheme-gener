@@ -112,7 +112,7 @@ class ConfWidget(common.ConfWidget):
 		self.vlayout.addWidget(self.table2)
 
 		self.vlayout.addWidget(self.sett)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 		self.setLayout(self.vlayout)
 
 	class sect:

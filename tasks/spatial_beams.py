@@ -146,7 +146,7 @@ class ConfWidget(common.ConfWidget):
 
 	def update_interface(self):
 		self.vlayout.addWidget(self.sett)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 		self.setLayout(self.vlayout)
 
 	def create_task_structure(self):

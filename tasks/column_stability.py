@@ -126,7 +126,7 @@ class ConfWidget(common.ConfWidget):
 		self.vlayout.addWidget(QLabel("Узлы (снизу вверх):"))
 		self.vlayout.addWidget(self.node_table)
 		self.vlayout.addWidget(self.sett)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 
 	def add_action_impl(self):
 		self.shemetype.task["segments"].append(self.segment())

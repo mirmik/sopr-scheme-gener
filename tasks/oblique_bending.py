@@ -184,7 +184,7 @@ class ConfWidget(common.ConfWidget):
 		self.vlayout.addWidget(self.sett)
 		for table in (self.table, self.table1, self.table2):
 			table.updated.connect(self.redraw)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 
 	def add_action_impl(self):
 		self.sections().append(self.sect())

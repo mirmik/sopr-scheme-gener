@@ -58,6 +58,10 @@ class StyleWidget(QWidget):
 	def __init__(self):
 		super().__init__()
 
+def add_symbol_text_editor(layout, editor):
+	from sopr_scheme_gener.symbol_palette import add_symbol_text_editor as add_editor
+	return add_editor(layout, editor)
+
 class SchemeType:
 	def __init__(self, name):
 		self.name = name

@@ -245,7 +245,7 @@ class ConfWidget_T0(common.ConfWidget):
 		self.vlayout.addWidget(QLabel("Локальные силы, метки узлов:"))
 		self.vlayout.addWidget(self.table2)
 		self.vlayout.addWidget(self.sett)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 
 	def hover_node(self, row, column, hint):
 		self.shemetype.paintwidget.highlited_node = (hint, row)

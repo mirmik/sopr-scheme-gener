@@ -114,7 +114,7 @@ class ConfWidget_T1(common.ConfWidget):
 		self.vlayout.addWidget(self.sett)
 		self.table.updated.connect(self.redraw)
 		self.table2.updated.connect(self.redraw)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 
 	def __init__(self, sheme):
 		super().__init__(sheme)

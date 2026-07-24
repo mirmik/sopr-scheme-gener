@@ -156,7 +156,7 @@ class ConfWidget_T2(common.ConfWidget):
 		self.table3.hover_hint.connect(self.hover_node)
 		self.table2.unhover.connect(self.table_unhover)
 		self.table3.unhover.connect(self.table_unhover)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 
 	def hover_node(self, row, column, hint):
 		self.shemetype.paintwidget.highlited_node = (hint, row)

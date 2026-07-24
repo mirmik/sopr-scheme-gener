@@ -129,7 +129,7 @@ class ConfWidget(common.ConfWidget):
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
 		self.vlayout.addWidget(self.sett)
-		self.vlayout.addWidget(self.shemetype.texteditor)
+		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 
 	def inittask(self):
 		return {}
