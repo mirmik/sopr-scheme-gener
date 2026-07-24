@@ -110,6 +110,64 @@ def test_right_side_link_hatching_is_mirrored_outwards():
 
 
 @pytest.mark.parametrize(
+	("support_name", "direction"),
+	[
+		("боковая тяга слева", -1),
+		("боковая тяга справа", 1),
+	],
+)
+def test_endpoint_side_link_centers_joint_and_keeps_link_out_of_circles(
+	support_name,
+	direction,
+):
+	scene = _build(
+		{
+			"segments": [{"length": 1, "length_text": "l", "rigidity_text": ""}],
+			"nodes": [
+				{"support": "заделка", "load": "нет", "load_text": ""},
+				{"support": support_name, "load": "нет", "load_text": ""},
+			],
+		}
+	)
+	index = SceneIndex(scene, FixedTextMetrics())
+	support = index.get("node/1/support").item
+	body = index.get("segment/0/body").item
+	link, inner_joint, outer_joint = support.children[:3]
+	inner_center_x = inner_joint.bounds.x + inner_joint.bounds.width / 2
+	outer_center_x = outer_joint.bounds.x + outer_joint.bounds.width / 2
+	radius = inner_joint.bounds.width / 2
+
+	assert inner_center_x == body.end.x
+	assert link.start.x == inner_center_x + direction * radius
+	assert link.end.x == outer_center_x - direction * radius
+	assert support.children.index(link) < support.children.index(inner_joint)
+	assert support.children.index(link) < support.children.index(outer_joint)
+
+
+def test_internal_side_link_keeps_joint_beside_rod():
+	scene = _build(
+		{
+			"segments": [
+				{"length": 1, "length_text": "l", "rigidity_text": ""},
+				{"length": 1, "length_text": "l", "rigidity_text": ""},
+			],
+			"nodes": [
+				{"support": "заделка", "load": "нет", "load_text": ""},
+				{"support": "боковая тяга справа", "load": "нет", "load_text": ""},
+				{"support": "нет", "load": "нет", "load_text": ""},
+			],
+		}
+	)
+	index = SceneIndex(scene, FixedTextMetrics())
+	support = index.get("node/1/support").item
+	body = index.get("segment/0/body").item
+	inner_joint = support.children[1]
+	inner_center_x = inner_joint.bounds.x + inner_joint.bounds.width / 2
+
+	assert inner_center_x > body.start.x
+
+
+@pytest.mark.parametrize(
 	"support",
 	[
 		"заделка",

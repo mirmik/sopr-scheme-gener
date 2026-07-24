@@ -142,20 +142,26 @@ def _hinge_support(point, size, stroke, object_id, at_top=False):
 	)
 
 
-def _side_link(point, size, stroke, object_id, side):
+def _side_link(point, size, stroke, object_id, side, at_endpoint=False):
 	sign = -1 if side == "left" else 1
 	radius = max(3.5, size / 6)
-	inner = Point(point.x + sign * radius * 1.5, point.y)
+	inner = (
+		point
+		if at_endpoint
+		else Point(point.x + sign * radius * 1.5, point.y)
+	)
 	outer = Point(point.x + sign * size * 1.8, point.y)
 	wall_x = outer.x + sign * radius
+	link_start = Point(inner.x + sign * radius, inner.y)
+	link_end = Point(outer.x - sign * radius, outer.y)
 	return Group(
 		(
+			Line(link_start, link_end, stroke),
 			Ellipse(
 				Rect(inner.x - radius, inner.y - radius, radius * 2, radius * 2),
 				stroke,
 				Fill(WHITE),
 			),
-			Line(inner, outer, stroke),
 			Ellipse(
 				Rect(outer.x - radius, outer.y - radius, radius * 2, radius * 2),
 				stroke,
@@ -225,9 +231,23 @@ def _support(point, support, settings, stroke, object_id, node_index, node_count
 			at_top=node_index == node_count - 1,
 		)
 	if support in (SUPPORT_SIDE_LEFT, "side-link-left"):
-		return _side_link(point, settings.support_size, stroke, object_id, "left")
+		return _side_link(
+			point,
+			settings.support_size,
+			stroke,
+			object_id,
+			"left",
+			at_endpoint=node_index in (0, node_count - 1),
+		)
 	if support in (SUPPORT_SIDE_RIGHT, "side-link-right"):
-		return _side_link(point, settings.support_size, stroke, object_id, "right")
+		return _side_link(
+			point,
+			settings.support_size,
+			stroke,
+			object_id,
+			"right",
+			at_endpoint=node_index in (0, node_count - 1),
+		)
 	if support in (
 		SUPPORT_FLOATING,
 		SUPPORT_FLOATING_LEFT,
