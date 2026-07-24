@@ -3,6 +3,7 @@ import os
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from sopr_scheme_gener.app import build_parser, create_runtime
+from sopr_scheme_gener.devapi import DevBridge
 
 
 def test_column_stability_editor_renders_and_round_trips_document(tmp_path):
@@ -25,5 +26,31 @@ def test_column_stability_editor_renders_and_round_trips_document(tmp_path):
 		before = context.storage.to_data()
 		context.storage.save(path)
 		assert context.storage.load(path) == before
+	finally:
+		context.window.close()
+
+
+def test_clearing_rod_width_while_editing_does_not_break_render():
+	context = create_runtime(
+		build_parser().parse_args(
+			["--type", "column-stability", "--no-maximize"]
+		)
+	)
+	try:
+		scheme = context.controller.current_scheme
+		bridge = DevBridge(context)
+		assert scheme.rod_width.get() == 5.0
+
+		scheme.rod_width.obj.clear()
+		context.app.processEvents()
+
+		assert scheme.rod_width.get() == 5.0
+		assert bridge.dispatch("screenshot", {"target": "canvas"})["png_base64"]
+		assert bridge.dispatch("errors.list", {}) == []
+
+		scheme.rod_width.obj.setText("7.5")
+		context.app.processEvents()
+		assert scheme.rod_width.get() == 7.5
+		assert bridge.dispatch("errors.list", {}) == []
 	finally:
 		context.window.close()

@@ -83,12 +83,19 @@ class Element(QWidget):
 
 				elif (type == "int"):
 					try:
-						return int(obj.text())
-					except:
-						return 1
+						value = int(obj.text())
+					except (TypeError, ValueError):
+						return getattr(obj, "_last_valid_value", 1)
+					obj._last_valid_value = value
+					return value
 
 				elif (type == "float"):
-					return float(obj.text())
+					try:
+						value = float(obj.text())
+					except (TypeError, ValueError):
+						return getattr(obj, "_last_valid_value", 1.0)
+					obj._last_valid_value = value
+					return value
 
 				elif (type == "bool"):
 					return bool(obj.checkState())
