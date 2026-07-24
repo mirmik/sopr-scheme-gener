@@ -122,6 +122,14 @@ def test_axial_layout_covers_gaps_forces_loads_labels_fixed_ends_and_highlights(
 	assert index.get("section/1/distributed-force").metadata_value("direction") == "-"
 	assert index.get("node/1/label") is not None
 	assert index.get("section/1/label") is not None
+	assert index.get("node/0/force/text").metadata_value("kind") == "label"
+	assert index.get("node/0/force/text").metadata_value("record") == "betsect"
+	assert (
+		index.get("section/0/distributed-force/text").metadata_value("record")
+		== "sectforce"
+	)
+	assert index.get("node/1/label").metadata_value("offset") == "node_label"
+	assert index.get("section/1/label").metadata_value("offset") == "section_label"
 	assert index.get("node/2/highlight") is not None
 	assert index.get("fixed-end/left") is not None
 	assert index.get("fixed-end/right") is not None
@@ -148,6 +156,11 @@ def test_torsion_layout_covers_stiffness_torques_and_distributed_torques():
 	assert index.get("node/1/torque").metadata_value("direction") == "-"
 	assert index.get("section/0/distributed-torque").metadata_value("direction") == "+"
 	assert index.get("section/1/distributed-torque").metadata_value("direction") == "-"
+	assert index.get("node/0/torque/text").metadata_value("kind") == "label"
+	assert (
+		index.get("section/0/distributed-torque/text").metadata_value("offset")
+		== "load_text"
+	)
 	assert index.get("section/1/dimension/text") is not None
 
 

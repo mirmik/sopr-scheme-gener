@@ -280,7 +280,11 @@ layout и тесты геометрии Qt не импортируют. Тот �
   painter z-order, при равенстве — наиболее глубокий;
 - `ViewportMapping` задаёт direct и aspect-fit преобразования координат;
 - `QtSceneInteraction` остаётся тонким адаптером `QPointF` и не переносит Qt
-  в Scene core.
+  в Scene core;
+- `QtDraggableLabelController` реализует общий контракт сохраняемых смещений:
+  Scene-метка с `kind=label`, `record`, `index` и `offset` связывается с
+  `<offset>_offset_x/y` соответствующей записи task model. Первые потребители
+  контракта — `column-stability` и все три подтипа `axial-torsion`.
 
 `beams`, `stress-cube`, `plate`, `rod-system-2`, `frames` и
 `axial-torsion` больше не строят локальные `TextItem`/hover maps для

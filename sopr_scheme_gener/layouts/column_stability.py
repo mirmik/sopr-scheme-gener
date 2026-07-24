@@ -341,7 +341,8 @@ class ColumnStabilityLayoutBuilder:
 						metadata=metadata(
 							kind="label",
 							label_kind="length",
-							record="segment",
+							record="segments",
+							offset="length",
 							index=index,
 						),
 					)
@@ -364,7 +365,8 @@ class ColumnStabilityLayoutBuilder:
 						metadata=metadata(
 							kind="label",
 							label_kind="rigidity",
-							record="segment",
+							record="segments",
+							offset="rigidity",
 							index=index,
 						),
 					)
@@ -478,7 +480,8 @@ class ColumnStabilityLayoutBuilder:
 							metadata=metadata(
 								kind="label",
 								label_kind="load",
-								record="node",
+								record="nodes",
+								offset="load",
 								index=index,
 							),
 						)

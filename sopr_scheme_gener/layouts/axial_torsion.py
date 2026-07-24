@@ -56,6 +56,23 @@ def _value(record, name, default=None):
 	return getattr(record, name, default)
 
 
+def _offset(record, name):
+	return Point(
+		float(_value(record, "{}_offset_x".format(name), 0.0)),
+		float(_value(record, "{}_offset_y".format(name), 0.0)),
+	)
+
+
+def _label_metadata(record, index, offset):
+	return metadata(
+		kind="label",
+		record=record,
+		index=index,
+		offset=offset,
+		label_kind=offset,
+	)
+
+
 def _arrow_head(tip, angle, size, stroke, object_id=None, top=False):
 	shift = 0.5 if top and abs(math.sin(angle)) < 1e-12 and math.cos(angle) > 0 else 0
 	tip = Point(tip.x + shift, tip.y + shift)
@@ -142,26 +159,39 @@ def _dimension(x0, x1, body_bottom, level, text, style, text_metrics, half, inde
 	)
 
 
-def _leader_text(point, distance, value, style, text_metrics, half, object_id, right=False):
+def _leader_text(
+	point,
+	distance,
+	value,
+	style,
+	text_metrics,
+	half,
+	object_id,
+	right=False,
+	label_offset=Point(0, 0),
+	record=None,
+	index=-1,
+	offset_name="",
+):
 	measurement = text_metrics.measure(value, style)
 	width = max(measurement.width, 18)
-	shelf_y = point.y - distance
-	shelf_left = Point(point.x - width / 2, shelf_y)
-	shelf_right = Point(point.x + width / 2, shelf_y)
+	shelf_y = point.y - distance + label_offset.y
+	shelf_left = Point(point.x - width / 2 + label_offset.x, shelf_y)
+	shelf_right = Point(point.x + width / 2 + label_offset.x, shelf_y)
 	leader_end = shelf_left if right else shelf_right
 	return Group(
 		(
 			Line(point, leader_end, half),
 			Line(shelf_left, shelf_right, half),
 			Text(
-				Point(point.x, shelf_y - 3),
+				Point(point.x + label_offset.x, shelf_y - 3),
 				value,
 				style,
 				TextAnchor.BASELINE_CENTER,
 			),
 		),
 		object_id=object_id,
-		metadata=metadata(kind="label"),
+		metadata=_label_metadata(record, index, offset_name),
 	)
 
 
@@ -175,6 +205,10 @@ def _text_by_points(
 	offset,
 	object_id,
 	leader=None,
+	label_offset=Point(0, 0),
+	record=None,
+	index=-1,
+	offset_name="",
 ):
 	if start == end:
 		return Group((), object_id=object_id)
@@ -186,8 +220,13 @@ def _text_by_points(
 	nx, ny = -uy, ux
 	measurement = text_metrics.measure(value, style)
 	center = Point(
-		(start.x + end.x) / 2 + nx * (offset + measurement.width / 2),
-		(start.y + end.y) / 2 + measurement.height / 4 + ny * offset,
+		(start.x + end.x) / 2
+		+ nx * (offset + measurement.width / 2)
+		+ label_offset.x,
+		(start.y + end.y) / 2
+		+ measurement.height / 4
+		+ ny * offset
+		+ label_offset.y,
 	)
 	children = [
 		Text(
@@ -221,7 +260,7 @@ def _text_by_points(
 	return Group(
 		children,
 		object_id=object_id,
-		metadata=metadata(kind="label"),
+		metadata=_label_metadata(record, index, offset_name),
 	)
 
 
@@ -582,11 +621,14 @@ class AxialTorsionLayoutBuilder:
 								Point(
 									text_point.x,
 									hcenter - node_radius(index) * 1.6 - 6,
-								),
+								).translated(_offset(node, "action_text")),
 								value,
 								style,
 								TextAnchor.BASELINE_CENTER,
 								object_id="node/{}/force/text".format(index),
+								metadata=_label_metadata(
+									"betsect", index, "action_text"
+								),
 							)
 						)
 					else:
@@ -599,6 +641,10 @@ class AxialTorsionLayoutBuilder:
 								text_metrics,
 								half,
 								"node/{}/force/text".format(index),
+								label_offset=_offset(node, "action_text"),
+								record="betsect",
+								index=index,
+								offset_name="action_text",
 							)
 						)
 
@@ -657,6 +703,10 @@ class AxialTorsionLayoutBuilder:
 							half,
 							"section/{}/distributed-force/text".format(index),
 							right=True,
+							label_offset=_offset(load, "load_text"),
+							record="sectforce",
+							index=index,
+							offset_name="load_text",
 						)
 					)
 		else:
@@ -681,10 +731,13 @@ class AxialTorsionLayoutBuilder:
 							Point(
 								x_position(index) + 14,
 								hcenter - torque_radius(index) - 14,
-							),
+							).translated(_offset(node, "action_text")),
 							value,
 							style,
 							object_id="node/{}/torque/text".format(index),
+							metadata=_label_metadata(
+								"betsect", index, "action_text"
+							),
 						)
 					)
 
@@ -729,11 +782,16 @@ class AxialTorsionLayoutBuilder:
 				if value:
 					objects.append(
 						Text(
-							Point((x0 + x1) / 2, top - 28),
+							Point((x0 + x1) / 2, top - 28).translated(
+								_offset(load, "load_text")
+							),
 							value,
 							style,
 							object_id="section/{}/distributed-torque/text".format(
 								index
+							),
+							metadata=_label_metadata(
+								"sectforce", index, "load_text"
 							),
 						)
 					)
@@ -788,6 +846,10 @@ class AxialTorsionLayoutBuilder:
 					offset,
 					"node/{}/label".format(index),
 					leader,
+					label_offset=_offset(node, "node_label"),
+					record="betsect",
+					index=index,
+					offset_name="node_label",
 				)
 			)
 
@@ -852,6 +914,10 @@ class AxialTorsionLayoutBuilder:
 						(x_position(index) + x_position(index + 1)) / 2,
 						hcenter,
 					),
+					label_offset=_offset(section, "section_label"),
+					record="sections",
+					index=index,
+					offset_name="section_label",
 				)
 			)
 

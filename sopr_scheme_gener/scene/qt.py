@@ -21,7 +21,9 @@ from .hit import SceneIndex, ViewportMapping
 from .model import (
 	Arc,
 	Arrow,
+	Color,
 	Ellipse,
+	Fill,
 	Group,
 	Line,
 	Point,
@@ -29,8 +31,10 @@ from .model import (
 	Polyline,
 	Rectangle,
 	Scene,
+	Stroke,
 	Text,
 	TextAnchor,
+	metadata,
 )
 
 
@@ -223,6 +227,96 @@ class QtSceneInteraction:
 	def hit_test(self, qt_point, kinds=None, predicate=None):
 		point = self.mapping.from_device(Point(qt_point.x(), qt_point.y()))
 		return self.index.hit_test(point, kinds=kinds, predicate=predicate)
+
+
+class QtDraggableLabelController:
+	"""Reusable hover/drag state for labels backed by task-record offsets.
+
+	Draggable Scene objects use metadata fields ``record``, ``index`` and
+	``offset``.  For example, ``record="nodes"`` and ``offset="load"`` updates
+	``task["nodes"][index].load_offset_x`` and ``load_offset_y``.
+	"""
+
+	def __init__(self):
+		self.selected_object_id = None
+		self.pressed = False
+		self.last_point = None
+
+	def hover(self, interaction, qt_point):
+		hit = interaction.hit_test(qt_point, kinds=("label",))
+		selected = hit.object_id if hit is not None else None
+		changed = selected != self.selected_object_id
+		self.selected_object_id = selected
+		self.last_point = interaction.point(qt_point)
+		return changed
+
+	def press(self, interaction, qt_point):
+		self.pressed = self.selected_object_id is not None
+		self.last_point = interaction.point(qt_point)
+		return self.pressed
+
+	def release(self):
+		was_pressed = self.pressed
+		self.pressed = False
+		self.last_point = None
+		return was_pressed
+
+	def move(self, interaction, qt_point, task):
+		point = interaction.point(qt_point)
+		if not self.pressed:
+			return self.hover(interaction, qt_point)
+		if self.selected_object_id is None or self.last_point is None:
+			self.last_point = point
+			return False
+		entry = interaction.index.get(self.selected_object_id)
+		if entry is None:
+			self.selected_object_id = None
+			self.last_point = point
+			return False
+		record_name = entry.metadata_value("record")
+		index = entry.metadata_value("index")
+		offset = entry.metadata_value("offset")
+		if (
+			not isinstance(record_name, str)
+			or not isinstance(index, int)
+			or not isinstance(offset, str)
+			or record_name not in task
+			or not 0 <= index < len(task[record_name])
+		):
+			self.last_point = point
+			return False
+		record = task[record_name][index]
+		diff = point - self.last_point
+		x_field = "{}_offset_x".format(offset)
+		y_field = "{}_offset_y".format(offset)
+		setattr(record, x_field, getattr(record, x_field, 0.0) + diff.x())
+		setattr(record, y_field, getattr(record, y_field, 0.0) + diff.y())
+		self.last_point = point
+		return True
+
+
+def with_label_selection_highlight(scene, interaction, object_id):
+	"""Append the standard translucent hover rectangle to a Scene."""
+	if not object_id:
+		return scene
+	bounds = interaction.index.bounds(object_id)
+	if bounds is None:
+		return scene
+	return Scene(
+		scene.viewport,
+		scene.objects
+		+ (
+			Rectangle(
+				bounds,
+				stroke=Stroke(),
+				fill=Fill(Color(0, 255, 0, 179)),
+				object_id=object_id + "/hover",
+				metadata=metadata(kind="hover"),
+			),
+		),
+		content_bounds=scene.content_bounds,
+		background=scene.background,
+	)
 
 
 class QtGraphicsSceneRenderer:

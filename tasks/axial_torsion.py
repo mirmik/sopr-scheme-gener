@@ -15,7 +15,13 @@ from sopr_scheme_gener.layouts.axial_torsion import (
 	AxialTorsionLayoutBuilder,
 	AxialTorsionLayoutSettings,
 )
-from sopr_scheme_gener.scene.qt import QtPainterRenderer, QtSceneInteraction, QtTextMetrics
+from sopr_scheme_gener.scene.qt import (
+	QtDraggableLabelController,
+	QtPainterRenderer,
+	QtSceneInteraction,
+	QtTextMetrics,
+	with_label_selection_highlight,
+)
 
 
 SUBTYPE_RASTYAZHENIE_SJATIE = AXIAL
@@ -45,9 +51,13 @@ class ConfWidget_T0(common.ConfWidget):
 			delta=False,
 			label="",
 			label_height=20,
+			section_label_offset_x=0.0,
+			section_label_offset_y=0.0,
 		):
 			self.label = label
 			self.label_height = label_height
+			self.section_label_offset_x = section_label_offset_x
+			self.section_label_offset_y = section_label_offset_y
 			self.A = A
 			self.GIk = GIk
 			self.d = d
@@ -58,10 +68,19 @@ class ConfWidget_T0(common.ConfWidget):
 			self.delta = delta
 
 	class sectforce:
-		def __init__(self, mkr="нет", mkrT="", Fr="нет"):
+		def __init__(
+			self,
+			mkr="нет",
+			mkrT="",
+			Fr="нет",
+			load_text_offset_x=0.0,
+			load_text_offset_y=0.0,
+		):
 			self.mkr = mkr
 			self.mkrT = mkrT
 			self.Fr = Fr
+			self.load_text_offset_x = load_text_offset_x
+			self.load_text_offset_y = load_text_offset_y
 
 	class betsect:
 		def __init__(
@@ -73,6 +92,10 @@ class ConfWidget_T0(common.ConfWidget):
 			label="",
 			label_up=False,
 			label_off="справа",
+			action_text_offset_x=0.0,
+			action_text_offset_y=0.0,
+			node_label_offset_x=0.0,
+			node_label_offset_y=0.0,
 		):
 			self.F = F
 			self.Fstyle = Fstyle
@@ -81,6 +104,10 @@ class ConfWidget_T0(common.ConfWidget):
 			self.label = label
 			self.label_up = label_up
 			self.label_off = label_off
+			self.action_text_offset_x = action_text_offset_x
+			self.action_text_offset_y = action_text_offset_y
+			self.node_label_offset_x = node_label_offset_x
+			self.node_label_offset_y = node_label_offset_y
 
 	def create_task_structure(self):
 		self.shemetype.task = {
@@ -279,6 +306,8 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		self.highlited_node = None
 		self.highlited_sect = None
 		self.last_scene = None
+		self.setMouseTracking(True)
+		self.label_drag = QtDraggableLabelController()
 
 	def paintEventImplementation(self, ev):
 		highlighted_section = (
@@ -316,4 +345,27 @@ class PaintWidget_T0(paintwdg.PaintWidget):
 		)
 		self.last_scene = scene
 		self.scene_interaction = QtSceneInteraction(scene, text_metrics=metrics)
+		self.selected_label_id = self.label_drag.selected_object_id
+		scene = with_label_selection_highlight(
+			scene,
+			self.scene_interaction,
+			self.selected_label_id,
+		)
+		self.last_scene = scene
 		QtPainterRenderer(metrics).render(scene, self.painter)
+
+	def mousePressEvent(self, ev):
+		if self.scene_interaction is None:
+			return
+		self.label_drag.press(self.scene_interaction, ev.pos())
+
+	def mouseReleaseEvent(self, ev):
+		self.label_drag.release()
+		self.repaint()
+
+	def mouseMoveEvent(self, ev):
+		if self.scene_interaction is None:
+			return
+		self.label_drag.move(self.scene_interaction, ev.pos(), self.shemetype.task)
+		self.selected_label_id = self.label_drag.selected_object_id
+		self.repaint()
