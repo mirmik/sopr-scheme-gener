@@ -148,6 +148,31 @@ def test_stress_cube_uses_classic_sheet_resize_and_one_to_one_framed_scene():
 		context.window.close()
 
 
+def test_spatial_beams_keep_one_to_one_scale_when_task_frame_resizes():
+	context = _context()
+	try:
+		context.controller.select("spatial-beams")
+		canvas = context.canvas
+		scheme = context.controller.current_scheme
+		layout = canvas._derived_page_layout()
+		scheme.page_layout = layout
+
+		canvas.make_image()
+		first = canvas.scene_interaction.index.bounds("section/0/hit")
+		assert canvas.scene_interaction.mapping.scale == 1.0
+
+		layout.task_frame.width -= 60
+		layout.task_frame.height -= 40
+		canvas.make_image()
+		second = canvas.scene_interaction.index.bounds("section/0/hit")
+
+		assert canvas.scene_interaction.mapping.scale == 1.0
+		assert second.width == first.width
+		assert second.height == first.height
+	finally:
+		context.window.close()
+
+
 def test_page_layout_task_scene_is_independent_from_note_text_for_every_task():
 	context = _context()
 	try:

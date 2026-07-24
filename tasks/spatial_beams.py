@@ -327,9 +327,12 @@ class PaintWidget(paintwdg.PaintWidget):
 			text_metrics=metrics,
 			device_width=max(1, self.width()),
 			device_height=max(1, self.height()),
-			aspect_fit=True,
+			aspect_fit=self.shemetype.page_layout is None,
 		)
-		QtGraphicsSceneRenderer(metrics).render(scene, self.painter)
+		QtGraphicsSceneRenderer(
+			metrics,
+			one_to_one=self.shemetype.page_layout is not None,
+		).render(scene, self.painter)
 		self.resize_after_render(scene.viewport.width, scene.viewport.height)
 
 	def Action(self, name, parent, trig=None):
