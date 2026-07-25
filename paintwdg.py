@@ -665,8 +665,15 @@ class PaintWidget(QWidget):
 			self.selected_label_id = None
 
 	def edit_text(self):
-		text, ok = QInputDialog.getText(self, 'Текст', 'Введите текст:')
 		label = self.selected_label_record()
+		if label is None:
+			return
+		text, ok = QInputDialog.getText(
+			self,
+			"Текст",
+			"Введите текст:",
+			text=label.text,
+		)
 		if ok and label is not None:
 			label.text = text
 		self.update()

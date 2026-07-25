@@ -2,6 +2,8 @@ import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PyQt5.QtCore import QEvent, QPointF, Qt
+from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QLabel
 
 from sopr_scheme_gener.app import build_parser, create_runtime
@@ -10,6 +12,15 @@ from sopr_scheme_gener.app import build_parser, create_runtime
 def _image_bytes(image):
 	bits = image.bits()
 	return bits.asstring(image.sizeInBytes())
+
+
+def _device_center(interaction, object_id):
+	bounds = interaction.index.bounds(object_id)
+	mapping = interaction.mapping
+	return (
+		(bounds.x + bounds.width / 2 - mapping.viewport.x) * mapping.scale,
+		(bounds.y + bounds.height / 2 - mapping.viewport.y) * mapping.scale,
+	)
 
 
 def test_plate_scene_renders_full_feature_matrix():
@@ -67,6 +78,42 @@ def test_plate_editor_shows_bold_right_click_label_hint():
 		assert layout.indexOf(hint) == layout.indexOf(
 			context.controller.current_scheme.confwidget.table2
 		) + 1
+	finally:
+		context.window.close()
+		context.app.processEvents()
+
+
+def test_plate_label_text_can_be_edited_by_double_click(monkeypatch):
+	context = create_runtime(
+		build_parser().parse_args(["--type", "plate", "--no-maximize", "--error"])
+	)
+	try:
+		scheme = context.controller.current_scheme
+		label = scheme.confwidget.label("before", (0.1, -15))
+		scheme.task["labels"] = [label]
+		context.app.processEvents()
+		context.canvas.make_image()
+		received = {}
+
+		def edit_text(*args, **kwargs):
+			received["text"] = kwargs.get("text")
+			return "after", True
+
+		monkeypatch.setattr("paintwdg.QInputDialog.getText", edit_text)
+		point = _device_center(context.canvas.scene_interaction, "label/0")
+		context.canvas.mouseDoubleClickEvent(
+			QMouseEvent(
+				QEvent.MouseButtonDblClick,
+				QPointF(*point),
+				Qt.LeftButton,
+				Qt.LeftButton,
+				Qt.NoModifier,
+			)
+		)
+
+		assert received["text"] == "before"
+		assert label.text == "after"
+		assert context.canvas.selected_label_id == "label/0"
 	finally:
 		context.window.close()
 		context.app.processEvents()

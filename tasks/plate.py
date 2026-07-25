@@ -10,7 +10,7 @@ from sopr_scheme_gener.layouts.plate import PlateLayoutBuilder, PlateLayoutSetti
 from sopr_scheme_gener.scene import Color, Fill, Rectangle, Scene, Stroke, metadata
 from sopr_scheme_gener.scene.qt import QtPainterRenderer, QtSceneInteraction, QtTextMetrics
 
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtWidgets import QLabel, QTextEdit
 
 
@@ -179,6 +179,16 @@ class PaintWidget_T3(paintwdg.PaintWidget):
 	def __init__(self):
 		super().__init__()
 		self.enable_common_mouse_events()
+
+	def mouseDoubleClickEvent(self, ev):
+		if self.scene_interaction is None or ev.button() != Qt.LeftButton:
+			return
+		hit = self.scene_interaction.hit_test(ev.pos(), kinds=("label",))
+		if hit is None:
+			return
+		self.selected_label_id = hit.object_id
+		self.edit_text()
+		ev.accept()
 
 	def paintEventImplementation(self, ev):
 		settings = PlateLayoutSettings(
