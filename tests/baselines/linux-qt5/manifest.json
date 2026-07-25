@@ -138,9 +138,9 @@
       "file": "column-stability--default.png",
       "width": 400,
       "height": 250,
-      "sha256": "3b58e564f6d2db622283a2ab6a3c2c6ec0774fd9cf8dd9ed3ba4e246b90a9543",
-      "non_white_pixels": 4121,
-      "bytes": 4870
+      "sha256": "8b80e387af87fa1576775907883887818b7e25f1d03ed94e6f00c1facd5063b7",
+      "non_white_pixels": 4123,
+      "bytes": 4880
     },
     {
       "task_id": "beams",

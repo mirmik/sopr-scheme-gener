@@ -130,6 +130,31 @@ def test_internal_load_uses_crossbar_and_two_slender_arrows():
 	assert index.get("node/1/load/left").item.head_width == 8.0
 
 
+@pytest.mark.parametrize("load_name", ["вниз", "вверх"])
+def test_top_load_arrow_is_separated_from_rod_with_correct_direction(load_name):
+	scene = _build(
+		{
+			"segments": [
+				{"length": 1, "length_text": "l", "rigidity_text": ""}
+			],
+			"nodes": [
+				{"support": "нет", "load": load_name, "load_text": "F"},
+			],
+			"base_support": "нет",
+		}
+	)
+	index = SceneIndex(scene, FixedTextMetrics())
+	rod = index.get("segment/0/body").item
+	arrow = index.get("node/0/load").item
+
+	if load_name == "вниз":
+		assert arrow.start.y < arrow.end.y < rod.start.y
+		assert rod.start.y - arrow.end.y >= 4
+	else:
+		assert arrow.start == rod.start
+		assert arrow.end.y < arrow.start.y
+
+
 def test_side_link_hatching_stays_outside_with_same_slope_on_both_sides():
 	def support(side):
 		scene = _build(

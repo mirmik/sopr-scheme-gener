@@ -616,6 +616,10 @@ class ColumnStabilityLayoutBuilder:
 			load = _value(node, "load", LOAD_NONE)
 			if load not in (LOAD_NONE, "none", None):
 				is_internal = index > 0
+				top_load_gap = max(
+					4.0,
+					settings.rod_width / 2 + settings.line_width,
+				)
 				if load in (LOAD_DOWN, "down"):
 					neighbor_gap = (
 						y - boundary_y[index - 1]
@@ -626,11 +630,18 @@ class ColumnStabilityLayoutBuilder:
 						52.0,
 						max(28.0, abs(neighbor_gap) * 0.65),
 					)
-					start_y, end_y = y - load_length, y
+					if index == 0:
+						end_y = y - top_load_gap
+						start_y = y - load_length
+					else:
+						start_y, end_y = y - load_length, y
 				elif load in (LOAD_UP, "up"):
 					neighbor_gap = y - boundary_y[index + 1]
 					load_length = min(52.0, max(28.0, abs(neighbor_gap) * 0.65))
-					start_y, end_y = y + load_length, y
+					if index == 0:
+						start_y, end_y = y, y - load_length
+					else:
+						start_y, end_y = y + load_length, y
 				else:
 					raise ValueError("Unsupported stability load: {!r}".format(load))
 				if is_internal:
