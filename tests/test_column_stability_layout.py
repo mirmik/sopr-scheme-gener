@@ -130,7 +130,7 @@ def test_internal_load_uses_crossbar_and_two_slender_arrows():
 	assert index.get("node/1/load/left").item.head_width == 8.0
 
 
-def test_side_link_hatching_has_same_direction_on_both_sides():
+def test_side_link_hatching_stays_outside_with_same_slope_on_both_sides():
 	def support(side):
 		scene = _build(
 			{
@@ -161,7 +161,11 @@ def test_side_link_hatching_has_same_direction_on_both_sides():
 	]
 
 	assert any(item.end.x < item.start.x for item in left_hatches)
-	assert any(item.end.x < item.start.x for item in right_hatches)
+	assert any(item.end.x > item.start.x for item in right_hatches)
+	assert all(
+		(item.end.x - item.start.x) * (item.end.y - item.start.y) < 0
+		for item in left_hatches + right_hatches
+	)
 
 
 def test_floating_clamp_hatching_has_same_direction_on_both_sides():
@@ -190,7 +194,14 @@ def test_floating_clamp_hatching_has_same_direction_on_both_sides():
 	]
 
 	assert len(hatches) > 2
-	assert all(item.end.x < item.start.x for item in hatches)
+	left_hatches = [item for item in hatches if item.end.x < item.start.x]
+	right_hatches = [item for item in hatches if item.end.x > item.start.x]
+	assert left_hatches
+	assert right_hatches
+	assert all(
+		(item.end.x - item.start.x) * (item.end.y - item.start.y) < 0
+		for item in hatches
+	)
 
 
 @pytest.mark.parametrize(

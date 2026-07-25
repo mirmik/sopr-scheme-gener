@@ -100,7 +100,14 @@ def _hatching(
 		y = y1
 		while y <= y2:
 			lines.append(
-				Line(Point(x1, y), Point(x1 + direction * 7, y + 6), stroke)
+				Line(
+					Point(x1, y),
+					Point(
+						x1 + direction * 7,
+						y + normal_direction * 6,
+					),
+					stroke,
+				)
 			)
 			y += step
 	return tuple(lines)
@@ -203,7 +210,8 @@ def _side_link(point, size, stroke, object_id, side, at_endpoint=False):
 				wall_x,
 				point.y + size,
 				stroke,
-				direction=-1,
+				direction=sign,
+				normal_direction=-sign,
 			),
 		),
 		object_id=object_id,
@@ -229,7 +237,15 @@ def _floating_clamp(point, size, stroke, object_id):
 			Line(Point(right_plate, top), Point(right_wall, top), stroke),
 			Line(Point(right_plate, bottom), Point(right_wall, bottom), stroke),
 			*_hatching(left_wall, top, left_wall, bottom, stroke, direction=-1),
-			*_hatching(right_wall, top, right_wall, bottom, stroke, direction=-1),
+			*_hatching(
+				right_wall,
+				top,
+				right_wall,
+				bottom,
+				stroke,
+				direction=1,
+				normal_direction=-1,
+			),
 		),
 		object_id=object_id,
 		metadata=metadata(kind="support", support="floating-clamp"),
