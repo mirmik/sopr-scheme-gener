@@ -52,6 +52,7 @@ def test_symbol_palette_is_always_on_top_and_inserts_at_cursor():
 
 		dialog.findChild(QPushButton, "symbol_alpha").click()
 		dialog.findChild(QPushButton, "symbol_squared").click()
-		assert editor.toPlainText() == "F=𝛼²"
+		dialog.findChild(QPushButton, "symbol_fourth_power").click()
+		assert editor.toPlainText() == "F=𝛼²⁴"
 	finally:
 		context.window.close()
