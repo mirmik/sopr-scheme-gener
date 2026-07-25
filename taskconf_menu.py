@@ -40,14 +40,17 @@ class Element(QWidget):
 	def add_object(self, type, defval, variant):
 		if type == "text" or type == "str":
 			obj = QLineEdit(defval)
+			obj.setProperty("symbol_palette_text", True)
 			obj.textChanged.connect(self.updated)
 
 		elif type == "int":
 			obj = QLineEdit(defval)
+			obj.setProperty("symbol_palette_text", False)
 			obj.textChanged.connect(self.updated)
 
 		elif type == "float":
 			obj = QLineEdit(defval)
+			obj.setProperty("symbol_palette_text", False)
 			obj.textChanged.connect(self.updated)
 
 		elif type == "bool":
