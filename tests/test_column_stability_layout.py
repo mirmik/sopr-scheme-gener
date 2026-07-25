@@ -186,6 +186,39 @@ def _single_support(support_name):
 	)
 
 
+def _walk_scene_items(item):
+	yield item
+	for child in getattr(item, "children", ()):
+		yield from _walk_scene_items(child)
+
+
+@pytest.mark.parametrize("support_name", ["заделка", "плавающая заделка"])
+def test_support_hatching_is_thinner_than_geometry(support_name):
+	scene = _single_support(support_name)
+	support = SceneIndex(scene, FixedTextMetrics()).get("node/0/support").item
+	lines = [
+		item
+		for item in _walk_scene_items(support)
+		if hasattr(item, "start") and hasattr(item, "end")
+	]
+	hatches = [
+		item
+		for item in lines
+		if item.start.x != item.end.x and item.start.y != item.end.y
+	]
+	geometry = [
+		item
+		for item in lines
+		if item.start.x == item.end.x or item.start.y == item.end.y
+	]
+
+	assert hatches
+	assert geometry
+	assert {item.stroke.width for item in hatches} == {1.0}
+	assert {item.stroke.width for item in geometry} == {2.0}
+	assert all(item.stroke.width < geometry[0].stroke.width for item in hatches)
+
+
 def _assert_block_hatching_is_clipped(block):
 	border = block.children[0].bounds
 	hatches = [

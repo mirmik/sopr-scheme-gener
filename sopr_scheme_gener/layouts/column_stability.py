@@ -72,6 +72,15 @@ def _value(record, name, default=None):
 	return getattr(record, name, default)
 
 
+def _hatch_stroke(stroke):
+	return Stroke(
+		color=stroke.color,
+		width=stroke.width * 0.5,
+		dash=stroke.dash,
+		line_style=stroke.line_style,
+	)
+
+
 def _hatching(
 	x1,
 	y1,
@@ -82,6 +91,7 @@ def _hatching(
 	direction=-1,
 	normal_direction=1,
 ):
+	stroke = _hatch_stroke(stroke)
 	lines = []
 	if abs(y2 - y1) < 0.01:
 		x = x1
@@ -116,6 +126,7 @@ def _hatching(
 
 def _rectangle_hatching(rect, stroke, step=8):
 	"""Fill a rectangle with clipped hatches of the common support slope."""
+	stroke = _hatch_stroke(stroke)
 	left = rect.left + 2
 	right = rect.right - 2
 	top = rect.top + 2
