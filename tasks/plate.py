@@ -105,13 +105,13 @@ class ConfWidget_T3(common.ConfWidget):
 		self.table2.addColumn("sharn", "list", "Шарнир", variant=["нет", "1", "2"])
 		self.table2.updateTable()
 
-		self.vlayout.addWidget(label_hint)
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
 		self.vlayout.addWidget(QLabel("Распределённые силы:"))
 		self.vlayout.addWidget(self.table1)
 		self.vlayout.addWidget(QLabel("Локальные силы:"))
 		self.vlayout.addWidget(self.table2)
+		self.vlayout.addWidget(label_hint)
 		self.vlayout.addWidget(self.sett)
 
 		self.table.updated.connect(self.redraw)

@@ -63,6 +63,10 @@ def test_plate_editor_shows_bold_right_click_label_hint():
 		assert hint.font().bold()
 		assert "правой кнопкой мыши" in hint.text()
 		assert "добавить метку" in hint.text()
+		layout = context.controller.current_scheme.confwidget.vlayout
+		assert layout.indexOf(hint) == layout.indexOf(
+			context.controller.current_scheme.confwidget.table2
+		) + 1
 	finally:
 		context.window.close()
 		context.app.processEvents()
