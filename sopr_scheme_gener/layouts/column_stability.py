@@ -230,13 +230,15 @@ def _fixed_support(point, size, stroke, object_id, at_top=False):
 
 def _hinge_support(point, size, stroke, object_id, at_top=False):
 	sign = -1 if at_top else 1
-	radius = max(4.0, size / 5)
-	base_y = point.y + sign * size
+	radius = max(3.0, size / 7)
+	base_half_width = size * 0.48
+	surface_half_width = size * 0.75
+	base_y = point.y + sign * size * 0.72
 	triangle = Polygon(
 		(
 			point,
-			Point(point.x - size * 0.65, base_y),
-			Point(point.x + size * 0.65, base_y),
+			Point(point.x - base_half_width, base_y),
+			Point(point.x + base_half_width, base_y),
 		),
 		stroke,
 		Fill(WHITE),
@@ -246,14 +248,14 @@ def _hinge_support(point, size, stroke, object_id, at_top=False):
 		(
 			triangle,
 			Line(
-				Point(point.x - size, surface_y),
-				Point(point.x + size, surface_y),
+				Point(point.x - surface_half_width, surface_y),
+				Point(point.x + surface_half_width, surface_y),
 				stroke,
 			),
 			*_hatching(
-				point.x - size,
+				point.x - surface_half_width,
 				surface_y,
-				point.x + size,
+				point.x + surface_half_width,
 				surface_y,
 				stroke,
 				normal_direction=sign,
@@ -310,14 +312,15 @@ def _node_fixed_clamp(point, size, stroke, object_id):
 
 def _side_link(point, size, stroke, object_id, side, at_endpoint=False):
 	sign = -1 if side == "left" else 1
-	radius = max(3.5, size / 6)
+	radius = max(3.0, size / 8)
 	inner = (
 		point
 		if at_endpoint
 		else Point(point.x + sign * radius * 1.5, point.y)
 	)
-	outer = Point(point.x + sign * size * 1.8, point.y)
+	outer = Point(point.x + sign * size * 1.35, point.y)
 	wall_x = outer.x + sign * radius
+	wall_half_height = size * 0.75
 	link_start = Point(inner.x + sign * radius, inner.y)
 	link_end = Point(outer.x - sign * radius, outer.y)
 	return Group(
@@ -334,15 +337,15 @@ def _side_link(point, size, stroke, object_id, side, at_endpoint=False):
 				Fill(WHITE),
 			),
 			Line(
-				Point(wall_x, point.y - size),
-				Point(wall_x, point.y + size),
+				Point(wall_x, point.y - wall_half_height),
+				Point(wall_x, point.y + wall_half_height),
 				stroke,
 			),
 			*_hatching(
 				wall_x,
-				point.y - size,
+				point.y - wall_half_height,
 				wall_x,
-				point.y + size,
+				point.y + wall_half_height,
 				stroke,
 				direction=sign,
 				normal_direction=-sign,

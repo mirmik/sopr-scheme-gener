@@ -377,6 +377,9 @@ def test_endpoint_side_link_centers_joint_and_keeps_link_out_of_circles(
 	assert inner_center_x == body.end.x
 	assert link.start.x == inner_center_x + direction * radius
 	assert link.end.x == outer_center_x - direction * radius
+	assert radius < 5
+	assert abs(outer_center_x - inner_center_x) < 50
+	assert support.children[3].end.y - support.children[3].start.y < 60
 	assert support.children.index(link) < support.children.index(inner_joint)
 	assert support.children.index(link) < support.children.index(outer_joint)
 
@@ -423,6 +426,9 @@ def test_base_hinge_triangle_grows_from_support_line_and_joint_covers_apex():
 	assert triangle.points[0] == Point(joint_center_x, joint_center_y)
 	assert triangle.points[1].y == surface.start.y
 	assert triangle.points[2].y == surface.start.y
+	assert joint.bounds.width < 11
+	assert abs(triangle.points[1].y - triangle.points[0].y) < 27
+	assert surface.end.x - surface.start.x < 60
 	assert support.children.index(joint) > support.children.index(triangle)
 
 	hatches = [
