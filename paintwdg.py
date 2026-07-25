@@ -107,12 +107,18 @@ class PaintWidget(QWidget):
 		self._layout_drag = None
 		self._exporting = False
 		self._layout_render_frame = None
+		self._annotation_hover = None
+		self._annotation_drag = None
+		self._legacy_free_labels = False
 		super().__init__()
 		self.setMouseTracking(True)
 		self.installEventFilter(self)
 
 	def enable_common_mouse_events(self):
 		self.common_mouse_events_enabled = True
+
+	def enable_legacy_free_labels(self):
+		self._legacy_free_labels = True
 
 	def width(self):
 		if self._layout_render_frame is not None:
@@ -327,16 +333,35 @@ class PaintWidget(QWidget):
 			if hit is not None and hit[1] in ("move", "resize"):
 				self._start_layout_drag(event.pos(), hit)
 				return True
+			if self._annotation_press(event.pos()):
+				return True
+		if (
+			event_type == QEvent.MouseButtonPress
+			and event.button() == Qt.RightButton
+			and self._show_annotation_context_menu(event)
+		):
+			return True
+		if (
+			event_type == QEvent.MouseButtonDblClick
+			and event.button() == Qt.LeftButton
+			and self._annotation_double_click(event.pos())
+		):
+			return True
 		if event_type == QEvent.MouseMove:
 			if self._layout_drag is not None:
 				self._update_layout_drag(event.pos())
+				return True
+			if self._annotation_move(event.pos()):
 				return True
 			hit = self._layout_hit_test(QPointF(event.pos()))
 			hover = hit[0] if hit is not None else None
 			if hover != self._layout_hover:
 				self._layout_hover = hover
 				self.update()
-			self.setCursor(self._layout_cursor(hit))
+			if self._annotation_hover is not None:
+				self.setCursor(Qt.SizeAllCursor)
+			else:
+				self.setCursor(self._layout_cursor(hit))
 			return False
 		if event_type == QEvent.MouseButtonRelease and self._layout_drag is not None:
 			self._update_layout_drag(event.pos())
@@ -344,12 +369,269 @@ class PaintWidget(QWidget):
 			self.unsetCursor()
 			self.update()
 			return True
+		if event_type == QEvent.MouseButtonRelease and self._annotation_release():
+			return True
 		if event_type == QEvent.Leave and self._layout_drag is None:
 			if self._layout_hover is not None:
 				self._layout_hover = None
 				self.update()
+			if self._annotation_hover is not None:
+				self._annotation_hover = None
+				self.update()
 			self.unsetCursor()
 		return False
+
+	def _uses_legacy_free_labels(self):
+		return self.common_mouse_events_enabled or self._legacy_free_labels
+
+	def _annotation_records(self, create=False):
+		if self._uses_legacy_free_labels():
+			return None
+		task = getattr(getattr(self, "shemetype", None), "task", None)
+		if not isinstance(task, dict):
+			return None
+		records = task.get("annotations")
+		if records is None and create:
+			records = []
+			task["annotations"] = records
+		return records if isinstance(records, list) else None
+
+	def _annotation_value(self, record, name, default=None):
+		if isinstance(record, dict):
+			return record.get(name, default)
+		return getattr(record, name, default)
+
+	def _annotation_font(self):
+		current = self.font
+		font = QFont(current() if callable(current) else current)
+		scheme = getattr(self, "shemetype", None)
+		font_size = getattr(scheme, "font_size", None)
+		if font_size is not None:
+			font.setPointSize(font_size.get())
+		font.setItalic(True)
+		return font
+
+	def _annotation_local_point(self, qt_point):
+		point = QPointF(qt_point)
+		scheme = getattr(self, "shemetype", None)
+		if scheme is None:
+			return None
+		layout = scheme.page_layout
+		if layout is None:
+			return point
+		frame = layout.task_frame
+		if not QRectF(frame.x, frame.y, frame.width, frame.height).contains(point):
+			return None
+		return QPointF(point.x() - frame.x, point.y() - frame.y)
+
+	def _annotation_bounds(self, record):
+		pos = self._annotation_value(record, "pos")
+		if not isinstance(pos, (list, tuple)) or len(pos) != 2:
+			return None
+		try:
+			point = QPointF(float(pos[0]), float(pos[1]))
+		except (TypeError, ValueError):
+			return None
+		text = paintool.greek(str(self._annotation_value(record, "text", "")))
+		metrics = QFontMetrics(self._annotation_font())
+		width = max(5, metrics.horizontalAdvance(text) + 5)
+		height = max(1, metrics.height())
+		return QRectF(
+			point.x() - width / 2,
+			point.y() - height / 2,
+			width,
+			height,
+		)
+
+	def _annotation_hit(self, point):
+		if point is None:
+			return None
+		records = self._annotation_records()
+		if records is None:
+			return None
+		for index in range(len(records) - 1, -1, -1):
+			bounds = self._annotation_bounds(records[index])
+			if bounds is not None and bounds.contains(point):
+				return index
+		return None
+
+	def _annotation_press(self, qt_point):
+		if self._uses_legacy_free_labels():
+			return False
+		point = self._annotation_local_point(qt_point)
+		index = self._annotation_hit(point)
+		if index is None:
+			return False
+		self._annotation_hover = index
+		self._annotation_drag = {
+			"index": index,
+			"last": point,
+		}
+		self.update()
+		return True
+
+	def _annotation_move(self, qt_point):
+		if self._uses_legacy_free_labels():
+			return False
+		point = self._annotation_local_point(qt_point)
+		if self._annotation_drag is not None:
+			if point is None:
+				return True
+			records = self._annotation_records()
+			index = self._annotation_drag["index"]
+			if records is None or not 0 <= index < len(records):
+				self._annotation_drag = None
+				return True
+			record = records[index]
+			pos = self._annotation_value(record, "pos", (0, 0))
+			diff = point - self._annotation_drag["last"]
+			new_pos = [float(pos[0]) + diff.x(), float(pos[1]) + diff.y()]
+			if isinstance(record, dict):
+				record["pos"] = new_pos
+			else:
+				record.pos = new_pos
+			self._annotation_drag["last"] = point
+			self._annotation_hover = index
+			self.update()
+			return True
+		index = self._annotation_hit(point)
+		if index != self._annotation_hover:
+			self._annotation_hover = index
+			self.update()
+		return False
+
+	def _annotation_release(self):
+		if self._annotation_drag is None:
+			return False
+		self._annotation_drag = None
+		self.update()
+		return True
+
+	def _annotation_double_click(self, qt_point):
+		if self._uses_legacy_free_labels():
+			return False
+		index = self._annotation_hit(self._annotation_local_point(qt_point))
+		if index is None:
+			return False
+		self._annotation_hover = index
+		self.edit_annotation(index)
+		return True
+
+	def _show_annotation_context_menu(self, event):
+		if self._uses_legacy_free_labels():
+			return False
+		point = self._annotation_local_point(event.pos())
+		if point is None:
+			return False
+		index = self._annotation_hit(point)
+		self._annotation_hover = index
+		menu = QMenu(self)
+		if index is None:
+			menu.addAction(
+				self.Action(
+					"Создать метку",
+					self,
+					functools.partial(self.create_annotation, point, "Text"),
+				)
+			)
+		else:
+			menu.addAction(
+				self.Action(
+					"Редактировать текст",
+					self,
+					functools.partial(self.edit_annotation, index),
+				)
+			)
+			menu.addAction(
+				self.Action(
+					"Удалить метку",
+					self,
+					functools.partial(self.delete_annotation, index),
+				)
+			)
+			menu.addAction(
+				self.Action(
+					"Клонировать метку",
+					self,
+					functools.partial(self.clone_annotation, point, index),
+				)
+			)
+		menu.popup(self.mapToGlobal(event.pos()))
+		return True
+
+	def create_annotation(self, pos, text="Text"):
+		records = self._annotation_records(create=True)
+		if records is None:
+			return
+		records.append(
+			{
+				"text": str(text),
+				"pos": [float(pos.x()), float(pos.y())],
+			}
+		)
+		self._annotation_hover = len(records) - 1
+		self.update()
+
+	def edit_annotation(self, index):
+		records = self._annotation_records()
+		if records is None or not 0 <= index < len(records):
+			return
+		record = records[index]
+		text, accepted = QInputDialog.getText(
+			self,
+			"Текст",
+			"Введите текст:",
+			text=str(self._annotation_value(record, "text", "")),
+		)
+		if accepted:
+			if isinstance(record, dict):
+				record["text"] = text
+			else:
+				record.text = text
+			self.update()
+
+	def delete_annotation(self, index):
+		records = self._annotation_records()
+		if records is None or not 0 <= index < len(records):
+			return
+		del records[index]
+		self._annotation_hover = None
+		self._annotation_drag = None
+		self.update()
+
+	def clone_annotation(self, pos, index):
+		records = self._annotation_records()
+		if records is None or not 0 <= index < len(records):
+			return
+		text = self._annotation_value(records[index], "text", "")
+		self.create_annotation(QPointF(pos.x() + 30, pos.y()), text)
+
+	def _paint_annotations(self):
+		records = self._annotation_records()
+		if not records:
+			return
+		self.painter.save()
+		try:
+			self.painter.setFont(self._annotation_font())
+			for index, record in enumerate(records):
+				bounds = self._annotation_bounds(record)
+				if bounds is None:
+					continue
+				if index == self._annotation_hover and not self._exporting:
+					self.painter.setPen(QPen(Qt.black))
+					self.painter.setBrush(QColor(0, 255, 0, 179))
+					self.painter.drawRect(bounds)
+				self.painter.setPen(self.pen)
+				self.painter.setBrush(Qt.NoBrush)
+				self.painter.drawText(
+					bounds,
+					Qt.AlignCenter,
+					paintool.greek(
+						str(self._annotation_value(record, "text", ""))
+					),
+				)
+		finally:
+			self.painter.restore()
 
 	def _paint_layout_overlay(self):
 		if (
@@ -500,6 +782,7 @@ class PaintWidget(QWidget):
 	def _paint_task_contents(self, ev):
 		self.eval_hcenter()
 		self.paintEventImplementation(ev)
+		self._paint_annotations()
 		if self.scene_interaction is not None:
 			self.scene_interaction.set_device_origin(
 				self._layout_render_frame.x if self._layout_render_frame else 0,

@@ -22,10 +22,10 @@ MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
 # these short aliases; it never supplies a module or class to import.
 TASK_OBJECT_TYPES = {
 	"axial-torsion": ("sect", "betsect", "sectforce"),
-	"beams": ("sect", "betsect", "sectforce"),
+	"beams": ("sect", "betsect", "sectforce", "label"),
 	"rod-system-1": ("sect", "betsect"),
 	"rod-system-2": ("sect",),
-	"plate": ("sect", "betsect", "sectforce"),
+	"plate": ("sect", "betsect", "sectforce", "label"),
 	"frames": ("sect", "betsect", "sectforce", "label"),
 	"oblique-bending": ("sect", "betsect", "sectforce"),
 	"eccentric-bending": ("sect",),

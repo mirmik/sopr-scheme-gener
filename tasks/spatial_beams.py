@@ -216,6 +216,7 @@ class PaintWidget(paintwdg.PaintWidget):
 		self.grid_enabled = False
 		self.last_scene = None
 		self.setMouseTracking(True)
+		self.enable_legacy_free_labels()
 
 	def _section_spec(self):
 		container = self.shemetype.section_container
