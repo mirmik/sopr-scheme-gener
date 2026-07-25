@@ -168,15 +168,15 @@ def test_side_link_hatching_stays_outside_with_same_slope_on_both_sides():
 	)
 
 
-def test_floating_clamp_hatching_has_same_direction_on_both_sides():
-	scene = _build(
+def _single_support(support_name):
+	return _build(
 		{
 			"segments": [
 				{"length": 1, "length_text": "l", "rigidity_text": ""}
 			],
 			"nodes": [
 				{
-					"support": "плавающая заделка",
+					"support": support_name,
 					"load": "нет",
 					"load_text": "",
 				},
@@ -184,24 +184,57 @@ def test_floating_clamp_hatching_has_same_direction_on_both_sides():
 			"base_support": "нет",
 		}
 	)
-	support = SceneIndex(scene, FixedTextMetrics()).get("node/0/support").item
-	hatches = [
-		item
-		for item in support.children
-		if hasattr(item, "start")
-		and abs(item.end.x - item.start.x) == 7
-		and abs(item.end.y - item.start.y) == 6
+
+
+def _assert_block_hatching_is_clipped(block):
+	border = block.children[0].bounds
+	hatches = block.children[1:]
+	assert hatches
+	for hatch in hatches:
+		for point in (hatch.start, hatch.end):
+			assert border.left <= point.x <= border.right
+			assert border.top <= point.y <= border.bottom
+		assert (hatch.end.x - hatch.start.x) * (
+			hatch.end.y - hatch.start.y
+		) < 0
+
+
+def test_node_fixed_clamp_has_two_short_hatched_blocks_next_to_rod():
+	index = SceneIndex(_single_support("заделка"), FixedTextMetrics())
+	support = index.get("node/0/support").item
+	left = index.get("node/0/support/left-block").item
+	right = index.get("node/0/support/right-block").item
+	rod_x = index.get("segment/0/body").item.start.x
+
+	assert dict(support.metadata)["support"] == "node-fixed-clamp"
+	assert 0 < rod_x - left.children[0].bounds.right < 4
+	assert 0 < right.children[0].bounds.left - rod_x < 4
+	assert left.children[0].bounds.width < 30
+	assert right.children[0].bounds.width < 30
+	_assert_block_hatching_is_clipped(left)
+	_assert_block_hatching_is_clipped(right)
+
+
+def test_floating_clamp_has_guides_cheeks_and_four_hatched_outer_blocks():
+	index = SceneIndex(_single_support("плавающая заделка"), FixedTextMetrics())
+	support = index.get("node/0/support").item
+	left_guide = index.get("node/0/support/left-guide").item
+	right_guide = index.get("node/0/support/right-guide").item
+	left_cheek = index.get("node/0/support/left-cheek").item
+	right_cheek = index.get("node/0/support/right-cheek").item
+	blocks = [
+		index.get("node/0/support/{}-{}-block".format(side, level)).item
+		for side in ("left", "right")
+		for level in ("upper", "lower")
 	]
 
-	assert len(hatches) > 2
-	left_hatches = [item for item in hatches if item.end.x < item.start.x]
-	right_hatches = [item for item in hatches if item.end.x > item.start.x]
-	assert left_hatches
-	assert right_hatches
-	assert all(
-		(item.end.x - item.start.x) * (item.end.y - item.start.y) < 0
-		for item in hatches
-	)
+	assert dict(support.metadata)["support"] == "floating-clamp"
+	assert left_guide.end.x == left_cheek.start.x
+	assert right_guide.start.x == right_cheek.start.x
+	assert left_cheek.start.x < right_cheek.start.x
+	assert right_guide.end.x - left_guide.start.x < 100
+	for block in blocks:
+		_assert_block_hatching_is_clipped(block)
 
 
 @pytest.mark.parametrize(

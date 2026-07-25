@@ -44,6 +44,7 @@ NODE_SUPPORT_TYPES = (
 	SUPPORT_NONE,
 	SUPPORT_SIDE_LEFT,
 	SUPPORT_SIDE_RIGHT,
+	SUPPORT_FIXED,
 	SUPPORT_FLOATING,
 )
 
@@ -113,6 +114,55 @@ def _hatching(
 	return tuple(lines)
 
 
+def _rectangle_hatching(rect, stroke, step=8):
+	"""Fill a rectangle with clipped hatches of the common support slope."""
+	left = rect.left + 2
+	right = rect.right - 2
+	top = rect.top + 2
+	bottom = rect.bottom - 2
+	if left >= right or top >= bottom:
+		return ()
+
+	lines = []
+	value = left + top
+	limit = right + bottom
+	while value <= limit:
+		candidates = (
+			Point(left, value - left),
+			Point(right, value - right),
+			Point(value - top, top),
+			Point(value - bottom, bottom),
+		)
+		points = []
+		for candidate in candidates:
+			if not (
+				left <= candidate.x <= right
+				and top <= candidate.y <= bottom
+			):
+				continue
+			if any(
+				abs(candidate.x - point.x) < 0.01
+				and abs(candidate.y - point.y) < 0.01
+				for point in points
+			):
+				continue
+			points.append(candidate)
+		if len(points) >= 2:
+			lines.append(Line(points[0], points[1], stroke))
+		value += step
+	return tuple(lines)
+
+
+def _hatched_block(rect, stroke, object_id):
+	return Group(
+		(
+			Rectangle(rect, stroke, Fill(WHITE)),
+			*_rectangle_hatching(rect, stroke),
+		),
+		object_id=object_id,
+	)
+
+
 def _fixed_support(point, size, stroke, object_id, at_top=False):
 	sign = -1 if at_top else 1
 	surface_y = point.y + sign * 4
@@ -174,6 +224,35 @@ def _hinge_support(point, size, stroke, object_id, at_top=False):
 	)
 
 
+def _node_fixed_clamp(point, size, stroke, object_id):
+	"""Draw two short fixed blocks approaching the rod from both sides."""
+	gap = max(2.5, size * 0.08)
+	block_width = size * 0.72
+	half_height = size * 0.38
+	top = point.y - half_height
+	height = half_height * 2
+	left = Rect(
+		point.x - gap - block_width,
+		top,
+		block_width,
+		height,
+	)
+	right = Rect(
+		point.x + gap,
+		top,
+		block_width,
+		height,
+	)
+	return Group(
+		(
+			_hatched_block(left, stroke, "{}/left-block".format(object_id)),
+			_hatched_block(right, stroke, "{}/right-block".format(object_id)),
+		),
+		object_id=object_id,
+		metadata=metadata(kind="support", support="node-fixed-clamp"),
+	)
+
+
 def _side_link(point, size, stroke, object_id, side, at_endpoint=False):
 	sign = -1 if side == "left" else 1
 	radius = max(3.5, size / 6)
@@ -220,31 +299,72 @@ def _side_link(point, size, stroke, object_id, side, at_endpoint=False):
 
 
 def _floating_clamp(point, size, stroke, object_id):
-	"""Draw the two cheek plates used in the supplied stability references."""
-	gap = max(5.0, size / 4)
+	"""Draw a sliding guide with cheek plates and four outer guide blocks."""
+	gap = max(4.0, size * 0.13)
 	left_plate = point.x - gap
 	right_plate = point.x + gap
-	left_wall = point.x - size * 1.8
-	right_wall = point.x + size * 1.8
-	top = point.y - size * 0.55
-	bottom = point.y + size * 0.55
+	left_outer = point.x - size * 1.35
+	right_outer = point.x + size * 1.35
+	cheek_half_height = size * 0.42
+	block_width = size * 0.48
+	block_height = size * 0.32
+	left_block_x = left_outer
+	right_block_x = right_outer - block_width
 	return Group(
 		(
-			Line(Point(left_plate, top), Point(left_plate, bottom), stroke),
-			Line(Point(right_plate, top), Point(right_plate, bottom), stroke),
-			Line(Point(left_wall, top), Point(left_plate, top), stroke),
-			Line(Point(left_wall, bottom), Point(left_plate, bottom), stroke),
-			Line(Point(right_plate, top), Point(right_wall, top), stroke),
-			Line(Point(right_plate, bottom), Point(right_wall, bottom), stroke),
-			*_hatching(left_wall, top, left_wall, bottom, stroke, direction=-1),
-			*_hatching(
-				right_wall,
-				top,
-				right_wall,
-				bottom,
+			Line(
+				Point(left_outer, point.y),
+				Point(left_plate, point.y),
 				stroke,
-				direction=1,
-				normal_direction=-1,
+				object_id="{}/left-guide".format(object_id),
+			),
+			Line(
+				Point(right_plate, point.y),
+				Point(right_outer, point.y),
+				stroke,
+				object_id="{}/right-guide".format(object_id),
+			),
+			_hatched_block(
+				Rect(
+					left_block_x,
+					point.y - block_height,
+					block_width,
+					block_height,
+				),
+				stroke,
+				"{}/left-upper-block".format(object_id),
+			),
+			_hatched_block(
+				Rect(left_block_x, point.y, block_width, block_height),
+				stroke,
+				"{}/left-lower-block".format(object_id),
+			),
+			_hatched_block(
+				Rect(
+					right_block_x,
+					point.y - block_height,
+					block_width,
+					block_height,
+				),
+				stroke,
+				"{}/right-upper-block".format(object_id),
+			),
+			_hatched_block(
+				Rect(right_block_x, point.y, block_width, block_height),
+				stroke,
+				"{}/right-lower-block".format(object_id),
+			),
+			Line(
+				Point(left_plate, point.y - cheek_half_height),
+				Point(left_plate, point.y + cheek_half_height),
+				stroke,
+				object_id="{}/left-cheek".format(object_id),
+			),
+			Line(
+				Point(right_plate, point.y - cheek_half_height),
+				Point(right_plate, point.y + cheek_half_height),
+				stroke,
+				object_id="{}/right-cheek".format(object_id),
 			),
 		),
 		object_id=object_id,
@@ -256,12 +376,11 @@ def _support(point, support, settings, stroke, object_id, node_index, node_count
 	if support in (None, SUPPORT_NONE, "none"):
 		return None
 	if support in (SUPPORT_FIXED, "fixed"):
-		return _fixed_support(
+		return _node_fixed_clamp(
 			point,
 			settings.support_size,
 			stroke,
 			object_id,
-			at_top=node_index == 0,
 		)
 	if support in (SUPPORT_HINGE, "hinge"):
 		return _hinge_support(
