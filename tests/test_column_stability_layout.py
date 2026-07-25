@@ -247,6 +247,16 @@ def _vertical_lines_at(block, x):
 	]
 
 
+def _horizontal_lines_at(block, y):
+	return [
+		item
+		for item in block.children
+		if hasattr(item, "start")
+		and item.start.y == item.end.y == y
+		and item.start.x != item.end.x
+	]
+
+
 def test_node_fixed_clamp_has_two_short_hatched_blocks_next_to_rod():
 	index = SceneIndex(_single_support("заделка"), FixedTextMetrics())
 	support = index.get("node/0/support").item
@@ -276,18 +286,37 @@ def test_floating_clamp_has_guides_cheeks_and_four_hatched_outer_blocks():
 	right_guide = index.get("node/0/support/right-guide").item
 	left_cheek = index.get("node/0/support/left-cheek").item
 	right_cheek = index.get("node/0/support/right-cheek").item
-	blocks = [
-		index.get("node/0/support/{}-{}-block".format(side, level)).item
+	blocks = {
+		(side, level): index.get(
+			"node/0/support/{}-{}-block".format(side, level)
+		).item
 		for side in ("left", "right")
 		for level in ("upper", "lower")
-	]
+	}
 
 	assert dict(support.metadata)["support"] == "floating-clamp"
 	assert left_guide.end.x == left_cheek.start.x
 	assert right_guide.start.x == right_cheek.start.x
 	assert left_cheek.start.x < right_cheek.start.x
 	assert right_guide.end.x - left_guide.start.x < 100
-	for block in blocks:
+	left_upper = blocks[("left", "upper")].children[0].bounds
+	left_lower = blocks[("left", "lower")].children[0].bounds
+	assert left_lower.top - left_upper.bottom > 12
+	for (side, level), block in blocks.items():
+		bounds = block.children[0].bounds
+		inner_x = bounds.right if side == "left" else bounds.left
+		facing_y = bounds.bottom if level == "upper" else bounds.top
+		assert len(_vertical_lines_at(block, inner_x)) == 1
+		assert len(_horizontal_lines_at(block, facing_y)) == 1
+		assert sum(
+			1
+			for item in block.children
+			if hasattr(item, "start")
+			and (
+				item.start.x == item.end.x
+				or item.start.y == item.end.y
+			)
+		) == 2
 		_assert_block_hatching_is_clipped(block)
 
 

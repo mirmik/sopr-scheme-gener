@@ -164,22 +164,40 @@ def _rectangle_hatching(rect, stroke, step=8):
 	return tuple(lines)
 
 
-def _hatched_block(rect, stroke, object_id, open_side=None):
-	if open_side not in (None, "left", "right"):
-		raise ValueError("Unsupported open block side: {!r}".format(open_side))
-	if open_side is None:
+def _hatched_block(rect, stroke, object_id, sides=None):
+	if sides is None:
 		border = (Rectangle(rect, stroke, Fill(WHITE)),)
 	else:
-		inner_x = rect.right if open_side == "left" else rect.left
-		border = (
-			Rectangle(rect, None, Fill(WHITE)),
-			Line(Point(rect.left, rect.top), Point(rect.right, rect.top), stroke),
-			Line(
+		sides = tuple(sides)
+		unsupported = set(sides) - {"left", "right", "top", "bottom"}
+		if unsupported:
+			raise ValueError(
+				"Unsupported block sides: {!r}".format(sorted(unsupported))
+			)
+		lines = {
+			"left": Line(
+				Point(rect.left, rect.top),
+				Point(rect.left, rect.bottom),
+				stroke,
+			),
+			"right": Line(
+				Point(rect.right, rect.top),
+				Point(rect.right, rect.bottom),
+				stroke,
+			),
+			"top": Line(
+				Point(rect.left, rect.top),
+				Point(rect.right, rect.top),
+				stroke,
+			),
+			"bottom": Line(
 				Point(rect.left, rect.bottom),
 				Point(rect.right, rect.bottom),
 				stroke,
 			),
-			Line(Point(inner_x, rect.top), Point(inner_x, rect.bottom), stroke),
+		}
+		border = (Rectangle(rect, None, Fill(WHITE)),) + tuple(
+			lines[side] for side in sides
 		)
 	return Group(
 		(
@@ -276,13 +294,13 @@ def _node_fixed_clamp(point, size, stroke, object_id):
 				left,
 				stroke,
 				"{}/left-block".format(object_id),
-				open_side="left",
+				sides=("top", "right", "bottom"),
 			),
 			_hatched_block(
 				right,
 				stroke,
 				"{}/right-block".format(object_id),
-				open_side="right",
+				sides=("top", "left", "bottom"),
 			),
 		),
 		object_id=object_id,
@@ -345,6 +363,7 @@ def _floating_clamp(point, size, stroke, object_id):
 	cheek_half_height = size * 0.42
 	block_width = size * 0.48
 	block_height = size * 0.32
+	block_gap = max(6.0, size * 0.18)
 	left_block_x = left_outer
 	right_block_x = right_outer - block_width
 	return Group(
@@ -364,32 +383,46 @@ def _floating_clamp(point, size, stroke, object_id):
 			_hatched_block(
 				Rect(
 					left_block_x,
-					point.y - block_height,
+					point.y - block_gap - block_height,
 					block_width,
 					block_height,
 				),
 				stroke,
 				"{}/left-upper-block".format(object_id),
+				sides=("bottom", "right"),
 			),
 			_hatched_block(
-				Rect(left_block_x, point.y, block_width, block_height),
+				Rect(
+					left_block_x,
+					point.y + block_gap,
+					block_width,
+					block_height,
+				),
 				stroke,
 				"{}/left-lower-block".format(object_id),
+				sides=("top", "right"),
 			),
 			_hatched_block(
 				Rect(
 					right_block_x,
-					point.y - block_height,
+					point.y - block_gap - block_height,
 					block_width,
 					block_height,
 				),
 				stroke,
 				"{}/right-upper-block".format(object_id),
+				sides=("bottom", "left"),
 			),
 			_hatched_block(
-				Rect(right_block_x, point.y, block_width, block_height),
+				Rect(
+					right_block_x,
+					point.y + block_gap,
+					block_width,
+					block_height,
+				),
 				stroke,
 				"{}/right-lower-block".format(object_id),
+				sides=("top", "left"),
 			),
 			Line(
 				Point(left_plate, point.y - cheek_half_height),
