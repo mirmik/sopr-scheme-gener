@@ -61,23 +61,33 @@ def test_plate_scene_renders_full_feature_matrix():
 		context.app.processEvents()
 
 
-def test_plate_editor_shows_bold_right_click_label_hint():
+def test_every_task_shows_shared_bold_right_click_label_hint():
 	context = create_runtime(
 		build_parser().parse_args(["--type", "plate", "--no-maximize", "--error"])
 	)
 	try:
-		hint = context.controller.current_scheme.confwidget.findChild(
-			QLabel,
-			"plate_label_hint",
-		)
+		hint = context.window.central.findChild(QLabel, "annotation_hint")
 		assert hint is not None
 		assert hint.font().bold()
 		assert "правой кнопкой мыши" in hint.text()
 		assert "добавить метку" in hint.text()
-		layout = context.controller.current_scheme.confwidget.vlayout
-		assert layout.indexOf(hint) == layout.indexOf(
-			context.controller.current_scheme.confwidget.table2
-		) + 1
+		assert context.window.central.settings_layout.indexOf(hint) == (
+			context.window.central.settings_layout.indexOf(
+				context.window.central.container_settings
+			)
+			+ 1
+		)
+
+		for spec in context.task_specs:
+			context.controller.select(spec.identifier)
+			assert hint.isVisible()
+			assert (
+				context.controller.current_scheme.confwidget.findChild(
+					QLabel,
+					"annotation_hint",
+				)
+				is None
+			)
 	finally:
 		context.window.close()
 		context.app.processEvents()

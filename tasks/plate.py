@@ -75,15 +75,6 @@ class ConfWidget_T3(common.ConfWidget):
 		}
 
 	def update_interface(self):
-		label_hint = QLabel(
-			"Щёлкните правой кнопкой мыши по схеме, чтобы добавить метку."
-		)
-		label_hint.setObjectName("plate_label_hint")
-		label_hint.setWordWrap(True)
-		hint_font = label_hint.font()
-		hint_font.setBold(True)
-		label_hint.setFont(hint_font)
-
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("d", "float", "Длина")
 		self.table.addColumn("dtext", "str", "Текст")
@@ -111,7 +102,6 @@ class ConfWidget_T3(common.ConfWidget):
 		self.vlayout.addWidget(self.table1)
 		self.vlayout.addWidget(QLabel("Локальные силы:"))
 		self.vlayout.addWidget(self.table2)
-		self.vlayout.addWidget(label_hint)
 		self.vlayout.addWidget(self.sett)
 
 		self.table.updated.connect(self.redraw)

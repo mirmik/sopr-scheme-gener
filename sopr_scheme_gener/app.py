@@ -89,11 +89,20 @@ class CentralWidget(QWidget):
 		self.container_paint.setObjectName("canvas_container")
 		self.container_settings = container.ContainerWidget(border=False, fixedSize=False, filter=False)
 		self.container_settings.setObjectName("task_settings_container")
+		self.annotation_hint = QLabel(
+			"Щёлкните правой кнопкой мыши по схеме, чтобы добавить метку."
+		)
+		self.annotation_hint.setObjectName("annotation_hint")
+		self.annotation_hint.setWordWrap(True)
+		hint_font = self.annotation_hint.font()
+		hint_font.setBold(True)
+		self.annotation_hint.setFont(hint_font)
 
 		self.settings_layout = QVBoxLayout()
 		self.settings_layout.addWidget(self.type_list_widget)
 		self.settings_layout.addWidget(self.confview)
 		self.settings_layout.addWidget(self.container_settings)
+		self.settings_layout.addWidget(self.annotation_hint)
 		self.settings_layout.addStretch()
 
 		self.settings_layout_wdg_scr = QScrollArea()
@@ -184,11 +193,13 @@ class CentralWidget(QWidget):
 	def display_empty(self):
 		self.container_paint.replace(self.stub_widget_0)
 		self.container_settings.replace(self.stub_widget_1)
+		self.annotation_hint.hide()
 
 	def display_scheme(self, scheme, changed):
 		if changed:
 			self.container_settings.replace(scheme.confwidget)
 			self.container_paint.replace(scheme.paintwidget)
+		self.annotation_hint.show()
 
 	def set_selected_index(self, index):
 		self.type_list_widget.setCurrentIndex(index)
