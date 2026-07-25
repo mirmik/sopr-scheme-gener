@@ -130,7 +130,7 @@ def test_internal_load_uses_crossbar_and_two_slender_arrows():
 	assert index.get("node/1/load/left").item.head_width == 8.0
 
 
-def test_right_side_link_hatching_is_mirrored_outwards():
+def test_side_link_hatching_has_same_direction_on_both_sides():
 	def support(side):
 		scene = _build(
 			{
@@ -161,7 +161,36 @@ def test_right_side_link_hatching_is_mirrored_outwards():
 	]
 
 	assert any(item.end.x < item.start.x for item in left_hatches)
-	assert any(item.end.x > item.start.x for item in right_hatches)
+	assert any(item.end.x < item.start.x for item in right_hatches)
+
+
+def test_floating_clamp_hatching_has_same_direction_on_both_sides():
+	scene = _build(
+		{
+			"segments": [
+				{"length": 1, "length_text": "l", "rigidity_text": ""}
+			],
+			"nodes": [
+				{
+					"support": "плавающая заделка",
+					"load": "нет",
+					"load_text": "",
+				},
+			],
+			"base_support": "нет",
+		}
+	)
+	support = SceneIndex(scene, FixedTextMetrics()).get("node/0/support").item
+	hatches = [
+		item
+		for item in support.children
+		if hasattr(item, "start")
+		and abs(item.end.x - item.start.x) == 7
+		and abs(item.end.y - item.start.y) == 6
+	]
+
+	assert len(hatches) > 2
+	assert all(item.end.x < item.start.x for item in hatches)
 
 
 @pytest.mark.parametrize(
