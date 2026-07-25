@@ -118,7 +118,6 @@ class ConfWidget(common.ConfWidget):
 		base_support_layout = QHBoxLayout()
 		base_support_layout.addWidget(QLabel("Нижняя опора:"))
 		base_support_layout.addWidget(self.base_support_combo)
-		self.vlayout.addLayout(base_support_layout)
 
 		self.segment_table = tablewidget.TableWidget(self.shemetype, "segments")
 		self.segment_table.addColumn("length", "float", "Длина")
@@ -140,6 +139,7 @@ class ConfWidget(common.ConfWidget):
 		self.vlayout.addWidget(self.segment_table)
 		self.vlayout.addWidget(QLabel("Узлы над участками (сверху вниз):"))
 		self.vlayout.addWidget(self.node_table)
+		self.vlayout.addLayout(base_support_layout)
 		self.vlayout.addWidget(self.sett)
 		common.add_symbol_text_editor(self.vlayout, self.shemetype.texteditor)
 
