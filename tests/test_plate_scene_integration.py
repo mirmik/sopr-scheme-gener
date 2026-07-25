@@ -2,6 +2,8 @@ import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PyQt5.QtWidgets import QLabel
+
 from sopr_scheme_gener.app import build_parser, create_runtime
 
 
@@ -43,6 +45,24 @@ def test_plate_scene_renders_full_feature_matrix():
 		assert index.get("support/1/right/1") is not None
 		assert index.get("label/0") is not None
 		assert context.canvas.label_items == {}
+	finally:
+		context.window.close()
+		context.app.processEvents()
+
+
+def test_plate_editor_shows_bold_right_click_label_hint():
+	context = create_runtime(
+		build_parser().parse_args(["--type", "plate", "--no-maximize", "--error"])
+	)
+	try:
+		hint = context.controller.current_scheme.confwidget.findChild(
+			QLabel,
+			"plate_label_hint",
+		)
+		assert hint is not None
+		assert hint.font().bold()
+		assert "правой кнопкой мыши" in hint.text()
+		assert "добавить метку" in hint.text()
 	finally:
 		context.window.close()
 		context.app.processEvents()

@@ -75,6 +75,15 @@ class ConfWidget_T3(common.ConfWidget):
 		}
 
 	def update_interface(self):
+		label_hint = QLabel(
+			"Щёлкните правой кнопкой мыши по схеме, чтобы добавить метку."
+		)
+		label_hint.setObjectName("plate_label_hint")
+		label_hint.setWordWrap(True)
+		hint_font = label_hint.font()
+		hint_font.setBold(True)
+		label_hint.setFont(hint_font)
+
 		self.table = tablewidget.TableWidget(self.shemetype, "sections")
 		self.table.addColumn("d", "float", "Длина")
 		self.table.addColumn("dtext", "str", "Текст")
@@ -96,6 +105,7 @@ class ConfWidget_T3(common.ConfWidget):
 		self.table2.addColumn("sharn", "list", "Шарнир", variant=["нет", "1", "2"])
 		self.table2.updateTable()
 
+		self.vlayout.addWidget(label_hint)
 		self.vlayout.addWidget(QLabel("Геометрия:"))
 		self.vlayout.addWidget(self.table)
 		self.vlayout.addWidget(QLabel("Распределённые силы:"))
