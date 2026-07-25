@@ -188,7 +188,12 @@ def _single_support(support_name):
 
 def _assert_block_hatching_is_clipped(block):
 	border = block.children[0].bounds
-	hatches = block.children[1:]
+	hatches = [
+		item
+		for item in block.children[1:]
+		if hasattr(item, "start")
+		and (item.end.x - item.start.x) * (item.end.y - item.start.y) < 0
+	]
 	assert hatches
 	for hatch in hatches:
 		for point in (hatch.start, hatch.end):
@@ -199,6 +204,16 @@ def _assert_block_hatching_is_clipped(block):
 		) < 0
 
 
+def _vertical_lines_at(block, x):
+	return [
+		item
+		for item in block.children
+		if hasattr(item, "start")
+		and item.start.x == item.end.x == x
+		and item.start.y != item.end.y
+	]
+
+
 def test_node_fixed_clamp_has_two_short_hatched_blocks_next_to_rod():
 	index = SceneIndex(_single_support("заделка"), FixedTextMetrics())
 	support = index.get("node/0/support").item
@@ -207,10 +222,16 @@ def test_node_fixed_clamp_has_two_short_hatched_blocks_next_to_rod():
 	rod_x = index.get("segment/0/body").item.start.x
 
 	assert dict(support.metadata)["support"] == "node-fixed-clamp"
-	assert 0 < rod_x - left.children[0].bounds.right < 4
-	assert 0 < right.children[0].bounds.left - rod_x < 4
-	assert left.children[0].bounds.width < 30
-	assert right.children[0].bounds.width < 30
+	left_bounds = left.children[0].bounds
+	right_bounds = right.children[0].bounds
+	assert right_bounds.left - left_bounds.right > 12
+	assert rod_x - left_bounds.right == right_bounds.left - rod_x
+	assert left_bounds.width < 30
+	assert right_bounds.width < 30
+	assert not _vertical_lines_at(left, left_bounds.left)
+	assert _vertical_lines_at(left, left_bounds.right)
+	assert _vertical_lines_at(right, right_bounds.left)
+	assert not _vertical_lines_at(right, right_bounds.right)
 	_assert_block_hatching_is_clipped(left)
 	_assert_block_hatching_is_clipped(right)
 

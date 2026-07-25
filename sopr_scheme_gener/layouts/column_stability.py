@@ -153,10 +153,26 @@ def _rectangle_hatching(rect, stroke, step=8):
 	return tuple(lines)
 
 
-def _hatched_block(rect, stroke, object_id):
+def _hatched_block(rect, stroke, object_id, open_side=None):
+	if open_side not in (None, "left", "right"):
+		raise ValueError("Unsupported open block side: {!r}".format(open_side))
+	if open_side is None:
+		border = (Rectangle(rect, stroke, Fill(WHITE)),)
+	else:
+		inner_x = rect.right if open_side == "left" else rect.left
+		border = (
+			Rectangle(rect, None, Fill(WHITE)),
+			Line(Point(rect.left, rect.top), Point(rect.right, rect.top), stroke),
+			Line(
+				Point(rect.left, rect.bottom),
+				Point(rect.right, rect.bottom),
+				stroke,
+			),
+			Line(Point(inner_x, rect.top), Point(inner_x, rect.bottom), stroke),
+		)
 	return Group(
 		(
-			Rectangle(rect, stroke, Fill(WHITE)),
+			*border,
 			*_rectangle_hatching(rect, stroke),
 		),
 		object_id=object_id,
@@ -226,7 +242,7 @@ def _hinge_support(point, size, stroke, object_id, at_top=False):
 
 def _node_fixed_clamp(point, size, stroke, object_id):
 	"""Draw two short fixed blocks approaching the rod from both sides."""
-	gap = max(2.5, size * 0.08)
+	gap = max(6.0, size * 0.18)
 	block_width = size * 0.72
 	half_height = size * 0.38
 	top = point.y - half_height
@@ -245,8 +261,18 @@ def _node_fixed_clamp(point, size, stroke, object_id):
 	)
 	return Group(
 		(
-			_hatched_block(left, stroke, "{}/left-block".format(object_id)),
-			_hatched_block(right, stroke, "{}/right-block".format(object_id)),
+			_hatched_block(
+				left,
+				stroke,
+				"{}/left-block".format(object_id),
+				open_side="left",
+			),
+			_hatched_block(
+				right,
+				stroke,
+				"{}/right-block".format(object_id),
+				open_side="right",
+			),
 		),
 		object_id=object_id,
 		metadata=metadata(kind="support", support="node-fixed-clamp"),
