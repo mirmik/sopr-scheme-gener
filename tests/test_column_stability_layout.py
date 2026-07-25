@@ -298,6 +298,7 @@ def test_floating_clamp_has_guides_cheeks_and_four_hatched_outer_blocks():
 	assert left_guide.end.x == left_cheek.start.x
 	assert right_guide.start.x == right_cheek.start.x
 	assert left_cheek.start.x < right_cheek.start.x
+	assert right_cheek.start.x - left_cheek.start.x > 11
 	assert right_guide.end.x - left_guide.start.x < 100
 	left_upper = blocks[("left", "upper")].children[0].bounds
 	left_lower = blocks[("left", "lower")].children[0].bounds

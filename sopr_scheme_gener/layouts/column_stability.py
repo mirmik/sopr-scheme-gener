@@ -355,7 +355,7 @@ def _side_link(point, size, stroke, object_id, side, at_endpoint=False):
 
 def _floating_clamp(point, size, stroke, object_id):
 	"""Draw a sliding guide with cheek plates and four outer guide blocks."""
-	gap = max(4.0, size * 0.13)
+	gap = max(5.0, size * 0.16)
 	left_plate = point.x - gap
 	right_plate = point.x + gap
 	left_outer = point.x - size * 1.35
